@@ -1,0 +1,21 @@
+{
+  "name": "portuga-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp bot for O Portuga restaurant to send proactive messages",
+  "main": "bot-sender.js",
+  "scripts": {
+    "start": "node example-usage.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "restaurant",
+    "messaging"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
