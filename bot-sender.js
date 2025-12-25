@@ -74,17 +74,17 @@ class WhatsAppBot {
         const cleanNumber = phoneNumber.replace(/\D/g, '');
         
         // Verifica se tem o formato brasileiro correto
-        // 55 (país) + 2 dígitos (DDD) + número móvel (9 dígitos iniciando com 6-9)
-        // ou número fixo (8 dígitos iniciando com 2-5)
-        const mobileFormat = /^55\d{2}[6-9]\d{8}$/; // Móvel: 13 dígitos, 3º dígito do número é 6-9
-        const landlineFormat = /^55\d{2}[2-5]\d{7}$/; // Fixo: 12 dígitos, 1º dígito do número é 2-5
+        // Móvel: 55 (país) + 2 dígitos (DDD) + 9 dígitos (9[6-9]XXXXXXX)
+        // Fixo: 55 (país) + 2 dígitos (DDD) + 8 dígitos ([2-5]XXXXXXX)
+        const mobileFormat = /^55\d{2}9[6-9]\d{7}$/; // Móvel: 13 dígitos, inicia com 9 + [6-9]
+        const landlineFormat = /^55\d{2}[2-5]\d{7}$/; // Fixo: 12 dígitos, inicia com [2-5]
         
         if (!mobileFormat.test(cleanNumber) && !landlineFormat.test(cleanNumber)) {
             console.error('❌ Formato de número inválido:', phoneNumber);
-            console.error('   Formato esperado para móvel: 55 + DDD (2 dígitos) + 9XXXX-XXXX (9 dígitos)');
-            console.error('   Formato esperado para fixo: 55 + DDD (2 dígitos) + 2XXX-XXXX a 5XXX-XXXX (8 dígitos)');
+            console.error('   Formato esperado para móvel: 55 + DDD (2 dígitos) + 9[6-9]XXX-XXXX (9 dígitos)');
+            console.error('   Formato esperado para fixo: 55 + DDD (2 dígitos) + [2-5]XXX-XXXX (8 dígitos)');
             console.error('   Exemplo móvel: 5511991234567 (11 é o DDD de São Paulo)');
-            console.error('   Exemplo fixo: 5511912345678');
+            console.error('   Exemplo fixo: 551131234567 (número fixo de São Paulo)');
             return false;
         }
         

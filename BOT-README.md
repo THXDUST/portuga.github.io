@@ -102,20 +102,36 @@ A autenticação é salva localmente na pasta `.wwebjs_auth/` e não precisa ser
 ### Números Brasileiros
 
 O formato correto para números brasileiros é:
-```
-55 + DDD (2 dígitos) + Número (8 ou 9 dígitos)
-```
 
-**Exemplos válidos:**
-- `5511991234567` - São Paulo (11) com 9 dígitos
-- `5521987654321` - Rio de Janeiro (21) com 9 dígitos
-- `5511912345678` - São Paulo (11) com 9 dígitos
-- `55119123456` - São Paulo (11) com 8 dígitos (números fixos antigos)
+**Números Móveis (Celular):**
+```
+55 + DDD (2 dígitos) + 9[6-9]XXX-XXXX (9 dígitos)
+```
+O primeiro dígito é sempre 9, e o segundo dígito é 6, 7, 8 ou 9.
+
+**Números Fixos (Telefone Fixo):**
+```
+55 + DDD (2 dígitos) + [2-5]XXX-XXXX (8 dígitos)
+```
+O primeiro dígito é 2, 3, 4 ou 5.
+
+**Exemplos válidos de números móveis:**
+- `5511991234567` - São Paulo (11), móvel começando com 99
+- `5521987654321` - Rio de Janeiro (21), móvel começando com 98
+- `5511612345678` - São Paulo (11), móvel começando com 61
+- `5511712345678` - São Paulo (11), móvel começando com 71
+
+**Exemplos válidos de números fixos:**
+- `551131234567` - São Paulo (11), fixo começando com 3
+- `552121234567` - Rio de Janeiro (21), fixo começando com 2
+- `553141234567` - Belo Horizonte (31), fixo começando com 4
 
 **Formato incorreto (NÃO usar):**
 - ❌ `11991234567` - Faltando código do país (55)
 - ❌ `+55 11 99123-4567` - Com espaços e traços
 - ❌ `(11) 99123-4567` - Com parênteses e traços
+- ❌ `5511191234567` - Móvel começando com 1 (inválido)
+- ❌ `5511012345678` - Móvel começando com 0 (inválido)
 
 ### Principais DDDs do Brasil
 
