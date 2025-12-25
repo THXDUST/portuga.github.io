@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Portuga</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login Form -->
+    <div id="login-section" class="login-container">
+        <div class="login-box">
+            <h2>🔐 Painel Administrativo</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Usuário:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Entrar</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; color: #666; font-size: 0.9rem;">
+                Usuário padrão: <strong>admin</strong><br>
+                Senha padrão: <strong>portuga123</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Admin Panel (hidden by default) -->
+    <div id="admin-panel" style="display: none;">
+        <header>
+            <div class="container">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1>📊 Painel Administrativo</h1>
+                        <p class="subtitle">Gerenciamento de Pedidos</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="logout()">Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Voltar ao Site</a></li>
+            </ul>
+        </nav>
+
+        <main class="admin-container">
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total de Pedidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-pending">0</div>
+                    <div class="stat-label">Pedidos Pendentes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-preparing">0</div>
+                    <div class="stat-label">Em Preparo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-completed">0</div>
+                    <div class="stat-label">Concluídos</div>
+                </div>
+            </div>
+
+            <!-- Revenue Stats -->
+            <div class="menu-section">
+                <h2>💰 Estatísticas Financeiras</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-revenue">R$ 0,00</div>
+                        <div class="stat-label">Receita Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-avg-order">R$ 0,00</div>
+                        <div class="stat-label">Ticket Médio</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Most Ordered Items -->
+            <div class="menu-section">
+                <h2>🏆 Pratos Mais Pedidos</h2>
+                <div id="popular-items" style="color: #666;">
+                    Carregando estatísticas...
+                </div>
+            </div>
+
+            <!-- Orders List -->
+            <div class="order-list">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">📋 Lista de Pedidos</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="margin-right: 15px; color: #666;">Filtrar por status:</label>
+                    <select id="status-filter" class="form-group" style="padding: 8px 15px; border: 2px solid #e9ecef; border-radius: 8px;">
+                        <option value="all">Todos</option>
+                        <option value="pendente">Pendentes</option>
+                        <option value="preparo">Em Preparo</option>
+                        <option value="concluido">Concluídos</option>
+                    </select>
+                </div>
+
+                <div id="orders-container">
+                    <!-- Orders will be dynamically inserted here -->
+                </div>
+
+                <div id="no-orders" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>Nenhum pedido encontrado</h3>
+                    <p>Os pedidos aparecerão aqui quando os clientes fizerem pedidos</p>
+                </div>
+            </div>
+
+            <!-- Clear Data Section -->
+            <div class="menu-section" style="margin-top: 30px;">
+                <h2 style="color: #dc3545;">⚠️ Zona de Perigo</h2>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Atenção: Esta ação irá remover todos os pedidos do sistema e não pode ser desfeita.
+                </p>
+                <button class="btn btn-danger" onclick="clearAllOrders()">🗑️ Limpar Todos os Pedidos</button>
+            </div>
+        </main>
+
+        <footer>
+            <div class="container">
+                <p>&copy; 2024 Portuga - Restaurante & Pizzaria</p>
+                <p>Painel Administrativo</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="scripts.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
