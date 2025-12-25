@@ -27,6 +27,11 @@ class WhatsAppBot {
         // Evento disparado quando o bot está pronto para enviar mensagens
         this.client.on('ready', () => {
             this.isReady = true;
+            // Limpa o timeout de segurança
+            if (this.readyTimeout) {
+                clearTimeout(this.readyTimeout);
+                this.readyTimeout = null;
+            }
             console.log('✅ Bot pronto para enviar mensagens!');
             console.log('⏰ Timestamp:', new Date().toISOString());
         });
@@ -69,13 +74,17 @@ class WhatsAppBot {
         const cleanNumber = phoneNumber.replace(/\D/g, '');
         
         // Verifica se tem o formato brasileiro correto
-        // 55 (país) + 2 dígitos (DDD) + 8 ou 9 dígitos (número)
-        const brazilianFormat = /^55\d{2}9?\d{8}$/;
+        // 55 (país) + 2 dígitos (DDD) + número móvel (9 dígitos iniciando com 6-9)
+        // ou número fixo (8 dígitos iniciando com 2-5)
+        const mobileFormat = /^55\d{2}[6-9]\d{8}$/; // Móvel: 13 dígitos, 3º dígito do número é 6-9
+        const landlineFormat = /^55\d{2}[2-5]\d{7}$/; // Fixo: 12 dígitos, 1º dígito do número é 2-5
         
-        if (!brazilianFormat.test(cleanNumber)) {
+        if (!mobileFormat.test(cleanNumber) && !landlineFormat.test(cleanNumber)) {
             console.error('❌ Formato de número inválido:', phoneNumber);
-            console.error('   Formato esperado: 55 + DDD (2 dígitos) + número (8-9 dígitos)');
-            console.error('   Exemplo: 5511991234567 (11 é o DDD de São Paulo)');
+            console.error('   Formato esperado para móvel: 55 + DDD (2 dígitos) + 9XXXX-XXXX (9 dígitos)');
+            console.error('   Formato esperado para fixo: 55 + DDD (2 dígitos) + 2XXX-XXXX a 5XXX-XXXX (8 dígitos)');
+            console.error('   Exemplo móvel: 5511991234567 (11 é o DDD de São Paulo)');
+            console.error('   Exemplo fixo: 5511912345678');
             return false;
         }
         
@@ -128,16 +137,23 @@ class WhatsAppBot {
         }
 
         return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
+            let checkInterval = null;
+            let timeoutId = null;
+
+            checkInterval = setInterval(() => {
                 if (this.isReady) {
                     clearInterval(checkInterval);
+                    clearTimeout(timeoutId);
                     resolve(true);
                 }
             }, 1000);
 
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 clearInterval(checkInterval);
-                if (!this.isReady) {
+                // Verifica novamente para evitar condição de corrida
+                if (this.isReady) {
+                    resolve(true);
+                } else {
                     console.warn('⚠️  Timeout: Bot não ficou pronto no tempo esperado.');
                     resolve(false);
                 }
