@@ -34,9 +34,9 @@ const bot = new WhatsAppBot();
 // Escuta o evento 'ready' para enviar mensagem quando o bot estiver pronto
 bot.client.on('ready', async () => {
     // Enviar mensagem para um número
-    // Formato: código do país + DDD + número (ex: 5511999999999)
+    // Formato: código do país + DDD + número (ex: 5511991234567)
     try {
-        await bot.sendMessage('5511999999999', 'Sua mensagem aqui!');
+        await bot.sendMessage('5511991234567', 'Sua mensagem aqui!');
     } catch (error) {
         console.error('Erro ao enviar mensagem:', error);
     }
@@ -156,7 +156,7 @@ Cria uma nova instância do bot e inicializa a conexão.
 Envia uma mensagem para um número de telefone.
 
 **Parâmetros:**
-- `phoneNumber` (string): Número com código do país (ex: '5511999999999')
+- `phoneNumber` (string): Número com código do país (ex: '5511991234567')
 - `message` (string): Mensagem a ser enviada
 
 **Retorna:**
@@ -164,7 +164,7 @@ Envia uma mensagem para um número de telefone.
 
 **Exemplo:**
 ```javascript
-await bot.sendMessage('5511999999999', 'Olá! Esta é uma mensagem automática.');
+await bot.sendMessage('5511991234567', 'Olá! Esta é uma mensagem automática.');
 ```
 
 #### validatePhoneNumber(phoneNumber)

@@ -66,7 +66,7 @@ class WhatsAppBot {
 
     /**
      * Valida o formato do número de telefone brasileiro
-     * @param {string} phoneNumber - Número no formato 5511999999999
+     * @param {string} phoneNumber - Número no formato 5511991234567
      * @returns {boolean} - true se o formato é válido
      */
     validatePhoneNumber(phoneNumber) {
@@ -93,7 +93,7 @@ class WhatsAppBot {
 
     /**
      * Envia uma mensagem para um número de telefone
-     * @param {string} phoneNumber - Número com código do país (ex: '5511999999999')
+     * @param {string} phoneNumber - Número com código do país (ex: '5511991234567')
      * @param {string} message - Mensagem a ser enviada
      * @returns {Promise<boolean>} - true se enviada com sucesso, false caso contrário
      */
