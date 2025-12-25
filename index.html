@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portuga - Cardápio Digital</title>
+    <title>Portuga - Restaurante & Pizzaria</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,105 +14,68 @@
         </div>
     </header>
 
+    <nav>
+        <ul>
+            <li><a href="index.html">Início</a></li>
+            <li><a href="menu.html">Cardápio</a></li>
+            <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
+            <li><a href="admin.html">Admin</a></li>
+        </ul>
+    </nav>
+
     <main class="container">
-        <!-- Individuais -->
+        <!-- Hero Section -->
+        <section class="hero">
+            <h2>Bem-vindo ao Portuga!</h2>
+            <p>Sabor português com tradição brasileira. Há mais de 20 anos servindo os melhores pratos da culinária portuguesa e pizzas artesanais.</p>
+            <img src="images/restaurant.jpg" alt="Restaurante Portuga" class="restaurant-photo" onerror="this.style.display='none'">
+            <p>Venha nos visitar e experimentar nossas delícias! Agora com pedidos online via WhatsApp.</p>
+            <a href="menu.html" class="btn">Ver Cardápio</a>
+        </section>
+
+        <!-- Sobre -->
         <section class="menu-section">
-            <h2>🍽️ Pratos Individuais</h2>
+            <h2>📖 Nossa História</h2>
+            <p style="color: #666; font-size: 1.1rem; line-height: 1.8;">
+                O Restaurante Portuga nasceu do amor pela culinária portuguesa e pelo desejo de compartilhar 
+                sabores autênticos com a comunidade brasileira. Nossa equipe de chefs experientes prepara 
+                cada prato com ingredientes frescos e receitas tradicionais, garantindo uma experiência 
+                gastronômica única.
+            </p>
+        </section>
+
+        <!-- Destaques -->
+        <section class="menu-section">
+            <h2>⭐ Nossos Destaques</h2>
             <div class="menu-items">
                 <div class="menu-item">
-                    <h3>Bife-Cavalo</h3>
-                    <p>Delicioso bife coberto com ovo frito e acompanhamentos</p>
+                    <h3>🐟 Bacalhau à Portuguesa</h3>
+                    <p>Tradicional prato português preparado com bacalhau autêntico</p>
                 </div>
                 <div class="menu-item">
-                    <h3>Rondelli</h3>
-                    <p>Massa recheada gratinada ao forno</p>
+                    <h3>🍕 Pizzas Artesanais</h3>
+                    <p>Massa fresca preparada diariamente com ingredientes selecionados</p>
                 </div>
                 <div class="menu-item">
-                    <h3>Lasanha</h3>
-                    <p>Lasanha caseira com camadas de massa, molho e queijo</p>
+                    <h3>🥩 Carnes Premium</h3>
+                    <p>Cortes nobres grelhados ao ponto perfeito</p>
                 </div>
                 <div class="menu-item">
-                    <h3>Filé de Peixe ao Molho de Camarão</h3>
-                    <p>Filé de peixe grelhado com cremoso molho de camarão</p>
+                    <h3>🦐 Frutos do Mar</h3>
+                    <p>Frescos e selecionados, direto do mar para sua mesa</p>
                 </div>
             </div>
         </section>
 
-        <!-- Família -->
+        <!-- Contato -->
         <section class="menu-section">
-            <h2>👨‍👩‍👧‍👦 Pratos para Família</h2>
-            <div class="menu-items">
-                <div class="menu-item">
-                    <h3>Parmegiana de Carne</h3>
-                    <p>Bife empanado com molho de tomate e queijo gratinado</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Parmegiana de Frango</h3>
-                    <p>Frango empanado com molho de tomate e queijo gratinado</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Caldeirada</h3>
-                    <p>Peixe e frutos do mar em molho especial</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Paella Marinera</h3>
-                    <p>Arroz com frutos do mar ao estilo espanhol</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Picanha à Terra Brasilis</h3>
-                    <p>Picanha suculenta ao estilo brasileiro</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Porções -->
-        <section class="menu-section">
-            <h2>🍤 Porções</h2>
-            <div class="menu-items">
-                <div class="menu-item">
-                    <h3>Camarão</h3>
-                    <p>Porção de camarões frescos e temperados</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Fritas</h3>
-                    <p>Batatas fritas crocantes e douradas</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Bolinho de Bacalhau</h3>
-                    <p>Bolinhos tradicionais portugueses de bacalhau</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Pizzas -->
-        <section class="menu-section">
-            <h2>🍕 Pizzas</h2>
-            <div class="menu-items">
-                <div class="menu-item">
-                    <h3>Quatro Queijos</h3>
-                    <p>Mussarela, gorgonzola, parmesão e catupiry</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Portuguesa</h3>
-                    <p>Presunto, ovos, cebola, azeitonas e ervilhas</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Frutos do Mar</h3>
-                    <p>Camarão, lula, polvo e outros frutos do mar</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Toscana</h3>
-                    <p>Calabresa, catupiry e cebola</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Mussarela</h3>
-                    <p>Queijo mussarela, tomate e manjericão</p>
-                </div>
-                <div class="menu-item">
-                    <h3>Calabresa</h3>
-                    <p>Calabresa, cebola e azeitonas</p>
-                </div>
-            </div>
+            <h2>📞 Entre em Contato</h2>
+            <p style="color: #666; font-size: 1.1rem; line-height: 1.8;">
+                <strong>Endereço:</strong> Rua Exemplo, 123 - Centro<br>
+                <strong>Telefone:</strong> (11) 1234-5678<br>
+                <strong>WhatsApp:</strong> (11) 91234-5678<br>
+                <strong>Horário:</strong> Terça a Domingo - 11h às 23h
+            </p>
         </section>
     </main>
 
@@ -122,5 +85,7 @@
             <p>Sabor português com tradição brasileira</p>
         </div>
     </footer>
+
+    <script src="scripts.js"></script>
 </body>
 </html>
