@@ -31,12 +31,16 @@ const WhatsAppBot = require('./bot-sender');
 
 const bot = new WhatsAppBot();
 
-// Aguarda o bot ficar pronto antes de enviar
-setTimeout(async () => {
+// Escuta o evento 'ready' para enviar mensagem quando o bot estiver pronto
+bot.client.on('ready', async () => {
     // Enviar mensagem para um número
     // Formato: código do país + DDD + número (ex: 5511999999999)
-    await bot.sendMessage('5511999999999', 'Sua mensagem aqui!');
-}, 10000); // Aguarda 10 segundos para conexão
+    try {
+        await bot.sendMessage('5511999999999', 'Sua mensagem aqui!');
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+    }
+});
 ```
 
 ## 🔐 Autenticação
@@ -83,7 +87,8 @@ O bot emite os seguintes eventos durante sua execução:
 
 - O número de telefone deve incluir o código do país (ex: 55 para Brasil)
 - O formato do número é: código do país + DDD + número (sem espaços ou caracteres especiais)
-- Aguarde o evento 'ready' antes de enviar mensagens
+- **Sempre use o evento 'ready' para garantir que o bot está conectado antes de enviar mensagens**
+- O método `sendMessage` lançará um erro se o bot não estiver pronto
 - A pasta `.wwebjs_auth/` contém dados de sessão e não deve ser commitada no Git
 
 ## 🛠️ Tecnologias
