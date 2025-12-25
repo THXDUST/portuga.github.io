@@ -6,6 +6,7 @@ class WhatsAppBot {
         this.client = new Client({
             authStrategy: new LocalAuth()
         });
+        this.isReady = false;
         
         this.initialize();
     }
@@ -17,6 +18,7 @@ class WhatsAppBot {
         });
 
         this.client.on('ready', () => {
+            this.isReady = true;
             console.log('Bot pronto para enviar mensagens!');
         });
 
@@ -28,6 +30,10 @@ class WhatsAppBot {
     }
 
     async sendMessage(phoneNumber, message) {
+        if (!this.isReady) {
+            throw new Error('Bot ainda não está pronto. Aguarde o evento "ready".');
+        }
+
         try {
             // Formato: número com código do país (ex: 5511999999999)
             const chatId = phoneNumber.includes('@c.us') 

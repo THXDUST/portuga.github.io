@@ -2,8 +2,12 @@ const WhatsAppBot = require('./bot-sender');
 
 const bot = new WhatsAppBot();
 
-// Aguarda o bot ficar pronto antes de enviar
-setTimeout(async () => {
+// Escuta o evento 'ready' para enviar mensagem quando o bot estiver pronto
+bot.client.on('ready', async () => {
     // Enviar mensagem para um número
-    await bot.sendMessage('5511999999999', 'Olá! Esta é uma mensagem automática do bot.');
-}, 10000); // Aguarda 10 segundos para conexão
+    try {
+        await bot.sendMessage('5511999999999', 'Olá! Esta é uma mensagem automática do bot.');
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+    }
+});
