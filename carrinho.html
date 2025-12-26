@@ -25,12 +25,9 @@
 
     <main class="container" style="padding-bottom: 40px;">
         <div style="display: grid; grid-template-columns: 1fr 400px; gap: 30px; align-items: start;">
-            <!-- Cart Items -->
             <div>
-                <div id="cart-items-container">
-                    <!-- Items will be dynamically inserted here -->
-                </div>
-                
+                <div id="cart-items-container"></div>
+
                 <div id="empty-cart" class="empty-state" style="display: none;">
                     <div class="empty-state-icon"></div>
                     <h3>Seu carrinho está vazio</h3>
@@ -39,15 +36,14 @@
                 </div>
             </div>
 
-            <!-- Cart Summary -->
             <div id="cart-summary" class="cart-summary" style="display: none;">
                 <h3 style="color: #333; margin-bottom: 20px;">Resumo do Pedido</h3>
-                
+
                 <div class="summary-row">
                     <span>Subtotal:</span>
                     <span id="subtotal">R$ 0,00</span>
                 </div>
-                
+
                 <div class="summary-row summary-total">
                     <span>Total:</span>
                     <span id="total">R$ 0,00</span>
@@ -72,20 +68,13 @@
     </footer>
 
     <script src="scripts.js"></script>
-    <script>
-        // Render cart on page load
-        document.addEventListener('DOMContentLoaded', function() {
+    <script>        document.addEventListener('DOMContentLoaded', function() {
             renderCart();
-            
-            // Finalize order
             document.getElementById('finalize-order-btn').addEventListener('click', finalizeOrder);
-            
-            // Clear cart
+
             document.getElementById('clear-cart-btn').addEventListener('click', function() {
-                if (confirm('Tem certeza que deseja limpar o carrinho?')) {
-                    clearCart();
-                    renderCart();
-                }
+                clearCart();
+                renderCart();
             });
         });
     </script>
