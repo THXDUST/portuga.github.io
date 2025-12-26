@@ -23,21 +23,21 @@
         </ul>
     </nav>
 
-    <main class="container" style="padding-bottom: 40px;">
-        <div style="display: grid; grid-template-columns: 1fr 400px; gap: 30px; align-items: start;">
-            <div>
+    <main class="container cart-main">
+        <div class="cart-layout">
+            <div class="cart-items-section">
                 <div id="cart-items-container"></div>
 
                 <div id="empty-cart" class="empty-state" style="display: none;">
                     <div class="empty-state-icon"></div>
                     <h3>Seu carrinho está vazio</h3>
                     <p>Adicione itens do nosso cardápio para começar seu pedido</p>
-                    <a href="menu.html" class="btn" style="margin-top: 20px;">Ver Cardápio</a>
+                    <a href="menu.html" class="btn empty-cart-btn">Ver Cardápio</a>
                 </div>
             </div>
 
             <div id="cart-summary" class="cart-summary" style="display: none;">
-                <h3 style="color: #333; margin-bottom: 20px;">Resumo do Pedido</h3>
+                <h3 class="cart-summary-title">Resumo do Pedido</h3>
 
                 <div class="summary-row">
                     <span>Subtotal:</span>
@@ -49,11 +49,11 @@
                     <span id="total">R$ 0,00</span>
                 </div>
 
-                <button id="finalize-order-btn" class="btn" style="width: 100%; margin-top: 20px; font-size: 1.1rem;">
+                <button id="finalize-order-btn" class="btn btn-finalize">
                     Finalizar via WhatsApp
                 </button>
 
-                <button id="clear-cart-btn" class="btn btn-danger" style="width: 100%; margin-top: 10px;">
+                <button id="clear-cart-btn" class="btn btn-danger btn-clear">
                     Limpar Carrinho
                 </button>
             </div>
