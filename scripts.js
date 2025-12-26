@@ -1,7 +1,5 @@
-// Configuration
-const WHATSAPP_NUMBER = '551399649-9584'; // Replace with actual restaurant WhatsApp number
+const WHATSAPP_NUMBER = '5513997597759';
 
-// Cart functions
 function getCart() {
     const cart = localStorage.getItem('cart');
     return cart ? JSON.parse(cart) : [];
@@ -44,8 +42,6 @@ function addToCart(name, price, image) {
     }
     
     saveCart(cart);
-    
-    // Show confirmation
     alert(`${name} adicionado ao carrinho!`);
 }
 
@@ -102,7 +98,6 @@ function renderCart() {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
         
-        // Use placeholder image if the actual image fails
         const imageSrc = item.image || 'https://via.placeholder.com/80x80/e8c13f/333?text=Prato';
         
         html += `
@@ -125,7 +120,6 @@ function renderCart() {
     
     container.innerHTML = html;
     
-    // Update summary
     const subtotalEl = document.getElementById('subtotal');
     const totalEl = document.getElementById('total');
     
@@ -141,8 +135,7 @@ function finalizeOrder() {
         return;
     }
     
-    // Build WhatsApp message
-    let message = '*🍕 Novo Pedido - Restaurante Portuga*\n\n';
+    let message = '*🍽️🍕 Novo Pedido - Restaurante Portuga*\n\n';
     message += '*Itens do Pedido:*\n';
     
     let total = 0;
@@ -158,21 +151,14 @@ function finalizeOrder() {
     message += `*Total do Pedido: R$ ${total.toFixed(2)}*\n\n`;
     message += '_Por favor, confirme o pedido e informe o endereço de entrega._';
     
-    // Save order to localStorage for admin panel
     saveOrder(cart, total);
-    
-    // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
     
-    // Open WhatsApp
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
     
-    // Optionally clear cart after order
-    if (confirm('Deseja limpar o carrinho após enviar o pedido?')) {
-        clearCart();
-        renderCart();
-    }
+    clearCart();
+    renderCart();
 }
 
 function saveOrder(cart, total) {
@@ -204,7 +190,6 @@ function updateOrderStatus(orderId, newStatus) {
     }
 }
 
-// Initialize cart badge on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
 });
