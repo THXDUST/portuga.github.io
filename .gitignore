@@ -11,3 +11,7 @@ npm-debug.log*
 
 # Environment variables
 .env
+
+# Test files
+test-hardcoded-users.php
+test-login-api.php
