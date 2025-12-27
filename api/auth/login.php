@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/hardcoded-users.php';
 require_once __DIR__ . '/../../includes/security.php';
 require_once __DIR__ . '/../../includes/session.php';
 
@@ -57,6 +58,37 @@ try {
     if (!validateEmail($email)) {
         throw new Exception('Invalid email format');
     }
+    
+    // Check for hardcoded users first
+    $hardcodedUser = authenticateHardcodedUser($email, $password);
+    
+    if ($hardcodedUser) {
+        // Hardcoded user authentication successful
+        // Skip rate limiting and database checks for hardcoded users
+        
+        // Create session for hardcoded user
+        $sessionToken = createSessionForHardcodedUser($hardcodedUser['id'], $hardcodedUser['full_name'], $rememberMe);
+        
+        // Return success response with user type and redirect URL
+        http_response_code(200);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Login successful!',
+            'user' => [
+                'id' => $hardcodedUser['id'],
+                'full_name' => $hardcodedUser['full_name'],
+                'email' => $hardcodedUser['email'],
+                'email_verified' => $hardcodedUser['email_verified'],
+                'user_type' => $hardcodedUser['user_type'],
+                'role' => $hardcodedUser['role']
+            ],
+            'session_token' => $sessionToken,
+            'redirect_url' => getRedirectUrlForUserType($hardcodedUser['user_type'])
+        ]);
+        exit();
+    }
+    
+    // Not a hardcoded user, proceed with database authentication
     
     // Check rate limiting
     $rateLimit = checkRateLimit($email, 'login', 5, 15);
@@ -122,7 +154,8 @@ try {
             'email' => $user['email'],
             'email_verified' => $user['email_verified']
         ],
-        'session_token' => $sessionToken
+        'session_token' => $sessionToken,
+        'redirect_url' => '/index.html'  // Default redirect for database users
     ]);
     
 } catch (Exception $e) {
