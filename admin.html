@@ -44,12 +44,21 @@
         </header>
 
         <nav>
-            <ul>
+            <ul id="admin-nav">
                 <li><a href="index.html">Voltar ao Site</a></li>
+                <li><a href="#" class="nav-tab active" data-tab="dashboard">📊 Dashboard</a></li>
+                <li><a href="#" class="nav-tab" data-tab="orders">📦 Pedidos (Kanban)</a></li>
+                <li><a href="#" class="nav-tab" data-tab="menu">🍕 Cardápio</a></li>
+                <li><a href="#" class="nav-tab" data-tab="reports">📈 Relatórios</a></li>
+                <li><a href="#" class="nav-tab" data-tab="resumes">👔 Currículos</a></li>
+                <li><a href="#" class="nav-tab" data-tab="ouvidoria">💬 Ouvidoria</a></li>
+                <li><a href="#" class="nav-tab" data-tab="settings">⚙️ Configurações</a></li>
             </ul>
         </nav>
 
         <main class="admin-container">
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="admin-tab active">
             <!-- Statistics -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -126,6 +135,207 @@
                 </p>
                 <button class="btn btn-danger" onclick="clearAllOrders()">Limpar Todos os Pedidos</button>
             </div>
+            </div>
+            <!-- End Dashboard Tab -->
+
+            <!-- Orders Kanban Tab -->
+            <div id="tab-orders" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Pedidos - Kanban</h2>
+                
+                <div class="kanban-board">
+                    <div class="kanban-column" data-status="recebido">
+                        <div class="kanban-header">
+                            <h3>📥 Recebido</h3>
+                            <span class="kanban-count" id="count-recebido">0</span>
+                        </div>
+                        <div class="kanban-cards" id="kanban-recebido">
+                            <!-- Cards will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div class="kanban-column" data-status="em_andamento">
+                        <div class="kanban-header">
+                            <h3>👨‍🍳 Em Andamento</h3>
+                            <span class="kanban-count" id="count-em_andamento">0</span>
+                        </div>
+                        <div class="kanban-cards" id="kanban-em_andamento">
+                            <!-- Cards will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div class="kanban-column" data-status="finalizado">
+                        <div class="kanban-header">
+                            <h3>✅ Finalizado</h3>
+                            <span class="kanban-count" id="count-finalizado">0</span>
+                        </div>
+                        <div class="kanban-cards" id="kanban-finalizado">
+                            <!-- Cards will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Orders Kanban Tab -->
+
+            <!-- Menu Management Tab -->
+            <div id="tab-menu" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Cardápio</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showAddGroupModal()">➕ Adicionar Grupo</button>
+                    <button class="btn" onclick="showAddItemModal()">➕ Adicionar Item</button>
+                </div>
+                
+                <div id="menu-management">
+                    <p style="color: #666;">Carregando cardápio...</p>
+                </div>
+            </div>
+            <!-- End Menu Tab -->
+
+            <!-- Reports Tab -->
+            <div id="tab-reports" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Relatórios</h2>
+                
+                <div class="report-filters" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label>Tipo de Relatório:</label>
+                            <select id="report-type" class="form-group">
+                                <option value="revenue">Faturamento</option>
+                                <option value="popular-items">Produtos Mais Pedidos</option>
+                                <option value="customer-flow">Fluxo de Clientes</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Data Início:</label>
+                            <input type="date" id="report-date-from" class="form-group">
+                        </div>
+                        <div>
+                            <label>Data Fim:</label>
+                            <input type="date" id="report-date-to" class="form-group">
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                            <button class="btn" onclick="generateReport()">🔍 Gerar Relatório</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="report-results">
+                    <p style="color: #666; text-align: center; padding: 40px;">
+                        Selecione um tipo de relatório e clique em "Gerar Relatório"
+                    </p>
+                </div>
+            </div>
+            <!-- End Reports Tab -->
+
+            <!-- Resumes Tab -->
+            <div id="tab-resumes" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Currículos Recebidos</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="margin-right: 15px; color: #666;">Filtrar por status:</label>
+                    <select id="resume-status-filter" class="form-group" style="display: inline-block; width: auto;" onchange="loadResumes()">
+                        <option value="">Todos</option>
+                        <option value="em_analise">Em Análise</option>
+                        <option value="aprovado">Aprovado</option>
+                        <option value="rejeitado">Rejeitado</option>
+                    </select>
+                </div>
+                
+                <div id="resumes-list">
+                    <p style="color: #666;">Carregando currículos...</p>
+                </div>
+            </div>
+            <!-- End Resumes Tab -->
+
+            <!-- Ouvidoria Tab -->
+            <div id="tab-ouvidoria" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Mensagens da Ouvidoria</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="margin-right: 15px; color: #666;">Filtrar por status:</label>
+                    <select id="ouvidoria-status-filter" class="form-group" style="display: inline-block; width: auto;" onchange="loadOuvidoriaMessages()">
+                        <option value="">Todos</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="em_atendimento">Em Atendimento</option>
+                        <option value="resolvido">Resolvido</option>
+                    </select>
+                </div>
+                
+                <div id="ouvidoria-list">
+                    <p style="color: #666;">Carregando mensagens...</p>
+                </div>
+            </div>
+            <!-- End Ouvidoria Tab -->
+
+            <!-- Settings Tab -->
+            <div id="tab-settings" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Configurações do Restaurante</h2>
+                
+                <div class="settings-section">
+                    <h3>Status do Restaurante</h3>
+                    <div style="margin: 20px 0;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="restaurant-status" onchange="toggleRestaurantStatus()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="restaurant-status-label" style="margin-left: 10px; font-weight: bold;">Fechado</span>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Horários de Funcionamento</h3>
+                    <div style="display: grid; gap: 15px; max-width: 600px;">
+                        <div>
+                            <label>Cozinha:</label>
+                            <input type="time" id="kitchen-start" class="form-group" style="width: 120px;">
+                            <span> até </span>
+                            <input type="time" id="kitchen-end" class="form-group" style="width: 120px;">
+                        </div>
+                        <div>
+                            <label>Pizzaria:</label>
+                            <input type="time" id="pizza-start" class="form-group" style="width: 120px;">
+                            <span> até </span>
+                            <input type="time" id="pizza-end" class="form-group" style="width: 120px;">
+                        </div>
+                        <div>
+                            <label>Entregas:</label>
+                            <input type="time" id="delivery-start" class="form-group" style="width: 120px;">
+                            <span> até </span>
+                            <input type="time" id="delivery-end" class="form-group" style="width: 120px;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Configurações de Entrega</h3>
+                    <div style="display: grid; gap: 15px; max-width: 600px;">
+                        <div>
+                            <label>Distância Máxima (km):</label>
+                            <input type="number" id="max-delivery-distance" class="form-group" value="18" step="0.5">
+                        </div>
+                        <div>
+                            <label>Taxa por km (R$):</label>
+                            <input type="number" id="delivery-fee-per-km" class="form-group" value="2.5" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Modo Manutenção</h3>
+                    <div style="margin: 20px 0;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="maintenance-mode" onchange="toggleMaintenanceMode()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span style="margin-left: 10px;">Ativar Modo Manutenção</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button class="btn" onclick="saveSettings()">💾 Salvar Configurações</button>
+                </div>
+            </div>
+            <!-- End Settings Tab -->
         </main>
 
         <footer>

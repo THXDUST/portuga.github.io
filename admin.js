@@ -4,10 +4,82 @@ const ADMIN_CREDENTIALS = {
     password: 'portuga123'
 };
 
+// Current active tab
+let currentTab = 'dashboard';
+
 // Check if user is logged in
 function checkAuth() {
     const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
     return isLoggedIn === 'true';
+}
+
+// Tab Navigation
+function initTabNavigation() {
+    const tabLinks = document.querySelectorAll('.nav-tab');
+    
+    tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabName = this.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+    });
+}
+
+function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.style.display = 'none';
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all nav links
+    document.querySelectorAll('.nav-tab').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // Show selected tab
+    const selectedTab = document.getElementById(`tab-${tabName}`);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+        selectedTab.classList.add('active');
+    }
+    
+    // Add active class to clicked nav link
+    const activeLink = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
+    
+    // Load tab content
+    currentTab = tabName;
+    loadTabContent(tabName);
+}
+
+function loadTabContent(tabName) {
+    switch(tabName) {
+        case 'dashboard':
+            loadDashboard();
+            break;
+        case 'orders':
+            loadKanbanBoard();
+            break;
+        case 'menu':
+            loadMenuManagement();
+            break;
+        case 'reports':
+            initReportFilters();
+            break;
+        case 'resumes':
+            loadResumes();
+            break;
+        case 'ouvidoria':
+            loadOuvidoriaMessages();
+            break;
+        case 'settings':
+            loadSettings();
+            break;
+    }
 }
 
 // Login function
@@ -41,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showAdminPanel() {
         if (loginSection) loginSection.style.display = 'none';
         if (adminPanel) adminPanel.style.display = 'block';
+        initTabNavigation();
         loadDashboard();
     }
 });
@@ -251,3 +324,425 @@ setInterval(function() {
         loadDashboard();
     }
 }, 30000);
+
+// ==========================================
+// KANBAN BOARD FUNCTIONS
+// ==========================================
+
+function loadKanbanBoard() {
+    const orders = getOrders();
+    
+    // Clear all columns
+    ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
+        const column = document.getElementById(`kanban-${status}`);
+        if (column) column.innerHTML = '';
+    });
+    
+    // Group orders by status
+    const kanbanData = {
+        recebido: [],
+        em_andamento: [],
+        finalizado: []
+    };
+    
+    orders.forEach(order => {
+        // Map old status to new status
+        let status = order.status;
+        if (status === 'pendente') status = 'recebido';
+        if (status === 'preparo') status = 'em_andamento';
+        if (status === 'concluido') status = 'finalizado';
+        
+        if (kanbanData[status]) {
+            kanbanData[status].push(order);
+        }
+    });
+    
+    // Render cards in each column
+    Object.keys(kanbanData).forEach(status => {
+        renderKanbanColumn(status, kanbanData[status]);
+    });
+    
+    // Initialize drag and drop
+    initDragAndDrop();
+}
+
+function renderKanbanColumn(status, orders) {
+    const column = document.getElementById(`kanban-${status}`);
+    const countEl = document.getElementById(`count-${status}`);
+    
+    if (!column) return;
+    
+    // Update count
+    if (countEl) countEl.textContent = orders.length;
+    
+    if (orders.length === 0) {
+        column.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum pedido</p>';
+        return;
+    }
+    
+    column.innerHTML = '';
+    
+    orders.forEach(order => {
+        const card = createKanbanCard(order);
+        column.appendChild(card);
+    });
+}
+
+function createKanbanCard(order) {
+    const card = document.createElement('div');
+    card.className = 'kanban-card';
+    card.draggable = true;
+    card.dataset.orderId = order.id;
+    
+    const date = new Date(order.date);
+    const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    
+    const itemsList = order.items.map(item => 
+        `${item.quantity}x ${item.name}`
+    ).join(', ');
+    
+    card.innerHTML = `
+        <div class="kanban-card-header">
+            <span class="kanban-card-id">Pedido #${order.id}</span>
+            <span class="kanban-card-time">${timeStr}</span>
+        </div>
+        <div class="kanban-card-content">
+            <div class="kanban-card-items">${itemsList}</div>
+            <div class="kanban-card-total">R$ ${order.total.toFixed(2)}</div>
+        </div>
+    `;
+    
+    return card;
+}
+
+function initDragAndDrop() {
+    const cards = document.querySelectorAll('.kanban-card');
+    const columns = document.querySelectorAll('.kanban-cards');
+    
+    cards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+    });
+    
+    columns.forEach(column => {
+        column.addEventListener('dragover', handleDragOver);
+        column.addEventListener('drop', handleDrop);
+        column.addEventListener('dragenter', handleDragEnter);
+        column.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDragEnter(e) {
+    this.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    
+    this.classList.remove('drag-over');
+    
+    if (draggedElement !== this) {
+        const orderId = parseInt(draggedElement.dataset.orderId);
+        const newStatus = this.closest('.kanban-column').dataset.status;
+        
+        // Update order status
+        updateOrderStatus(orderId, mapKanbanStatusToOld(newStatus));
+        
+        // Reload kanban board
+        loadKanbanBoard();
+    }
+    
+    return false;
+}
+
+function mapKanbanStatusToOld(newStatus) {
+    const mapping = {
+        'recebido': 'pendente',
+        'em_andamento': 'preparo',
+        'finalizado': 'concluido'
+    };
+    return mapping[newStatus] || newStatus;
+}
+
+// ==========================================
+// MENU MANAGEMENT FUNCTIONS
+// ==========================================
+
+function loadMenuManagement() {
+    const container = document.getElementById('menu-management');
+    if (!container) return;
+    
+    container.innerHTML = '<p style="color: #666;">Funcionalidade de gerenciamento de cardápio em desenvolvimento...</p>';
+    // In a real implementation, this would load menu groups and items from the API
+}
+
+function showAddGroupModal() {
+    alert('Funcionalidade de adicionar grupo será implementada em breve!');
+}
+
+function showAddItemModal() {
+    alert('Funcionalidade de adicionar item será implementada em breve!');
+}
+
+// ==========================================
+// REPORTS FUNCTIONS
+// ==========================================
+
+function initReportFilters() {
+    // Set default dates
+    const today = new Date();
+    const lastMonth = new Date(today);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    
+    const dateFromInput = document.getElementById('report-date-from');
+    const dateToInput = document.getElementById('report-date-to');
+    
+    if (dateFromInput) dateFromInput.value = lastMonth.toISOString().split('T')[0];
+    if (dateToInput) dateToInput.value = today.toISOString().split('T')[0];
+}
+
+function generateReport() {
+    const reportType = document.getElementById('report-type')?.value;
+    const dateFrom = document.getElementById('report-date-from')?.value;
+    const dateTo = document.getElementById('report-date-to')?.value;
+    const resultsDiv = document.getElementById('report-results');
+    
+    if (!resultsDiv) return;
+    
+    resultsDiv.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">Gerando relatório...</p>';
+    
+    // Simulate report generation based on local storage data
+    setTimeout(() => {
+        const orders = getOrders();
+        
+        if (reportType === 'revenue') {
+            generateRevenueReport(orders, dateFrom, dateTo, resultsDiv);
+        } else if (reportType === 'popular-items') {
+            generatePopularItemsReport(orders, resultsDiv);
+        } else if (reportType === 'customer-flow') {
+            generateCustomerFlowReport(orders, resultsDiv);
+        }
+    }, 500);
+}
+
+function generateRevenueReport(orders, dateFrom, dateTo, container) {
+    const filteredOrders = orders.filter(order => {
+        const orderDate = new Date(order.date).toISOString().split('T')[0];
+        return orderDate >= dateFrom && orderDate <= dateTo;
+    });
+    
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+    const completedOrders = filteredOrders.filter(o => o.status === 'concluido' || o.status === 'finalizado');
+    const completedRevenue = completedOrders.reduce((sum, order) => sum + order.total, 0);
+    
+    container.innerHTML = `
+        <div class="report-card">
+            <h3>Relatório de Faturamento</h3>
+            <p><strong>Período:</strong> ${dateFrom} a ${dateTo}</p>
+            <div class="stats-grid" style="margin-top: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value">${filteredOrders.length}</div>
+                    <div class="stat-label">Total de Pedidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">R$ ${totalRevenue.toFixed(2)}</div>
+                    <div class="stat-label">Receita Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">R$ ${completedRevenue.toFixed(2)}</div>
+                    <div class="stat-label">Receita Concluída</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">R$ ${(completedRevenue / completedOrders.length || 0).toFixed(2)}</div>
+                    <div class="stat-label">Ticket Médio</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generatePopularItemsReport(orders, container) {
+    const itemCounts = {};
+    
+    orders.forEach(order => {
+        order.items.forEach(item => {
+            if (!itemCounts[item.name]) {
+                itemCounts[item.name] = { quantity: 0, revenue: 0 };
+            }
+            itemCounts[item.name].quantity += item.quantity;
+            itemCounts[item.name].revenue += item.price * item.quantity;
+        });
+    });
+    
+    const sortedItems = Object.entries(itemCounts)
+        .sort((a, b) => b[1].quantity - a[1].quantity)
+        .slice(0, 10);
+    
+    let html = '<div class="report-card"><h3>Top 10 Produtos Mais Pedidos</h3><div style="margin-top: 20px;">';
+    
+    sortedItems.forEach(([name, data], index) => {
+        html += `
+            <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between;">
+                <div>
+                    <span style="font-weight: bold; margin-right: 10px;">#${index + 1}</span>
+                    <span>${name}</span>
+                </div>
+                <div>
+                    <span style="color: #e8c13f; font-weight: bold; margin-right: 20px;">${data.quantity}x</span>
+                    <span style="color: #28a745; font-weight: bold;">R$ ${data.revenue.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div></div>';
+    container.innerHTML = html;
+}
+
+function generateCustomerFlowReport(orders, container) {
+    const hourCounts = {};
+    
+    orders.forEach(order => {
+        const hour = new Date(order.date).getHours();
+        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    });
+    
+    let html = '<div class="report-card"><h3>Fluxo de Clientes por Horário</h3><div style="margin-top: 20px;">';
+    
+    for (let hour = 0; hour < 24; hour++) {
+        const count = hourCounts[hour] || 0;
+        const barWidth = count > 0 ? (count / Math.max(...Object.values(hourCounts))) * 100 : 0;
+        
+        html += `
+            <div style="margin: 10px 0;">
+                <div style="display: flex; align-items: center;">
+                    <span style="min-width: 60px;">${hour}:00</span>
+                    <div style="flex: 1; background: #e9ecef; height: 30px; border-radius: 4px; margin: 0 10px; overflow: hidden;">
+                        <div style="width: ${barWidth}%; height: 100%; background: #e8c13f; transition: width 0.3s;"></div>
+                    </div>
+                    <span style="min-width: 40px; text-align: right; font-weight: bold;">${count}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div></div>';
+    container.innerHTML = html;
+}
+
+// ==========================================
+// RESUMES FUNCTIONS
+// ==========================================
+
+function loadResumes() {
+    const container = document.getElementById('resumes-list');
+    if (!container) return;
+    
+    container.innerHTML = '<p style="color: #666;">Nenhum currículo recebido ainda. Os currículos enviados pelo formulário aparecerão aqui.</p>';
+    // In a real implementation, this would fetch from the API
+}
+
+// ==========================================
+// OUVIDORIA FUNCTIONS
+// ==========================================
+
+function loadOuvidoriaMessages() {
+    const container = document.getElementById('ouvidoria-list');
+    if (!container) return;
+    
+    container.innerHTML = '<p style="color: #666;">Nenhuma mensagem recebida ainda. As mensagens da ouvidoria aparecerão aqui.</p>';
+    // In a real implementation, this would fetch from the API
+}
+
+// ==========================================
+// SETTINGS FUNCTIONS
+// ==========================================
+
+function loadSettings() {
+    // Load current settings
+    // In a real implementation, this would fetch from the API
+    const restaurantStatus = document.getElementById('restaurant-status');
+    const statusLabel = document.getElementById('restaurant-status-label');
+    
+    if (restaurantStatus && statusLabel) {
+        // Default to closed for demo
+        restaurantStatus.checked = false;
+        statusLabel.textContent = 'Fechado';
+        statusLabel.style.color = '#dc3545';
+    }
+}
+
+function toggleRestaurantStatus() {
+    const checkbox = document.getElementById('restaurant-status');
+    const label = document.getElementById('restaurant-status-label');
+    
+    if (checkbox && label) {
+        if (checkbox.checked) {
+            label.textContent = 'Aberto';
+            label.style.color = '#28a745';
+        } else {
+            label.textContent = 'Fechado';
+            label.style.color = '#dc3545';
+        }
+    }
+}
+
+function toggleMaintenanceMode() {
+    const checkbox = document.getElementById('maintenance-mode');
+    
+    if (checkbox && checkbox.checked) {
+        if (!confirm('Ativar modo manutenção? Isso pode restringir o acesso ao site.')) {
+            checkbox.checked = false;
+            return;
+        }
+        alert('Modo manutenção ativado!');
+    } else {
+        alert('Modo manutenção desativado!');
+    }
+}
+
+function saveSettings() {
+    const settings = {
+        restaurantStatus: document.getElementById('restaurant-status')?.checked,
+        kitchenStart: document.getElementById('kitchen-start')?.value,
+        kitchenEnd: document.getElementById('kitchen-end')?.value,
+        pizzaStart: document.getElementById('pizza-start')?.value,
+        pizzaEnd: document.getElementById('pizza-end')?.value,
+        deliveryStart: document.getElementById('delivery-start')?.value,
+        deliveryEnd: document.getElementById('delivery-end')?.value,
+        maxDeliveryDistance: document.getElementById('max-delivery-distance')?.value,
+        deliveryFeePerKm: document.getElementById('delivery-fee-per-km')?.value,
+        maintenanceMode: document.getElementById('maintenance-mode')?.checked
+    };
+    
+    // In a real implementation, this would save to the API
+    console.log('Saving settings:', settings);
+    alert('Configurações salvas com sucesso!');
+}
