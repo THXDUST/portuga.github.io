@@ -215,9 +215,10 @@ async function handleLogin(e) {
             
             showAlert(data.message, 'success');
             
-            // Redirect to home page after 1 second
+            // Redirect based on user type (from API) or to default page after 1 second
+            const redirectUrl = data.redirect_url || '/index.html';
             setTimeout(() => {
-                window.location.href = '/index.html';
+                window.location.href = redirectUrl;
             }, 1000);
         } else {
             showAlert(data.message, 'error');

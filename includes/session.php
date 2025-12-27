@@ -30,6 +30,31 @@ function startSecureSession() {
 }
 
 /**
+ * Create session for hardcoded user (no database storage)
+ * @param int $userId Hardcoded user ID (negative)
+ * @param string $fullName User's full name
+ * @param bool $rememberMe Whether to extend session
+ * @return string Session token
+ */
+function createSessionForHardcodedUser($userId, $fullName, $rememberMe = false) {
+    startSecureSession();
+    
+    // Generate session token
+    $sessionToken = bin2hex(random_bytes(32));
+    $expiresIn = $rememberMe ? 30 : 1; // days
+    
+    // Set session variables (no database storage for hardcoded users)
+    $_SESSION['user_id'] = $userId;
+    $_SESSION['session_token'] = $sessionToken;
+    $_SESSION['full_name'] = $fullName;
+    $_SESSION['is_hardcoded_user'] = true;
+    $_SESSION['created'] = time();
+    $_SESSION['expires_at'] = time() + ($expiresIn * 24 * 60 * 60);
+    
+    return $sessionToken;
+}
+
+/**
  * Check if user is logged in
  * @return bool True if logged in
  */
@@ -40,7 +65,17 @@ function isLoggedIn() {
         return false;
     }
     
-    // Verify session token in database
+    // Handle hardcoded users separately
+    if (isset($_SESSION['is_hardcoded_user']) && $_SESSION['is_hardcoded_user'] === true) {
+        // Check if session has expired
+        if (isset($_SESSION['expires_at']) && time() > $_SESSION['expires_at']) {
+            destroySession();
+            return false;
+        }
+        return true;
+    }
+    
+    // Verify session token in database for regular users
     try {
         $pdo = getDBConnection();
         $stmt = $pdo->prepare("
@@ -141,7 +176,8 @@ function createSession($userId, $rememberMe = false) {
 function destroySession() {
     startSecureSession();
     
-    if (isset($_SESSION['session_token'])) {
+    // Only delete from database if it's not a hardcoded user
+    if (isset($_SESSION['session_token']) && !isset($_SESSION['is_hardcoded_user'])) {
         try {
             $pdo = getDBConnection();
             $stmt = $pdo->prepare("DELETE FROM sessions WHERE session_token = ?");
