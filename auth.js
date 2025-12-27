@@ -324,7 +324,7 @@ function initializeOAuthButtons() {
  */
 function initiateOAuth(provider) {
     const clientIds = {
-        google: 'YOUR_GOOGLE_CLIENT_ID',
+        google: '151705503793-58conb3193si0a8njile4bjpdn77nps6.apps.googleusercontent.com',
         facebook: 'YOUR_FACEBOOK_APP_ID',
         instagram: 'YOUR_INSTAGRAM_CLIENT_ID'
     };
