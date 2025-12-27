@@ -40,8 +40,8 @@ try {
         throw new Exception('Invalid CSRF token');
     }
     
-    // Sanitize inputs
-    $email = sanitizeInput($input['email'] ?? '');
+    // Sanitize inputs (trim only, email validation done separately)
+    $email = trim($input['email'] ?? '');
     $password = $input['password'] ?? '';
     $rememberMe = isset($input['remember_me']) && $input['remember_me'] === true;
     
@@ -54,12 +54,7 @@ try {
         throw new Exception('Password is required');
     }
     
-    // Validate email format
-    if (!validateEmail($email)) {
-        throw new Exception('Invalid email format');
-    }
-    
-    // Check for hardcoded users first
+    // Check for hardcoded users first (before email validation)
     $hardcodedUser = authenticateHardcodedUser($email, $password);
     
     if ($hardcodedUser) {
@@ -89,6 +84,10 @@ try {
     }
     
     // Not a hardcoded user, proceed with database authentication
+    // Validate email format for database users
+    if (!validateEmail($email)) {
+        throw new Exception('Invalid email format');
+    }
     
     // Check rate limiting
     $rateLimit = checkRateLimit($email, 'login', 5, 15);
