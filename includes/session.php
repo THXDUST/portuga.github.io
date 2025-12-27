@@ -176,7 +176,8 @@ function createSession($userId, $rememberMe = false) {
 function destroySession() {
     startSecureSession();
     
-    if (isset($_SESSION['session_token'])) {
+    // Only delete from database if it's not a hardcoded user
+    if (isset($_SESSION['session_token']) && !isset($_SESSION['is_hardcoded_user'])) {
         try {
             $pdo = getDBConnection();
             $stmt = $pdo->prepare("DELETE FROM sessions WHERE session_token = ?");
