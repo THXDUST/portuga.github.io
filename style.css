@@ -188,6 +188,44 @@ nav ul li a:hover {
     color: #e8c13f;
 }
 
+/* Hamburger Menu */
+.hamburger-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 101;
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.hamburger-menu span {
+    width: 30px;
+    height: 3px;
+    background: #333;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-menu.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+.hamburger-menu.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+
 .cart-badge {
     background: #dc3545;
     color: white;
@@ -595,9 +633,35 @@ nav ul li a:hover {
         grid-template-columns: 1fr;
     }
     
+    /* Mobile Hamburger Menu */
+    .hamburger-menu {
+        display: flex;
+    }
+    
     nav ul {
         flex-direction: column;
         align-items: center;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        padding: 0;
+    }
+    
+    nav ul.active,
+    nav ul.show {
+        max-height: 500px;
+        padding: 15px 0;
+    }
+    
+    nav ul li {
+        margin: 10px 0;
+        width: 100%;
+        text-align: center;
+    }
+    
+    nav ul li a {
+        display: block;
+        padding: 10px 20px;
     }
     
     .cart-item {

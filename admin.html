@@ -49,6 +49,7 @@
                 <li><a href="#" class="nav-tab active" data-tab="dashboard">📊 Dashboard</a></li>
                 <li><a href="#" class="nav-tab" data-tab="orders">📦 Pedidos (Kanban)</a></li>
                 <li><a href="#" class="nav-tab" data-tab="menu">🍕 Cardápio</a></li>
+                <li><a href="#" class="nav-tab" data-tab="notes">📝 Notas</a></li>
                 <li><a href="#" class="nav-tab" data-tab="reports">📈 Relatórios</a></li>
                 <li><a href="#" class="nav-tab" data-tab="resumes">👔 Currículos</a></li>
                 <li><a href="#" class="nav-tab" data-tab="ouvidoria">💬 Ouvidoria</a></li>
@@ -190,6 +191,20 @@
                 </div>
             </div>
             <!-- End Menu Tab -->
+
+            <!-- Notes Tab -->
+            <div id="tab-notes" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Notas/Comunicados</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showAddNoteModal()">➕ Adicionar Nova Nota</button>
+                </div>
+                
+                <div id="notes-list">
+                    <p style="color: #666;">Carregando notas...</p>
+                </div>
+            </div>
+            <!-- End Notes Tab -->
 
             <!-- Reports Tab -->
             <div id="tab-reports" class="admin-tab" style="display: none;">
@@ -344,6 +359,125 @@
                 <p>Painel Administrativo</p>
             </div>
         </footer>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="note-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeNoteModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;" id="note-modal-title">Adicionar Nova Nota</h2>
+            
+            <form id="note-form" onsubmit="saveNote(event)">
+                <input type="hidden" id="note-id">
+                
+                <div class="form-group">
+                    <label for="note-title">Título:</label>
+                    <input type="text" id="note-title" required maxlength="100" placeholder="Ex: Promoção Especial">
+                </div>
+                
+                <div class="form-group">
+                    <label for="note-content">Mensagem:</label>
+                    <textarea id="note-content" required rows="5" placeholder="Conteúdo da nota..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="note-active" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span>Nota Ativa (exibir no site)</span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeNoteModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Menu Group Modal -->
+    <div id="group-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeGroupModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;" id="group-modal-title">Adicionar Grupo</h2>
+            
+            <form id="group-form" onsubmit="saveGroup(event)">
+                <input type="hidden" id="group-id">
+                
+                <div class="form-group">
+                    <label for="group-name">Nome do Grupo:</label>
+                    <input type="text" id="group-name" required maxlength="50" placeholder="Ex: Pratos Individuais">
+                </div>
+                
+                <div class="form-group">
+                    <label for="group-description">Descrição (opcional):</label>
+                    <input type="text" id="group-description" maxlength="100" placeholder="Breve descrição do grupo">
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeGroupModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Menu Item Modal -->
+    <div id="item-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeItemModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;" id="item-modal-title">Adicionar Item</h2>
+            
+            <form id="item-form" onsubmit="saveItem(event)">
+                <input type="hidden" id="item-id">
+                
+                <div class="form-group">
+                    <label for="item-group">Grupo:</label>
+                    <select id="item-group" required>
+                        <option value="">Selecione um grupo</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-name">Nome do Prato:</label>
+                    <input type="text" id="item-name" required maxlength="100" placeholder="Ex: Bacalhau à Portuguesa">
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-description">Descrição:</label>
+                    <textarea id="item-description" rows="3" placeholder="Descrição do prato"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-price">Preço (R$):</label>
+                    <input type="number" id="item-price" required step="0.01" min="0" placeholder="0.00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-image">URL da Imagem:</label>
+                    <input type="text" id="item-image" placeholder="https://exemplo.com/imagem.jpg">
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 10px;">
+                        <input type="checkbox" id="item-delivery" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span>🚚 Disponível para Entrega</span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="item-available" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span>✅ Disponível para Venda</span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeItemModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="scripts.js"></script>
