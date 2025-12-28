@@ -498,20 +498,314 @@ function mapKanbanStatusToOld(newStatus) {
 // MENU MANAGEMENT FUNCTIONS
 // ==========================================
 
+function getMenuData() {
+    const menu = localStorage.getItem('menu_data');
+    return menu ? JSON.parse(menu) : { groups: [], items: [] };
+}
+
+function saveMenuData(menuData) {
+    localStorage.setItem('menu_data', JSON.stringify(menuData));
+}
+
 function loadMenuManagement() {
     const container = document.getElementById('menu-management');
     if (!container) return;
     
-    container.innerHTML = '<p style="color: #666;">Funcionalidade de gerenciamento de cardápio em desenvolvimento...</p>';
-    // In a real implementation, this would load menu groups and items from the API
+    const menuData = getMenuData();
+    
+    if (menuData.groups.length === 0) {
+        container.innerHTML = '<p style="color: #666;">Nenhum grupo cadastrado ainda. Clique em "Adicionar Grupo" para criar um grupo de menu.</p>';
+        return;
+    }
+    
+    let html = '';
+    
+    menuData.groups.forEach(group => {
+        const groupItems = menuData.items.filter(item => item.groupId === group.id);
+        
+        html += `
+            <div class="menu-group">
+                <div class="menu-group-header">
+                    <div>
+                        <h3 style="color: #e8c13f; margin-bottom: 5px;">${group.name}</h3>
+                        ${group.description ? `<p style="color: #666; font-size: 0.9rem;">${group.description}</p>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="editGroup(${group.id})" style="padding: 8px 16px;">✏️ Editar</button>
+                        <button class="btn btn-danger" onclick="deleteGroup(${group.id})" style="padding: 8px 16px;">🗑️ Excluir</button>
+                    </div>
+                </div>
+                
+                ${groupItems.length > 0 ? `
+                    <div style="margin-top: 15px;">
+                        ${groupItems.map(item => `
+                            <div class="menu-item">
+                                <div class="menu-item-info">
+                                    <h4 style="color: #333; margin-bottom: 5px;">${item.name}</h4>
+                                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">${item.description || ''}</p>
+                                    <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${parseFloat(item.price).toFixed(2)}</p>
+                                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                                        ${item.deliveryEnabled ? '<span style="color: #28a745; font-size: 0.85rem;">🚚 Entrega</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">🚚 Sem Entrega</span>'}
+                                        ${item.available ? '<span style="color: #28a745; font-size: 0.85rem;">✅ Disponível</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">❌ Indisponível</span>'}
+                                    </div>
+                                </div>
+                                <div class="menu-item-actions">
+                                    <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;">✏️</button>
+                                    <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;">🗑️</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p style="color: #999; font-style: italic; margin-top: 10px;">Nenhum item neste grupo</p>'}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
 }
 
 function showAddGroupModal() {
-    alert('Funcionalidade de adicionar grupo será implementada em breve!');
+    const modal = document.getElementById('group-modal');
+    const modalTitle = document.getElementById('group-modal-title');
+    const form = document.getElementById('group-form');
+    
+    if (modal && modalTitle && form) {
+        modalTitle.textContent = 'Adicionar Grupo';
+        form.reset();
+        document.getElementById('group-id').value = '';
+        modal.style.display = 'block';
+    }
+}
+
+function closeGroupModal() {
+    const modal = document.getElementById('group-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function saveGroup(event) {
+    event.preventDefault();
+    
+    const groupId = document.getElementById('group-id')?.value;
+    const name = document.getElementById('group-name')?.value;
+    const description = document.getElementById('group-description')?.value;
+    
+    if (!name) {
+        alert('Por favor, informe o nome do grupo.');
+        return;
+    }
+    
+    const menuData = getMenuData();
+    
+    if (groupId) {
+        // Edit existing group
+        const index = menuData.groups.findIndex(g => g.id === parseInt(groupId));
+        if (index !== -1) {
+            menuData.groups[index] = {
+                ...menuData.groups[index],
+                name,
+                description
+            };
+        }
+    } else {
+        // Add new group
+        const newGroup = {
+            id: Date.now(),
+            name,
+            description
+        };
+        menuData.groups.push(newGroup);
+    }
+    
+    saveMenuData(menuData);
+    closeGroupModal();
+    loadMenuManagement();
+    alert('Grupo salvo com sucesso!');
+}
+
+function editGroup(groupId) {
+    const menuData = getMenuData();
+    const group = menuData.groups.find(g => g.id === groupId);
+    
+    if (!group) {
+        alert('Grupo não encontrado!');
+        return;
+    }
+    
+    const modal = document.getElementById('group-modal');
+    const modalTitle = document.getElementById('group-modal-title');
+    
+    if (modal && modalTitle) {
+        modalTitle.textContent = 'Editar Grupo';
+        document.getElementById('group-id').value = group.id;
+        document.getElementById('group-name').value = group.name;
+        document.getElementById('group-description').value = group.description || '';
+        modal.style.display = 'block';
+    }
+}
+
+function deleteGroup(groupId) {
+    const menuData = getMenuData();
+    const groupItems = menuData.items.filter(item => item.groupId === groupId);
+    
+    if (groupItems.length > 0) {
+        if (!confirm(`Este grupo possui ${groupItems.length} item(ns). Todos os itens serão excluídos. Tem certeza?`)) {
+            return;
+        }
+    } else {
+        if (!confirm('Tem certeza que deseja excluir este grupo?')) {
+            return;
+        }
+    }
+    
+    menuData.groups = menuData.groups.filter(g => g.id !== groupId);
+    menuData.items = menuData.items.filter(item => item.groupId !== groupId);
+    
+    saveMenuData(menuData);
+    loadMenuManagement();
+    alert('Grupo excluído com sucesso!');
 }
 
 function showAddItemModal() {
-    alert('Funcionalidade de adicionar item será implementada em breve!');
+    const menuData = getMenuData();
+    
+    if (menuData.groups.length === 0) {
+        alert('Por favor, crie um grupo primeiro antes de adicionar itens.');
+        return;
+    }
+    
+    const modal = document.getElementById('item-modal');
+    const modalTitle = document.getElementById('item-modal-title');
+    const form = document.getElementById('item-form');
+    const groupSelect = document.getElementById('item-group');
+    
+    if (modal && modalTitle && form && groupSelect) {
+        modalTitle.textContent = 'Adicionar Item';
+        form.reset();
+        document.getElementById('item-id').value = '';
+        document.getElementById('item-delivery').checked = true;
+        document.getElementById('item-available').checked = true;
+        
+        // Populate group select
+        groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
+        menuData.groups.forEach(group => {
+            groupSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
+        });
+        
+        modal.style.display = 'block';
+    }
+}
+
+function closeItemModal() {
+    const modal = document.getElementById('item-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function saveItem(event) {
+    event.preventDefault();
+    
+    const itemId = document.getElementById('item-id')?.value;
+    const groupId = parseInt(document.getElementById('item-group')?.value);
+    const name = document.getElementById('item-name')?.value;
+    const description = document.getElementById('item-description')?.value;
+    const price = parseFloat(document.getElementById('item-price')?.value);
+    const image = document.getElementById('item-image')?.value;
+    const deliveryEnabled = document.getElementById('item-delivery')?.checked || false;
+    const available = document.getElementById('item-available')?.checked || false;
+    
+    if (!groupId || !name || isNaN(price)) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+    
+    const menuData = getMenuData();
+    
+    if (itemId) {
+        // Edit existing item
+        const index = menuData.items.findIndex(i => i.id === parseInt(itemId));
+        if (index !== -1) {
+            menuData.items[index] = {
+                ...menuData.items[index],
+                groupId,
+                name,
+                description,
+                price,
+                image,
+                deliveryEnabled,
+                available
+            };
+        }
+    } else {
+        // Add new item
+        const newItem = {
+            id: Date.now(),
+            groupId,
+            name,
+            description,
+            price,
+            image,
+            deliveryEnabled,
+            available
+        };
+        menuData.items.push(newItem);
+    }
+    
+    saveMenuData(menuData);
+    closeItemModal();
+    loadMenuManagement();
+    alert('Item salvo com sucesso!');
+}
+
+function editItem(itemId) {
+    const menuData = getMenuData();
+    const item = menuData.items.find(i => i.id === itemId);
+    
+    if (!item) {
+        alert('Item não encontrado!');
+        return;
+    }
+    
+    const modal = document.getElementById('item-modal');
+    const modalTitle = document.getElementById('item-modal-title');
+    const groupSelect = document.getElementById('item-group');
+    
+    if (modal && modalTitle && groupSelect) {
+        modalTitle.textContent = 'Editar Item';
+        
+        // Populate group select
+        groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
+        menuData.groups.forEach(group => {
+            groupSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
+        });
+        
+        // Fill form
+        document.getElementById('item-id').value = item.id;
+        document.getElementById('item-group').value = item.groupId;
+        document.getElementById('item-name').value = item.name;
+        document.getElementById('item-description').value = item.description || '';
+        document.getElementById('item-price').value = item.price;
+        document.getElementById('item-image').value = item.image || '';
+        document.getElementById('item-delivery').checked = item.deliveryEnabled;
+        document.getElementById('item-available').checked = item.available;
+        
+        modal.style.display = 'block';
+    }
+}
+
+function deleteItem(itemId) {
+    if (!confirm('Tem certeza que deseja excluir este item?')) {
+        return;
+    }
+    
+    const menuData = getMenuData();
+    menuData.items = menuData.items.filter(i => i.id !== itemId);
+    
+    saveMenuData(menuData);
+    loadMenuManagement();
+    alert('Item excluído com sucesso!');
 }
 
 // ==========================================

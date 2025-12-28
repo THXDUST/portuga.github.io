@@ -163,7 +163,6 @@ nav {
     position: sticky;
     top: 0;
     z-index: 100;
-    position: relative;
 }
 
 nav ul {
@@ -648,7 +647,8 @@ nav ul li a:hover {
         padding: 0;
     }
     
-    nav ul.active {
+    nav ul.active,
+    nav ul.show {
         max-height: 500px;
         padding: 15px 0;
     }

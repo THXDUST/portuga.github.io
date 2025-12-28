@@ -336,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hamburgerBtn.addEventListener('click', function() {
             this.classList.toggle('active');
             navMenu.classList.toggle('active');
+            navMenu.classList.toggle('show');
         });
         
         // Close menu when clicking on a link
@@ -344,7 +345,20 @@ document.addEventListener('DOMContentLoaded', function() {
             link.addEventListener('click', function() {
                 hamburgerBtn.classList.remove('active');
                 navMenu.classList.remove('active');
+                navMenu.classList.remove('show');
             });
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const isClickInsideNav = navMenu.contains(event.target);
+            const isClickOnHamburger = hamburgerBtn.contains(event.target);
+            
+            if (!isClickInsideNav && !isClickOnHamburger && navMenu.classList.contains('show')) {
+                navMenu.classList.remove('show');
+                navMenu.classList.remove('active');
+                hamburgerBtn.classList.remove('active');
+            }
         });
     }
     
