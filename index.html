@@ -15,7 +15,12 @@
     </header>
 
     <nav>
-        <ul>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul id="nav-menu">
             <li><a href="index.html">Início</a></li>
             <li><a href="menu.html">Cardápio</a></li>
             <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
@@ -73,6 +78,16 @@
             </p>
         </section>
     </main>
+
+    <!-- Notes Pop-up Modal -->
+    <div id="notes-popup" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" onclick="closeNotesPopup()">&times;</span>
+            <div id="notes-popup-content">
+                <!-- Notes will be loaded here -->
+            </div>
+        </div>
+    </div>
 
     <footer>
         <div class="container">

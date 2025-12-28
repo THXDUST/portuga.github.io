@@ -49,6 +49,7 @@
                 <li><a href="#" class="nav-tab active" data-tab="dashboard">📊 Dashboard</a></li>
                 <li><a href="#" class="nav-tab" data-tab="orders">📦 Pedidos (Kanban)</a></li>
                 <li><a href="#" class="nav-tab" data-tab="menu">🍕 Cardápio</a></li>
+                <li><a href="#" class="nav-tab" data-tab="notes">📝 Notas</a></li>
                 <li><a href="#" class="nav-tab" data-tab="reports">📈 Relatórios</a></li>
                 <li><a href="#" class="nav-tab" data-tab="resumes">👔 Currículos</a></li>
                 <li><a href="#" class="nav-tab" data-tab="ouvidoria">💬 Ouvidoria</a></li>
@@ -190,6 +191,20 @@
                 </div>
             </div>
             <!-- End Menu Tab -->
+
+            <!-- Notes Tab -->
+            <div id="tab-notes" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Notas/Comunicados</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showAddNoteModal()">➕ Adicionar Nova Nota</button>
+                </div>
+                
+                <div id="notes-list">
+                    <p style="color: #666;">Carregando notas...</p>
+                </div>
+            </div>
+            <!-- End Notes Tab -->
 
             <!-- Reports Tab -->
             <div id="tab-reports" class="admin-tab" style="display: none;">
@@ -344,6 +359,40 @@
                 <p>Painel Administrativo</p>
             </div>
         </footer>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="note-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeNoteModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;" id="note-modal-title">Adicionar Nova Nota</h2>
+            
+            <form id="note-form" onsubmit="saveNote(event)">
+                <input type="hidden" id="note-id">
+                
+                <div class="form-group">
+                    <label for="note-title">Título:</label>
+                    <input type="text" id="note-title" required maxlength="100" placeholder="Ex: Promoção Especial">
+                </div>
+                
+                <div class="form-group">
+                    <label for="note-content">Mensagem:</label>
+                    <textarea id="note-content" required rows="5" placeholder="Conteúdo da nota..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="note-active" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span>Nota Ativa (exibir no site)</span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeNoteModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="scripts.js"></script>

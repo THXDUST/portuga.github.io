@@ -67,6 +67,9 @@ function loadTabContent(tabName) {
         case 'menu':
             loadMenuManagement();
             break;
+        case 'notes':
+            loadNotes();
+            break;
         case 'reports':
             initReportFilters();
             break;
@@ -745,4 +748,187 @@ function saveSettings() {
     // In a real implementation, this would save to the API
     console.log('Saving settings:', settings);
     alert('Configurações salvas com sucesso!');
+}
+
+// ==========================================
+// NOTES MANAGEMENT FUNCTIONS
+// ==========================================
+
+function getNotes() {
+    const notes = localStorage.getItem('admin_notes');
+    return notes ? JSON.parse(notes) : [];
+}
+
+function saveNotesToStorage(notes) {
+    localStorage.setItem('admin_notes', JSON.stringify(notes));
+}
+
+function loadNotes() {
+    const container = document.getElementById('notes-list');
+    if (!container) return;
+    
+    const notes = getNotes();
+    
+    if (notes.length === 0) {
+        container.innerHTML = '<p style="color: #666;">Nenhuma nota cadastrada ainda. Clique em "Adicionar Nova Nota" para criar uma.</p>';
+        return;
+    }
+    
+    let html = '';
+    
+    notes.forEach(note => {
+        const date = new Date(note.createdAt);
+        const formattedDate = date.toLocaleString('pt-BR');
+        
+        html += `
+            <div class="note-card" style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <h3 style="color: #e8c13f; margin-bottom: 5px;">${note.title}</h3>
+                        <small style="color: #666;">Criado em: ${formattedDate}</small>
+                    </div>
+                    <div>
+                        <span class="note-status ${note.active ? 'status-ativo' : 'status-inativo'}" 
+                              style="padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; 
+                                     ${note.active ? 'background: #d4edda; color: #155724;' : 'background: #f8d7da; color: #721c24;'}">
+                            ${note.active ? '✓ Ativa' : '✗ Inativa'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; color: #333;">
+                    ${note.content.replace(/\n/g, '<br>')}
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" onclick="editNote(${note.id})" style="flex: 1;">✏️ Editar</button>
+                    <button class="btn ${note.active ? 'btn-secondary' : ''}" 
+                            onclick="toggleNoteStatus(${note.id})" style="flex: 1;">
+                        ${note.active ? '🔕 Desativar' : '🔔 Ativar'}
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteNote(${note.id})" style="flex: 1;">🗑️ Excluir</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function showAddNoteModal() {
+    const modal = document.getElementById('note-modal');
+    const modalTitle = document.getElementById('note-modal-title');
+    const form = document.getElementById('note-form');
+    
+    if (modal && modalTitle && form) {
+        modalTitle.textContent = 'Adicionar Nova Nota';
+        form.reset();
+        document.getElementById('note-id').value = '';
+        document.getElementById('note-active').checked = true;
+        modal.style.display = 'block';
+    }
+}
+
+function closeNoteModal() {
+    const modal = document.getElementById('note-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function saveNote(event) {
+    event.preventDefault();
+    
+    const noteId = document.getElementById('note-id')?.value;
+    const title = document.getElementById('note-title')?.value;
+    const content = document.getElementById('note-content')?.value;
+    const active = document.getElementById('note-active')?.checked || false;
+    
+    if (!title || !content) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+    
+    const notes = getNotes();
+    
+    if (noteId) {
+        // Edit existing note
+        const index = notes.findIndex(n => n.id === parseInt(noteId));
+        if (index !== -1) {
+            notes[index] = {
+                ...notes[index],
+                title,
+                content,
+                active,
+                updatedAt: new Date().toISOString()
+            };
+        }
+    } else {
+        // Add new note
+        const newNote = {
+            id: Date.now(),
+            title,
+            content,
+            active,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        notes.push(newNote);
+    }
+    
+    saveNotesToStorage(notes);
+    closeNoteModal();
+    loadNotes();
+    alert('Nota salva com sucesso!');
+}
+
+function editNote(noteId) {
+    const notes = getNotes();
+    const note = notes.find(n => n.id === noteId);
+    
+    if (!note) {
+        alert('Nota não encontrada!');
+        return;
+    }
+    
+    const modal = document.getElementById('note-modal');
+    const modalTitle = document.getElementById('note-modal-title');
+    
+    if (modal && modalTitle) {
+        modalTitle.textContent = 'Editar Nota';
+        document.getElementById('note-id').value = note.id;
+        document.getElementById('note-title').value = note.title;
+        document.getElementById('note-content').value = note.content;
+        document.getElementById('note-active').checked = note.active;
+        modal.style.display = 'block';
+    }
+}
+
+function toggleNoteStatus(noteId) {
+    const notes = getNotes();
+    const note = notes.find(n => n.id === noteId);
+    
+    if (!note) {
+        alert('Nota não encontrada!');
+        return;
+    }
+    
+    note.active = !note.active;
+    note.updatedAt = new Date().toISOString();
+    
+    saveNotesToStorage(notes);
+    loadNotes();
+}
+
+function deleteNote(noteId) {
+    if (!confirm('Tem certeza que deseja excluir esta nota?')) {
+        return;
+    }
+    
+    let notes = getNotes();
+    notes = notes.filter(n => n.id !== noteId);
+    
+    saveNotesToStorage(notes);
+    loadNotes();
+    alert('Nota excluída com sucesso!');
 }
