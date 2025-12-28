@@ -135,7 +135,7 @@ async function calculateDistanceFromAddress() {
     const btn = document.getElementById('calculate-distance-btn');
     
     // Validate required fields
-    if (!street || !number || !neighborhood || !city) {
+    if (!street.trim() || !number.trim() || !neighborhood.trim() || !city.trim()) {
         if (deliveryError) {
             deliveryError.textContent = 'Por favor, preencha todos os campos obrigatórios do endereço.';
             deliveryError.style.display = 'block';
@@ -214,11 +214,14 @@ async function geocodeAddress(address) {
     try {
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'Portuga Restaurant App'
+                'User-Agent': 'PortugaRestaurant/1.0 (https://thxdust.github.io/test-portuga.github.io/)'
             }
         });
         
         if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('Muitas requisições. Por favor, tente novamente em alguns instantes.');
+            }
             throw new Error('Falha na requisição de geolocalização');
         }
         
