@@ -74,42 +74,199 @@ function clearCart() {
 }
 
 // Delivery fee calculation
+const RESTAURANT_ADDRESS = "Av. Beira Mar, 13050 - Balneário Britânia, Ilha Comprida - SP, 11925-000";
+let calculatedDistance = 0;
+
 function toggleDeliveryFields() {
     const checkbox = document.getElementById('for-delivery');
     const fields = document.getElementById('delivery-fields');
+    const paymentOptions = document.getElementById('payment-options');
     
     if (checkbox && fields) {
         if (checkbox.checked) {
             fields.style.display = 'block';
+            if (paymentOptions) paymentOptions.style.display = 'block';
         } else {
             fields.style.display = 'none';
+            if (paymentOptions) paymentOptions.style.display = 'none';
             // Reset delivery fee
             const deliveryFeeRow = document.getElementById('delivery-fee-row');
             const deliveryError = document.getElementById('delivery-error');
+            const distanceResult = document.getElementById('distance-result');
             if (deliveryFeeRow) deliveryFeeRow.style.display = 'none';
             if (deliveryError) deliveryError.style.display = 'none';
+            if (distanceResult) distanceResult.style.display = 'none';
+            calculatedDistance = 0;
             renderCart();
         }
     }
 }
 
-function calculateDeliveryFee() {
-    const distanceInput = document.getElementById('delivery-distance');
+function showManualDistanceInput() {
+    const manualInput = document.getElementById('manual-distance-input');
+    if (manualInput) {
+        manualInput.style.display = 'block';
+    }
+}
+
+function toggleChangeField() {
+    const paymentMethod = document.querySelector('input[name="payment-method"]:checked');
+    const changeField = document.getElementById('change-amount-field');
+    
+    if (changeField && paymentMethod) {
+        if (paymentMethod.value === 'cash-with-change') {
+            changeField.style.display = 'block';
+        } else {
+            changeField.style.display = 'none';
+        }
+    }
+}
+
+// Geolocation API integration using Nominatim (OpenStreetMap)
+async function calculateDistanceFromAddress() {
+    const street = document.getElementById('delivery-street')?.value || '';
+    const number = document.getElementById('delivery-number')?.value || '';
+    const neighborhood = document.getElementById('delivery-neighborhood')?.value || '';
+    const city = document.getElementById('delivery-city')?.value || '';
+    
+    const deliveryError = document.getElementById('delivery-error');
+    const distanceResult = document.getElementById('distance-result');
+    const calculatedDistanceEl = document.getElementById('calculated-distance');
+    const btn = document.getElementById('calculate-distance-btn');
+    
+    // Validate required fields
+    if (!street.trim() || !number.trim() || !neighborhood.trim() || !city.trim()) {
+        if (deliveryError) {
+            deliveryError.textContent = 'Por favor, preencha todos os campos obrigatórios do endereço.';
+            deliveryError.style.display = 'block';
+        }
+        return;
+    }
+    
+    // Clear previous errors
+    if (deliveryError) deliveryError.style.display = 'none';
+    
+    // Show loading state
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Calculando...';
+    }
+    
+    try {
+        // Build full address
+        const fullAddress = `${street}, ${number}, ${neighborhood}, ${city}, SP, Brazil`;
+        
+        // Geocode customer address
+        const customerCoords = await geocodeAddress(fullAddress);
+        
+        if (!customerCoords) {
+            throw new Error('Não foi possível localizar o endereço informado.');
+        }
+        
+        // Geocode restaurant address
+        const restaurantCoords = await geocodeAddress(RESTAURANT_ADDRESS);
+        
+        if (!restaurantCoords) {
+            throw new Error('Erro ao localizar endereço do restaurante.');
+        }
+        
+        // Calculate distance using Haversine formula
+        const distance = calculateHaversineDistance(
+            restaurantCoords.lat,
+            restaurantCoords.lon,
+            customerCoords.lat,
+            customerCoords.lon
+        );
+        
+        calculatedDistance = distance;
+        
+        // Display result
+        if (calculatedDistanceEl) {
+            calculatedDistanceEl.textContent = distance.toFixed(1);
+        }
+        if (distanceResult) {
+            distanceResult.style.display = 'block';
+        }
+        
+        // Calculate and display delivery fee
+        calculateDeliveryFeeFromDistance(distance);
+        
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        if (deliveryError) {
+            deliveryError.textContent = `Erro ao calcular distância: ${error.message}. Use o campo manual abaixo.`;
+            deliveryError.style.display = 'block';
+        }
+        showManualDistanceInput();
+    } finally {
+        // Reset button
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '📍 Calcular Distância e Taxa';
+        }
+    }
+}
+
+// Geocode address using Nominatim API
+async function geocodeAddress(address) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+    
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'PortugaRestaurant/1.0 (https://thxdust.github.io/test-portuga.github.io/)'
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('Muitas requisições. Por favor, tente novamente em alguns instantes.');
+            }
+            throw new Error('Falha na requisição de geolocalização');
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            return {
+                lat: parseFloat(data[0].lat),
+                lon: parseFloat(data[0].lon)
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Geocoding API error:', error);
+        throw error;
+    }
+}
+
+// Calculate distance using Haversine formula
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    
+    return distance;
+}
+
+function toRad(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+function calculateDeliveryFeeFromDistance(distance) {
     const deliveryFeeRow = document.getElementById('delivery-fee-row');
     const deliveryFeeEl = document.getElementById('delivery-fee');
     const deliveryError = document.getElementById('delivery-error');
-    const checkbox = document.getElementById('for-delivery');
     
-    if (!distanceInput || !deliveryFeeRow || !deliveryFeeEl || !checkbox) return;
-    
-    const distance = parseFloat(distanceInput.value);
-    
-    if (!checkbox.checked || !distance || distance <= 0) {
-        deliveryFeeRow.style.display = 'none';
-        if (deliveryError) deliveryError.style.display = 'none';
-        renderCart();
-        return;
-    }
+    if (!deliveryFeeRow || !deliveryFeeEl) return;
     
     let fee = 0;
     let error = '';
@@ -143,13 +300,35 @@ function calculateDeliveryFee() {
     renderCart();
 }
 
-function getDeliveryFee() {
+function calculateDeliveryFee() {
+    const distanceInput = document.getElementById('manual-distance');
+    const deliveryFeeRow = document.getElementById('delivery-fee-row');
+    const deliveryFeeEl = document.getElementById('delivery-fee');
+    const deliveryError = document.getElementById('delivery-error');
     const checkbox = document.getElementById('for-delivery');
-    const distanceInput = document.getElementById('delivery-distance');
     
-    if (!checkbox || !checkbox.checked || !distanceInput) return 0;
+    if (!distanceInput || !deliveryFeeRow || !deliveryFeeEl || !checkbox) return;
     
     const distance = parseFloat(distanceInput.value);
+    
+    if (!checkbox.checked || !distance || distance <= 0) {
+        deliveryFeeRow.style.display = 'none';
+        if (deliveryError) deliveryError.style.display = 'none';
+        renderCart();
+        return;
+    }
+    
+    calculatedDistance = distance;
+    calculateDeliveryFeeFromDistance(distance);
+}
+
+function getDeliveryFee() {
+    const checkbox = document.getElementById('for-delivery');
+    
+    if (!checkbox || !checkbox.checked) return 0;
+    
+    // Use calculated distance from API or manual input
+    const distance = calculatedDistance;
     
     if (!distance || distance <= 0) return 0;
     
@@ -228,28 +407,72 @@ function finalizeOrder() {
     }
     
     const forDelivery = document.getElementById('for-delivery')?.checked || false;
-    const deliveryDistance = document.getElementById('delivery-distance')?.value || '';
-    const deliveryAddress = document.getElementById('delivery-address')?.value || '';
     const deliveryFee = getDeliveryFee();
     
+    // Get pickup/delivery time
+    const pickupTime = document.getElementById('pickup-time')?.value || '';
+    if (!pickupTime) {
+        alert('Por favor, informe o horário de retirada/entrega.');
+        return;
+    }
+    
+    // Validate pickup time (11:00 - 23:00)
+    const [hours, minutes] = pickupTime.split(':').map(Number);
+    if (hours < 11 || hours >= 23) {
+        alert('Horário fora do período de funcionamento (11:00 - 23:00).');
+        return;
+    }
+    
     // Validate delivery info if delivery is checked
+    let deliveryAddress = '';
     if (forDelivery) {
-        if (!deliveryDistance || parseFloat(deliveryDistance) <= 0) {
-            alert('Por favor, informe a distância para entrega.');
+        const street = document.getElementById('delivery-street')?.value || '';
+        const number = document.getElementById('delivery-number')?.value || '';
+        const neighborhood = document.getElementById('delivery-neighborhood')?.value || '';
+        const city = document.getElementById('delivery-city')?.value || '';
+        const complement = document.getElementById('delivery-complement')?.value || '';
+        
+        if (!street || !number || !neighborhood || !city) {
+            alert('Por favor, preencha todos os campos obrigatórios do endereço.');
             return;
         }
-        if (parseFloat(deliveryDistance) > 18) {
+        
+        if (!calculatedDistance || calculatedDistance <= 0) {
+            alert('Por favor, calcule a distância antes de finalizar o pedido.');
+            return;
+        }
+        
+        if (calculatedDistance > 18) {
             alert('Desculpe, não realizamos entregas para distâncias acima de 18 km.');
             return;
         }
-        if (!deliveryAddress || deliveryAddress.trim() === '') {
-            alert('Por favor, informe o endereço de entrega.');
+        
+        // Build full address
+        deliveryAddress = `${street}, ${number} - ${neighborhood}, ${city}`;
+        if (complement) {
+            deliveryAddress += ` (${complement})`;
+        }
+        
+        // Get payment method
+        const paymentMethod = document.querySelector('input[name="payment-method"]:checked');
+        if (!paymentMethod) {
+            alert('Por favor, selecione a forma de pagamento.');
             return;
+        }
+        
+        // Validate change amount if needed
+        if (paymentMethod.value === 'cash-with-change') {
+            const changeAmount = document.getElementById('change-amount')?.value || '';
+            if (!changeAmount || parseFloat(changeAmount) <= 0) {
+                alert('Por favor, informe o valor para o troco.');
+                return;
+            }
         }
     }
     
+    // Build WhatsApp message
     let message = '*🍽️🍕 Novo Pedido - Restaurante Portuga*\n\n';
-    message += '*Itens do Pedido:*\n';
+    message += '*📋 Itens do Pedido:*\n';
     
     let subtotal = 0;
     cart.forEach((item, index) => {
@@ -261,29 +484,59 @@ function finalizeOrder() {
         message += `   Subtotal: R$ ${itemTotal.toFixed(2)}\n\n`;
     });
     
-    message += `*Subtotal: R$ ${subtotal.toFixed(2)}*\n\n`;
+    message += '*💵 Valores:*\n';
+    message += `Subtotal: R$ ${subtotal.toFixed(2)}\n`;
     
     // Add delivery info if applicable
     if (forDelivery && deliveryFee > 0) {
-        message += '*🚗 Informações de Entrega:*\n';
-        message += `Distância: ${deliveryDistance} km\n`;
-        message += `Endereço: ${deliveryAddress}\n`;
-        message += `Taxa de Entrega: R$ ${deliveryFee.toFixed(2)}\n\n`;
+        message += `Taxa de Entrega: R$ ${deliveryFee.toFixed(2)} (${calculatedDistance.toFixed(1)} km)\n`;
     }
     
     const total = subtotal + deliveryFee;
-    message += `*💰 Total do Pedido: R$ ${total.toFixed(2)}*\n\n`;
+    message += `*Total: R$ ${total.toFixed(2)}*\n\n`;
     
-    if (!forDelivery) {
-        message += '_Retirada no local_\n';
+    // Add delivery address
+    if (forDelivery) {
+        message += '*📍 Endereço de Entrega:*\n';
+        message += `${deliveryAddress}\n`;
+        message += `Distância: ${calculatedDistance.toFixed(1)} km\n\n`;
+    } else {
+        message += '*📍 Tipo:*\n';
+        message += 'Retirada no local\n\n';
     }
+    
+    // Add pickup time
+    message += '*⏰ Horário de Retirada/Entrega:*\n';
+    message += `${pickupTime}\n\n`;
+    
+    // Add payment method (only for delivery)
+    if (forDelivery) {
+        const paymentMethod = document.querySelector('input[name="payment-method"]:checked');
+        message += '*💳 Forma de Pagamento:*\n';
+        
+        if (paymentMethod.value === 'card') {
+            message += 'Cartão (Maquininha)\n\n';
+        } else if (paymentMethod.value === 'cash-with-change') {
+            const changeAmount = document.getElementById('change-amount')?.value || '';
+            message += `Dinheiro - Troco para R$ ${parseFloat(changeAmount).toFixed(2)}\n\n`;
+        } else {
+            message += 'Dinheiro - Não preciso de troco\n\n';
+        }
+    }
+    
+    message += '---\n';
     message += '_Por favor, confirme o pedido!_';
     
+    // Save order with all info
     saveOrder(cart, total, {
         forDelivery,
-        deliveryDistance,
+        deliveryDistance: calculatedDistance,
         deliveryAddress,
-        deliveryFee
+        deliveryFee,
+        pickupTime,
+        paymentMethod: forDelivery ? document.querySelector('input[name="payment-method"]:checked')?.value : null,
+        changeAmount: forDelivery && document.querySelector('input[name="payment-method"]:checked')?.value === 'cash-with-change' 
+            ? document.getElementById('change-amount')?.value : null
     });
     
     const encodedMessage = encodeURIComponent(message);
