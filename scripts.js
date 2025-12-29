@@ -81,14 +81,27 @@ function toggleDeliveryFields() {
     const checkbox = document.getElementById('for-delivery');
     const fields = document.getElementById('delivery-fields');
     const paymentOptions = document.getElementById('payment-options');
+    const tableNumberField = document.getElementById('table-number-field');
     
     if (checkbox && fields) {
         if (checkbox.checked) {
             fields.style.display = 'block';
             if (paymentOptions) paymentOptions.style.display = 'block';
+            if (tableNumberField) tableNumberField.style.display = 'none';
         } else {
             fields.style.display = 'none';
             if (paymentOptions) paymentOptions.style.display = 'none';
+            
+            // Show table number field if user is logged in and not for delivery
+            // and there's no mesa parameter
+            const mesaNumber = sessionStorage.getItem('mesaNumber');
+            if (tableNumberField && !mesaNumber && window.isUserLoggedIn) {
+                const isLoggedIn = isUserLoggedIn();
+                if (isLoggedIn) {
+                    tableNumberField.style.display = 'block';
+                }
+            }
+            
             // Reset delivery fee
             const deliveryFeeRow = document.getElementById('delivery-fee-row');
             const deliveryError = document.getElementById('delivery-error');
@@ -406,8 +419,49 @@ function finalizeOrder() {
         return;
     }
     
+    // Check for mesa parameter
+    const mesaNumber = sessionStorage.getItem('mesaNumber');
+    
+    // Check if user is logged in (unless ordering with mesa parameter)
+    if (!mesaNumber && window.isUserLoggedIn && !isUserLoggedIn()) {
+        // User is not logged in and not ordering from a table
+        const currentUrl = window.location.pathname + window.location.search;
+        const redirectUrl = `/login.html?redirect=${encodeURIComponent(currentUrl)}`;
+        
+        if (confirm('Você precisa estar logado para fazer um pedido. Deseja fazer login agora?')) {
+            window.location.href = redirectUrl;
+        }
+        return;
+    }
+    
     const forDelivery = document.getElementById('for-delivery')?.checked || false;
     const deliveryFee = getDeliveryFee();
+    let tableNumber = null;
+    let userId = null;
+    
+    // Get user ID if logged in
+    if (window.getCurrentUser) {
+        const user = getCurrentUser();
+        if (user) {
+            userId = user.id;
+        }
+    }
+    
+    // Handle table number
+    if (mesaNumber) {
+        // Using mesa parameter from URL
+        tableNumber = parseInt(mesaNumber);
+    } else if (!forDelivery) {
+        // For local orders when logged in, get table number from field
+        const tableNumberInput = document.getElementById('table-number');
+        if (tableNumberInput && tableNumberInput.value) {
+            tableNumber = parseInt(tableNumberInput.value);
+            if (!tableNumber || tableNumber <= 0) {
+                alert('Por favor, informe um número de mesa válido.');
+                return;
+            }
+        }
+    }
     
     // Get pickup/delivery time
     const pickupTime = document.getElementById('pickup-time')?.value || '';
@@ -472,6 +526,12 @@ function finalizeOrder() {
     
     // Build WhatsApp message
     let message = '*🍽️🍕 Novo Pedido - Restaurante Portuga*\n\n';
+    
+    // Add table number if applicable
+    if (tableNumber) {
+        message += `*🪑 Mesa: ${tableNumber}*\n\n`;
+    }
+    
     message += '*📋 Itens do Pedido:*\n';
     
     let subtotal = 0;
@@ -495,7 +555,7 @@ function finalizeOrder() {
     const total = subtotal + deliveryFee;
     message += `*Total: R$ ${total.toFixed(2)}*\n\n`;
     
-    // Add delivery address
+    // Add delivery address or pickup info
     if (forDelivery) {
         message += '*📍 Endereço de Entrega:*\n';
         message += `${deliveryAddress}\n`;
@@ -536,7 +596,9 @@ function finalizeOrder() {
         pickupTime,
         paymentMethod: forDelivery ? document.querySelector('input[name="payment-method"]:checked')?.value : null,
         changeAmount: forDelivery && document.querySelector('input[name="payment-method"]:checked')?.value === 'cash-with-change' 
-            ? document.getElementById('change-amount')?.value : null
+            ? document.getElementById('change-amount')?.value : null,
+        tableNumber: tableNumber,
+        userId: userId
     });
     
     const encodedMessage = encodeURIComponent(message);

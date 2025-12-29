@@ -499,3 +499,189 @@ async function logout() {
 
 // Export logout function for use in other scripts
 window.logout = logout;
+
+/**
+ * Check if user is currently logged in
+ * @returns {boolean} True if user is logged in
+ */
+function isUserLoggedIn() {
+    const user = localStorage.getItem('user');
+    const sessionToken = localStorage.getItem('session_token');
+    return !!(user && sessionToken);
+}
+
+/**
+ * Get current logged in user data from localStorage
+ * @returns {object|null} User data or null if not logged in
+ */
+function getCurrentUser() {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    try {
+        return JSON.parse(userStr);
+    } catch (error) {
+        console.error('Error parsing user data:', error);
+        return null;
+    }
+}
+
+/**
+ * Fetch fresh user info from server including permissions
+ * @returns {Promise<object|null>} User data with permissions or null
+ */
+async function fetchUserInfo() {
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/get-user-info.php`, {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            // Update localStorage with fresh data
+            localStorage.setItem('userInfo', JSON.stringify(data.data));
+            return data.data;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        return null;
+    }
+}
+
+/**
+ * Check if user has a specific permission
+ * @param {string} permissionName Permission name to check
+ * @returns {boolean} True if user has permission
+ */
+function hasPermission(permissionName) {
+    const userInfoStr = localStorage.getItem('userInfo');
+    if (!userInfoStr) return false;
+    
+    try {
+        const userInfo = JSON.parse(userInfoStr);
+        return Boolean(userInfo.permissionMap && userInfo.permissionMap[permissionName]);
+    } catch (error) {
+        console.error('Error checking permission:', error);
+        return false;
+    }
+}
+
+/**
+ * Check if user has admin access
+ * @returns {boolean} True if user has admin panel access
+ */
+function hasAdminAccess() {
+    const userInfoStr = localStorage.getItem('userInfo');
+    if (!userInfoStr) return false;
+    
+    try {
+        const userInfo = JSON.parse(userInfoStr);
+        return Boolean(userInfo.hasAdminAccess);
+    } catch (error) {
+        console.error('Error checking admin access:', error);
+        return false;
+    }
+}
+
+/**
+ * Update navigation UI based on login status
+ */
+async function updateNavigationUI() {
+    // Check if user is logged in
+    if (!isUserLoggedIn()) {
+        // Show login button, hide logout/profile
+        updateNavMenuForGuest();
+        return;
+    }
+    
+    // Fetch fresh user info
+    const userInfo = await fetchUserInfo();
+    
+    if (!userInfo) {
+        // Session expired or error, treat as guest
+        localStorage.removeItem('user');
+        localStorage.removeItem('session_token');
+        localStorage.removeItem('userInfo');
+        updateNavMenuForGuest();
+        return;
+    }
+    
+    // User is logged in, update UI
+    updateNavMenuForUser(userInfo);
+}
+
+/**
+ * Update navigation menu for guest users
+ */
+function updateNavMenuForGuest() {
+    const navMenus = document.querySelectorAll('#nav-menu, #admin-nav');
+    
+    navMenus.forEach(navMenu => {
+        // Remove any existing user-specific items
+        const existingUserItems = navMenu.querySelectorAll('.user-menu-item, .admin-menu-item');
+        existingUserItems.forEach(item => item.remove());
+        
+        // Ensure login link exists
+        const loginLink = navMenu.querySelector('a[href="login.html"]');
+        if (!loginLink) {
+            const li = document.createElement('li');
+            li.innerHTML = '<a href="login.html">Login</a>';
+            navMenu.appendChild(li);
+        }
+    });
+}
+
+/**
+ * Update navigation menu for logged in users
+ */
+function updateNavMenuForUser(userInfo) {
+    const navMenus = document.querySelectorAll('#nav-menu, #admin-nav');
+    
+    navMenus.forEach(navMenu => {
+        // Remove login link
+        const loginLink = navMenu.querySelector('a[href="login.html"]');
+        if (loginLink) {
+            loginLink.parentElement.remove();
+        }
+        
+        // Remove any existing user items to avoid duplicates
+        const existingUserItems = navMenu.querySelectorAll('.user-menu-item, .admin-menu-item');
+        existingUserItems.forEach(item => item.remove());
+        
+        // Add user profile/logout button
+        const userLi = document.createElement('li');
+        userLi.className = 'user-menu-item';
+        userLi.innerHTML = `
+            <span style="color: #e8c13f; margin-right: 10px;">👤 ${userInfo.full_name}</span>
+            <button onclick="logout()" style="background: transparent; border: 1px solid #e8c13f; color: #e8c13f; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Sair</button>
+        `;
+        navMenu.appendChild(userLi);
+        
+        // Add admin link if user has admin access
+        if (userInfo.hasAdminAccess) {
+            // Check if admin link already exists (if not commented out)
+            const existingAdminLink = navMenu.querySelector('a[href="admin.html"]');
+            if (!existingAdminLink) {
+                const adminLi = document.createElement('li');
+                adminLi.className = 'admin-menu-item';
+                adminLi.innerHTML = '<a href="admin.html">Admin</a>';
+                // Insert before user profile item
+                navMenu.insertBefore(adminLi, userLi);
+            }
+        } else {
+            // Remove admin link if user doesn't have access
+            const adminLinks = navMenu.querySelectorAll('a[href="admin.html"]');
+            adminLinks.forEach(link => link.parentElement.remove());
+        }
+    });
+}
+
+// Export functions for global use
+window.isUserLoggedIn = isUserLoggedIn;
+window.getCurrentUser = getCurrentUser;
+window.fetchUserInfo = fetchUserInfo;
+window.hasPermission = hasPermission;
+window.hasAdminAccess = hasAdminAccess;
+window.updateNavigationUI = updateNavigationUI;

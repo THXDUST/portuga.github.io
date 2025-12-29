@@ -57,6 +57,16 @@
                         <span style="font-weight: 600; color: #333;">Para Viagem (Entrega)</span>
                     </label>
                     
+                    <!-- Table Number Field (for local orders when logged in) -->
+                    <div id="table-number-field" style="display: none; margin-top: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">🪑 Número da Mesa *</label>
+                        <input type="number" id="table-number" placeholder="Ex: 5" min="1" max="100" 
+                               style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Informe o número da mesa para pedido no local
+                        </small>
+                    </div>
+                    
                     <div id="delivery-fields" style="display: none;">
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Rua *</label>
@@ -181,7 +191,42 @@
     </footer>
 
     <script src="scripts.js"></script>
-    <script>        document.addEventListener('DOMContentLoaded', function() {
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Update navigation UI
+            await updateNavigationUI();
+            
+            // Check for mesa parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const mesaNumber = urlParams.get('mesa');
+            
+            if (mesaNumber) {
+                // Store mesa number for use in order
+                sessionStorage.setItem('mesaNumber', mesaNumber);
+                
+                // Show banner for mesa order
+                const container = document.querySelector('.cart-layout');
+                if (container) {
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'background: #e8c13f; color: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;';
+                    banner.innerHTML = `🪑 Pedido para Mesa ${mesaNumber}`;
+                    container.insertBefore(banner, container.firstChild);
+                }
+                
+                // Disable delivery checkbox
+                const deliveryCheckbox = document.getElementById('for-delivery');
+                if (deliveryCheckbox) {
+                    deliveryCheckbox.checked = false;
+                    deliveryCheckbox.disabled = true;
+                    const label = deliveryCheckbox.parentElement;
+                    if (label) {
+                        label.style.opacity = '0.5';
+                        label.title = 'Entrega não disponível para pedidos de mesa';
+                    }
+                }
+            }
+            
             renderCart();
             document.getElementById('finalize-order-btn').addEventListener('click', finalizeOrder);
 

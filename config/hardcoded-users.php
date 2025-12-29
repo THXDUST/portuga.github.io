@@ -22,8 +22,10 @@ function getHardcodedUsers() {
             'full_name' => 'Cliente Teste',
             'user_type' => 'customer',
             'role' => 'Cliente',
+            'role_id' => null,  // Customers don't need role assignment
             'email_verified' => true,
             'is_active' => true,
+            'is_hardcoded' => true,
             'id' => -1  // Negative ID convention: -1 for customer
         ],
         
@@ -35,8 +37,10 @@ function getHardcodedUsers() {
             'full_name' => 'Garçom Teste',
             'user_type' => 'waiter',
             'role' => 'Atendente',
+            'role_id' => 3,  // Atendente role ID
             'email_verified' => true,
             'is_active' => true,
+            'is_hardcoded' => true,
             'id' => -2  // Negative ID convention: -2 for waiter
         ],
         
@@ -48,8 +52,10 @@ function getHardcodedUsers() {
             'full_name' => 'Administrador Teste',
             'user_type' => 'admin',
             'role' => 'Admin',
+            'role_id' => 1,  // Admin role ID
             'email_verified' => true,
             'is_active' => true,
+            'is_hardcoded' => true,
             'id' => -3  // Negative ID convention: -3 for admin
         ]
     ];

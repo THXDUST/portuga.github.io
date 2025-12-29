@@ -27,6 +27,12 @@ function initTabNavigation() {
 }
 
 function switchTab(tabName) {
+    // Check if user has permission to access this tab
+    if (window.canAccessTab && !canAccessTab(tabName)) {
+        showAccessDenied(tabName);
+        // Still switch to the tab to show the access denied message
+    }
+    
     // Hide all tabs
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.style.display = 'none';
@@ -51,9 +57,11 @@ function switchTab(tabName) {
         activeLink.classList.add('active');
     }
     
-    // Load tab content
+    // Load tab content only if user has permission
     currentTab = tabName;
-    loadTabContent(tabName);
+    if (!window.canAccessTab || canAccessTab(tabName)) {
+        loadTabContent(tabName);
+    }
 }
 
 function loadTabContent(tabName) {
@@ -78,6 +86,15 @@ function loadTabContent(tabName) {
             break;
         case 'ouvidoria':
             loadOuvidoriaMessages();
+            break;
+        case 'permissions':
+            loadPermissions();
+            break;
+        case 'roles':
+            loadRoles();
+            break;
+        case 'users':
+            loadUsers();
             break;
         case 'settings':
             loadSettings();
@@ -117,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginSection) loginSection.style.display = 'none';
         if (adminPanel) adminPanel.style.display = 'block';
         initTabNavigation();
+        filterAdminMenuByPermissions();
         loadDashboard();
     }
 });
@@ -333,7 +351,30 @@ setInterval(function() {
 // ==========================================
 
 function loadKanbanBoard() {
-    const orders = getOrders();
+    let orders = getOrders();
+    
+    // Apply filters
+    const typeFilter = document.getElementById('kanban-type-filter')?.value;
+    const tableFilter = document.getElementById('kanban-table-filter')?.value;
+    
+    if (typeFilter) {
+        orders = orders.filter(order => {
+            if (typeFilter === 'table') {
+                return order.delivery && order.delivery.tableNumber;
+            } else if (typeFilter === 'delivery') {
+                return order.delivery && order.delivery.forDelivery;
+            } else if (typeFilter === 'pickup') {
+                return !order.delivery || (!order.delivery.forDelivery && !order.delivery.tableNumber);
+            }
+            return true;
+        });
+    }
+    
+    if (tableFilter && parseInt(tableFilter) > 0) {
+        orders = orders.filter(order => {
+            return order.delivery && order.delivery.tableNumber === parseInt(tableFilter);
+        });
+    }
     
     // Clear all columns
     ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
@@ -367,6 +408,16 @@ function loadKanbanBoard() {
     
     // Initialize drag and drop
     initDragAndDrop();
+}
+
+function clearKanbanFilters() {
+    const typeFilter = document.getElementById('kanban-type-filter');
+    const tableFilter = document.getElementById('kanban-table-filter');
+    
+    if (typeFilter) typeFilter.value = '';
+    if (tableFilter) tableFilter.value = '';
+    
+    loadKanbanBoard();
 }
 
 function renderKanbanColumn(status, orders) {
@@ -404,16 +455,43 @@ function createKanbanCard(order) {
         `${item.quantity}x ${item.name}`
     ).join(', ');
     
+    // Determine order type and details
+    let orderTypeInfo = '';
+    let orderTypeClass = '';
+    
+    if (order.delivery && order.delivery.tableNumber) {
+        orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.delivery.tableNumber}</span>`;
+        orderTypeClass = ' kanban-card-table';
+    } else if (order.delivery && order.delivery.forDelivery) {
+        orderTypeInfo = '<span class="kanban-badge kanban-badge-delivery">🚚 Entrega</span>';
+        orderTypeClass = ' kanban-card-delivery';
+    } else {
+        orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">📦 Retirada</span>';
+        orderTypeClass = ' kanban-card-pickup';
+    }
+    
+    // Add user info if available
+    let userInfo = '';
+    if (order.delivery && order.delivery.userId) {
+        userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">👤 Usuário ID: ${order.delivery.userId}</div>`;
+    }
+    
     card.innerHTML = `
         <div class="kanban-card-header">
             <span class="kanban-card-id">Pedido #${order.id}</span>
             <span class="kanban-card-time">${timeStr}</span>
         </div>
+        <div class="kanban-card-type">
+            ${orderTypeInfo}
+        </div>
         <div class="kanban-card-content">
             <div class="kanban-card-items">${itemsList}</div>
             <div class="kanban-card-total">R$ ${order.total.toFixed(2)}</div>
+            ${userInfo}
         </div>
     `;
+    
+    card.classList.add(orderTypeClass);
     
     return card;
 }
@@ -1225,4 +1303,121 @@ function deleteNote(noteId) {
     saveNotesToStorage(notes);
     loadNotes();
     alert('Nota excluída com sucesso!');
+}
+
+// ============================================
+// PERMISSION-BASED MENU FILTERING
+// ============================================
+
+/**
+ * Filter admin menu tabs based on user permissions
+ */
+async function filterAdminMenuByPermissions() {
+    // Check if user has permissions loaded
+    if (!window.fetchUserInfo) {
+        console.log('Permission functions not available');
+        return;
+    }
+    
+    try {
+        // Fetch fresh user info with permissions
+        const userInfo = await fetchUserInfo();
+        
+        if (!userInfo || !userInfo.permissionMap) {
+            console.log('No permission info available');
+            return;
+        }
+        
+        // Define tab-to-permission mapping
+        const tabPermissions = {
+            'dashboard': null, // Always visible
+            'orders': 'order_view',
+            'menu': 'menu_view',
+            'notes': null, // Always visible for admins
+            'reports': 'reports_access',
+            'resumes': 'resumes_access',
+            'ouvidoria': 'ouvidoria_access',
+            'permissions': 'permissions_management',
+            'roles': 'roles_management',
+            'users': 'users_management',
+            'settings': 'settings_access'
+        };
+        
+        // Filter menu items
+        const navLinks = document.querySelectorAll('.nav-tab');
+        
+        navLinks.forEach(link => {
+            const tabName = link.getAttribute('data-tab');
+            const requiredPermission = tabPermissions[tabName];
+            
+            // If no permission required or user has admin access, show tab
+            if (!requiredPermission || userInfo.hasAdminAccess || userInfo.permissionMap[requiredPermission]) {
+                link.parentElement.style.display = '';
+            } else {
+                // Hide tab if user doesn't have permission
+                link.parentElement.style.display = 'none';
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error filtering admin menu:', error);
+        // On error, don't hide any tabs to avoid locking out users
+    }
+}
+
+/**
+ * Check if user has permission to access a specific tab
+ */
+function canAccessTab(tabName) {
+    const userInfoStr = localStorage.getItem('userInfo');
+    if (!userInfoStr) return false;
+    
+    try {
+        const userInfo = JSON.parse(userInfoStr);
+        
+        // Admin has access to everything
+        if (userInfo.hasAdminAccess) return true;
+        
+        // Define permission requirements
+        const tabPermissions = {
+            'dashboard': true, // Always accessible
+            'orders': userInfo.permissionMap['order_view'],
+            'menu': userInfo.permissionMap['menu_view'],
+            'notes': true, // Always accessible
+            'reports': userInfo.permissionMap['reports_access'],
+            'resumes': userInfo.permissionMap['resumes_access'],
+            'ouvidoria': userInfo.permissionMap['ouvidoria_access'],
+            'permissions': userInfo.permissionMap['permissions_management'],
+            'roles': userInfo.permissionMap['roles_management'],
+            'users': userInfo.permissionMap['users_management'],
+            'settings': userInfo.permissionMap['settings_access']
+        };
+        
+        return tabPermissions[tabName] || false;
+        
+    } catch (error) {
+        console.error('Error checking tab access:', error);
+        return false;
+    }
+}
+
+/**
+ * Show access denied message
+ */
+function showAccessDenied(tabName) {
+    const tabElement = document.getElementById(`tab-${tabName}`);
+    if (tabElement) {
+        tabElement.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
+                <h2 style="color: #dc3545; margin-bottom: 15px;">Acesso Negado</h2>
+                <p style="color: #666; font-size: 1.1rem;">
+                    Você não tem permissão para acessar esta seção do painel administrativo.
+                </p>
+                <p style="color: #999; margin-top: 10px;">
+                    Entre em contato com o administrador se você acredita que deveria ter acesso.
+                </p>
+            </div>
+        `;
+    }
 }
