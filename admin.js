@@ -27,6 +27,12 @@ function initTabNavigation() {
 }
 
 function switchTab(tabName) {
+    // Check if user has permission to access this tab
+    if (window.canAccessTab && !canAccessTab(tabName)) {
+        showAccessDenied(tabName);
+        // Still switch to the tab to show the access denied message
+    }
+    
     // Hide all tabs
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.style.display = 'none';
@@ -51,9 +57,11 @@ function switchTab(tabName) {
         activeLink.classList.add('active');
     }
     
-    // Load tab content
+    // Load tab content only if user has permission
     currentTab = tabName;
-    loadTabContent(tabName);
+    if (!window.canAccessTab || canAccessTab(tabName)) {
+        loadTabContent(tabName);
+    }
 }
 
 function loadTabContent(tabName) {
@@ -126,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginSection) loginSection.style.display = 'none';
         if (adminPanel) adminPanel.style.display = 'block';
         initTabNavigation();
+        filterAdminMenuByPermissions();
         loadDashboard();
     }
 });
@@ -1294,4 +1303,121 @@ function deleteNote(noteId) {
     saveNotesToStorage(notes);
     loadNotes();
     alert('Nota excluída com sucesso!');
+}
+
+// ============================================
+// PERMISSION-BASED MENU FILTERING
+// ============================================
+
+/**
+ * Filter admin menu tabs based on user permissions
+ */
+async function filterAdminMenuByPermissions() {
+    // Check if user has permissions loaded
+    if (!window.fetchUserInfo) {
+        console.log('Permission functions not available');
+        return;
+    }
+    
+    try {
+        // Fetch fresh user info with permissions
+        const userInfo = await fetchUserInfo();
+        
+        if (!userInfo || !userInfo.permissionMap) {
+            console.log('No permission info available');
+            return;
+        }
+        
+        // Define tab-to-permission mapping
+        const tabPermissions = {
+            'dashboard': null, // Always visible
+            'orders': 'order_view',
+            'menu': 'menu_view',
+            'notes': null, // Always visible for admins
+            'reports': 'reports_access',
+            'resumes': 'resumes_access',
+            'ouvidoria': 'ouvidoria_access',
+            'permissions': 'permissions_management',
+            'roles': 'roles_management',
+            'users': 'users_management',
+            'settings': 'settings_access'
+        };
+        
+        // Filter menu items
+        const navLinks = document.querySelectorAll('.nav-tab');
+        
+        navLinks.forEach(link => {
+            const tabName = link.getAttribute('data-tab');
+            const requiredPermission = tabPermissions[tabName];
+            
+            // If no permission required or user has admin access, show tab
+            if (!requiredPermission || userInfo.hasAdminAccess || userInfo.permissionMap[requiredPermission]) {
+                link.parentElement.style.display = '';
+            } else {
+                // Hide tab if user doesn't have permission
+                link.parentElement.style.display = 'none';
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error filtering admin menu:', error);
+        // On error, don't hide any tabs to avoid locking out users
+    }
+}
+
+/**
+ * Check if user has permission to access a specific tab
+ */
+function canAccessTab(tabName) {
+    const userInfoStr = localStorage.getItem('userInfo');
+    if (!userInfoStr) return false;
+    
+    try {
+        const userInfo = JSON.parse(userInfoStr);
+        
+        // Admin has access to everything
+        if (userInfo.hasAdminAccess) return true;
+        
+        // Define permission requirements
+        const tabPermissions = {
+            'dashboard': true, // Always accessible
+            'orders': userInfo.permissionMap['order_view'],
+            'menu': userInfo.permissionMap['menu_view'],
+            'notes': true, // Always accessible
+            'reports': userInfo.permissionMap['reports_access'],
+            'resumes': userInfo.permissionMap['resumes_access'],
+            'ouvidoria': userInfo.permissionMap['ouvidoria_access'],
+            'permissions': userInfo.permissionMap['permissions_management'],
+            'roles': userInfo.permissionMap['roles_management'],
+            'users': userInfo.permissionMap['users_management'],
+            'settings': userInfo.permissionMap['settings_access']
+        };
+        
+        return tabPermissions[tabName] || false;
+        
+    } catch (error) {
+        console.error('Error checking tab access:', error);
+        return false;
+    }
+}
+
+/**
+ * Show access denied message
+ */
+function showAccessDenied(tabName) {
+    const tabElement = document.getElementById(`tab-${tabName}`);
+    if (tabElement) {
+        tabElement.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
+                <h2 style="color: #dc3545; margin-bottom: 15px;">Acesso Negado</h2>
+                <p style="color: #666; font-size: 1.1rem;">
+                    Você não tem permissão para acessar esta seção do painel administrativo.
+                </p>
+                <p style="color: #999; margin-top: 10px;">
+                    Entre em contato com o administrador se você acredita que deveria ter acesso.
+                </p>
+            </div>
+        `;
+    }
 }
