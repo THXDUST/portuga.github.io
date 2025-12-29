@@ -79,6 +79,15 @@ function loadTabContent(tabName) {
         case 'ouvidoria':
             loadOuvidoriaMessages();
             break;
+        case 'permissions':
+            loadPermissions();
+            break;
+        case 'roles':
+            loadRoles();
+            break;
+        case 'users':
+            loadUsers();
+            break;
         case 'settings':
             loadSettings();
             break;

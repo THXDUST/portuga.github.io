@@ -58,6 +58,9 @@
                 <li><a href="#" class="nav-tab" data-tab="reports">📈 Relatórios</a></li>
                 <li><a href="#" class="nav-tab" data-tab="resumes">👔 Currículos</a></li>
                 <li><a href="#" class="nav-tab" data-tab="ouvidoria">💬 Ouvidoria</a></li>
+                <li><a href="#" class="nav-tab" data-tab="permissions">🔐 Permissões</a></li>
+                <li><a href="#" class="nav-tab" data-tab="roles">👥 Cargos</a></li>
+                <li><a href="#" class="nav-tab" data-tab="users">👤 Usuários</a></li>
                 <li><a href="#" class="nav-tab" data-tab="settings">⚙️ Configurações</a></li>
             </ul>
         </nav>
@@ -287,6 +290,62 @@
             </div>
             <!-- End Ouvidoria Tab -->
 
+            <!-- Permissions Tab -->
+            <div id="tab-permissions" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Permissões</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showAddPermissionModal()">➕ Adicionar Permissão</button>
+                </div>
+                
+                <div id="permissions-list">
+                    <p style="color: #666;">Carregando permissões...</p>
+                </div>
+            </div>
+            <!-- End Permissions Tab -->
+
+            <!-- Roles Tab -->
+            <div id="tab-roles" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Cargos/Roles</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showAddRoleModal()">➕ Adicionar Cargo</button>
+                </div>
+                
+                <div id="roles-list">
+                    <p style="color: #666;">Carregando cargos...</p>
+                </div>
+            </div>
+            <!-- End Roles Tab -->
+
+            <!-- Users Tab -->
+            <div id="tab-users" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Usuários</h2>
+                
+                <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="btn" onclick="showAddUserModal()">➕ Adicionar Usuário</button>
+                    
+                    <select id="user-role-filter" class="form-group" onchange="loadUsers()">
+                        <option value="">Todos os Cargos</option>
+                    </select>
+                    
+                    <select id="user-status-filter" class="form-group" onchange="loadUsers()">
+                        <option value="">Todos os Status</option>
+                        <option value="active">Ativos</option>
+                        <option value="inactive">Inativos</option>
+                    </select>
+                    
+                    <input type="text" id="user-search" placeholder="Buscar por nome/email..." 
+                           class="form-group" style="flex: 1; min-width: 200px;"
+                           onkeyup="debounceUserSearch()">
+                </div>
+                
+                <div id="users-list">
+                    <p style="color: #666;">Carregando usuários...</p>
+                </div>
+            </div>
+            <!-- End Users Tab -->
+
             <!-- Settings Tab -->
             <div id="tab-settings" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Configurações do Restaurante</h2>
@@ -485,7 +544,126 @@
         </div>
     </div>
 
+    <!-- Permission Modal -->
+    <div id="permission-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePermissionModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;" id="permission-modal-title">Adicionar Permissão</h2>
+            
+            <form id="permission-form" onsubmit="savePermission(event)">
+                <input type="hidden" id="permission-id">
+                
+                <div class="form-group">
+                    <label for="permission-name">Nome da Permissão:</label>
+                    <input type="text" id="permission-name" required maxlength="50" placeholder="Ex: order_view">
+                </div>
+                
+                <div class="form-group">
+                    <label for="permission-description">Descrição:</label>
+                    <input type="text" id="permission-description" maxlength="255" placeholder="Descrição da permissão">
+                </div>
+                
+                <div class="form-group">
+                    <label for="permission-resource">Recurso:</label>
+                    <input type="text" id="permission-resource" required maxlength="50" placeholder="Ex: orders, menu, users">
+                </div>
+                
+                <div class="form-group">
+                    <label for="permission-action">Ação:</label>
+                    <input type="text" id="permission-action" required maxlength="20" placeholder="Ex: read, create, update, delete">
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closePermissionModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Role Modal -->
+    <div id="role-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="modal-close" onclick="closeRoleModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;" id="role-modal-title">Adicionar Cargo</h2>
+            
+            <form id="role-form" onsubmit="saveRole(event)">
+                <input type="hidden" id="role-id">
+                
+                <div class="form-group">
+                    <label for="role-name">Nome do Cargo:</label>
+                    <input type="text" id="role-name" required maxlength="50" placeholder="Ex: Gerente">
+                </div>
+                
+                <div class="form-group">
+                    <label for="role-description">Descrição:</label>
+                    <textarea id="role-description" rows="3" placeholder="Descrição do cargo"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 10px; display: block;">Permissões:</label>
+                    <div id="role-permissions-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #e9ecef; padding: 15px; border-radius: 8px;">
+                        <p style="color: #666;">Carregando permissões...</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeRoleModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeUserModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;" id="user-modal-title">Adicionar Usuário</h2>
+            
+            <form id="user-form" onsubmit="saveUser(event)">
+                <input type="hidden" id="user-id">
+                
+                <div class="form-group">
+                    <label for="user-full-name">Nome Completo:</label>
+                    <input type="text" id="user-full-name" required maxlength="255" placeholder="Ex: João Silva">
+                </div>
+                
+                <div class="form-group">
+                    <label for="user-email">Email:</label>
+                    <input type="email" id="user-email" required maxlength="255" placeholder="usuario@exemplo.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="user-password">Senha:</label>
+                    <input type="password" id="user-password" minlength="6" placeholder="Deixe em branco para manter a senha atual">
+                    <small style="color: #666;">Mínimo 6 caracteres. Deixe em branco ao editar para não alterar a senha.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 10px; display: block;">Cargos:</label>
+                    <div id="user-roles-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #e9ecef; padding: 15px; border-radius: 8px;">
+                        <p style="color: #666;">Carregando cargos...</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="user-active" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span>✅ Usuário Ativo</span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="scripts.js"></script>
+    <script src="admin-permissions.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
