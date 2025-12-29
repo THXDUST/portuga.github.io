@@ -97,5 +97,12 @@
     </footer>
 
     <script src="scripts.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Update navigation UI on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await updateNavigationUI();
+        });
+    </script>
 </body>
 </html>

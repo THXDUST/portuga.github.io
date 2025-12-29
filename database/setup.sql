@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NULL,
     order_number VARCHAR(20) UNIQUE NOT NULL,
+    table_number INT NULL COMMENT 'Table number for in-restaurant orders',
     status ENUM('recebido', 'em_andamento', 'finalizado', 'cancelado') DEFAULT 'recebido',
     order_type ENUM('viagem', 'local') NOT NULL,
     payment_method ENUM('dinheiro', 'cartao_debito', 'cartao_credito', 'pix') NOT NULL,
@@ -212,7 +213,8 @@ CREATE TABLE IF NOT EXISTS orders (
     INDEX idx_status (status),
     INDEX idx_order_number (order_number),
     INDEX idx_created (created_at),
-    INDEX idx_user (user_id)
+    INDEX idx_user (user_id),
+    INDEX idx_table (table_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: order_items
@@ -401,6 +403,8 @@ INSERT IGNORE INTO roles (name, description) VALUES
 
 -- Insert default permissions
 INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
+-- Admin panel access
+('admin_panel_access', 'Acesso ao painel administrativo', 'admin', 'access'),
 -- Order permissions
 ('order_view', 'Visualizar pedidos', 'orders', 'read'),
 ('order_create', 'Criar pedidos', 'orders', 'create'),
@@ -416,18 +420,30 @@ INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
 ('user_create', 'Criar usuários', 'users', 'create'),
 ('user_update', 'Atualizar usuários', 'users', 'update'),
 ('user_delete', 'Deletar usuários', 'users', 'delete'),
+-- Permission management
+('permissions_management', 'Gerenciar permissões', 'permissions', 'manage'),
+('roles_management', 'Gerenciar cargos/roles', 'roles', 'manage'),
+('users_management', 'Gerenciar usuários', 'users', 'manage'),
 -- Report permissions
 ('report_view', 'Visualizar relatórios', 'reports', 'read'),
 ('report_create', 'Criar relatórios', 'reports', 'create'),
+('financial_stats', 'Acesso às estatísticas financeiras', 'reports', 'financial'),
 -- Settings permissions
 ('settings_view', 'Visualizar configurações', 'settings', 'read'),
 ('settings_update', 'Atualizar configurações', 'settings', 'update'),
+('settings_access', 'Acesso às configurações do sistema', 'settings', 'access'),
 -- Resume permissions
 ('resume_view', 'Visualizar currículos', 'resumes', 'read'),
 ('resume_update', 'Atualizar status de currículos', 'resumes', 'update'),
+('resumes_access', 'Acesso aos currículos', 'resumes', 'access'),
 -- Ouvidoria permissions
 ('ouvidoria_view', 'Visualizar ouvidoria', 'ouvidoria', 'read'),
-('ouvidoria_update', 'Responder ouvidoria', 'ouvidoria', 'update');
+('ouvidoria_update', 'Responder ouvidoria', 'ouvidoria', 'update'),
+('ouvidoria_access', 'Acesso à ouvidoria', 'ouvidoria', 'access'),
+-- Order status permissions
+('orders_status', 'Mudança de estado dos pedidos', 'orders', 'status'),
+-- Reports access
+('reports_access', 'Acesso aos relatórios', 'reports', 'access');
 
 -- Insert default restaurant settings
 INSERT IGNORE INTO restaurant_settings (setting_key, setting_value, setting_type, description) VALUES
