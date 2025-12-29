@@ -1255,3 +1255,48 @@ nav ul li a:hover {
         transform: rotate(90deg);
     }
 }
+
+/* Kanban Badge Styles */
+.kanban-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.kanban-badge-table {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.kanban-badge-delivery {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #b8daff;
+}
+
+.kanban-badge-pickup {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Card color accents by type */
+.kanban-card-table {
+    border-left: 4px solid #ffc107;
+}
+
+.kanban-card-delivery {
+    border-left: 4px solid #17a2b8;
+}
+
+.kanban-card-pickup {
+    border-left: 4px solid #28a745;
+}
+
+.kanban-card-type {
+    margin-bottom: 10px;
+}

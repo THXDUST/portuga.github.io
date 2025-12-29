@@ -342,7 +342,30 @@ setInterval(function() {
 // ==========================================
 
 function loadKanbanBoard() {
-    const orders = getOrders();
+    let orders = getOrders();
+    
+    // Apply filters
+    const typeFilter = document.getElementById('kanban-type-filter')?.value;
+    const tableFilter = document.getElementById('kanban-table-filter')?.value;
+    
+    if (typeFilter) {
+        orders = orders.filter(order => {
+            if (typeFilter === 'table') {
+                return order.delivery && order.delivery.tableNumber;
+            } else if (typeFilter === 'delivery') {
+                return order.delivery && order.delivery.forDelivery;
+            } else if (typeFilter === 'pickup') {
+                return !order.delivery || (!order.delivery.forDelivery && !order.delivery.tableNumber);
+            }
+            return true;
+        });
+    }
+    
+    if (tableFilter && parseInt(tableFilter) > 0) {
+        orders = orders.filter(order => {
+            return order.delivery && order.delivery.tableNumber === parseInt(tableFilter);
+        });
+    }
     
     // Clear all columns
     ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
@@ -376,6 +399,16 @@ function loadKanbanBoard() {
     
     // Initialize drag and drop
     initDragAndDrop();
+}
+
+function clearKanbanFilters() {
+    const typeFilter = document.getElementById('kanban-type-filter');
+    const tableFilter = document.getElementById('kanban-table-filter');
+    
+    if (typeFilter) typeFilter.value = '';
+    if (tableFilter) tableFilter.value = '';
+    
+    loadKanbanBoard();
 }
 
 function renderKanbanColumn(status, orders) {
@@ -413,16 +446,43 @@ function createKanbanCard(order) {
         `${item.quantity}x ${item.name}`
     ).join(', ');
     
+    // Determine order type and details
+    let orderTypeInfo = '';
+    let orderTypeClass = '';
+    
+    if (order.delivery && order.delivery.tableNumber) {
+        orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.delivery.tableNumber}</span>`;
+        orderTypeClass = ' kanban-card-table';
+    } else if (order.delivery && order.delivery.forDelivery) {
+        orderTypeInfo = '<span class="kanban-badge kanban-badge-delivery">🚚 Entrega</span>';
+        orderTypeClass = ' kanban-card-delivery';
+    } else {
+        orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">📦 Retirada</span>';
+        orderTypeClass = ' kanban-card-pickup';
+    }
+    
+    // Add user info if available
+    let userInfo = '';
+    if (order.delivery && order.delivery.userId) {
+        userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">👤 Usuário ID: ${order.delivery.userId}</div>`;
+    }
+    
     card.innerHTML = `
         <div class="kanban-card-header">
             <span class="kanban-card-id">Pedido #${order.id}</span>
             <span class="kanban-card-time">${timeStr}</span>
         </div>
+        <div class="kanban-card-type">
+            ${orderTypeInfo}
+        </div>
         <div class="kanban-card-content">
             <div class="kanban-card-items">${itemsList}</div>
             <div class="kanban-card-total">R$ ${order.total.toFixed(2)}</div>
+            ${userInfo}
         </div>
     `;
+    
+    card.classList.add(orderTypeClass);
     
     return card;
 }
