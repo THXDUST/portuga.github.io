@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NULL,
     order_number VARCHAR(20) UNIQUE NOT NULL,
-    table_number INT NULL COMMENT 'Table number for in-restaurant orders',
+    table_number INT NULL CHECK (table_number > 0) COMMENT 'Table number for in-restaurant orders',
     status ENUM('recebido', 'em_andamento', 'finalizado', 'cancelado') DEFAULT 'recebido',
     order_type ENUM('viagem', 'local') NOT NULL,
     payment_method ENUM('dinheiro', 'cartao_debito', 'cartao_credito', 'pix') NOT NULL,

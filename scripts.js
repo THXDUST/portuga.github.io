@@ -95,8 +95,11 @@ function toggleDeliveryFields() {
             // Show table number field if user is logged in and not for delivery
             // and there's no mesa parameter
             const mesaNumber = sessionStorage.getItem('mesaNumber');
-            if (tableNumberField && !mesaNumber && window.isUserLoggedIn && isUserLoggedIn()) {
-                tableNumberField.style.display = 'block';
+            if (tableNumberField && !mesaNumber && window.isUserLoggedIn) {
+                const isLoggedIn = isUserLoggedIn();
+                if (isLoggedIn) {
+                    tableNumberField.style.display = 'block';
+                }
             }
             
             // Reset delivery fee
@@ -437,9 +440,11 @@ function finalizeOrder() {
     let userId = null;
     
     // Get user ID if logged in
-    if (window.getCurrentUser && getCurrentUser()) {
+    if (window.getCurrentUser) {
         const user = getCurrentUser();
-        userId = user.id;
+        if (user) {
+            userId = user.id;
+        }
     }
     
     // Handle table number

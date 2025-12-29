@@ -561,7 +561,7 @@ function hasPermission(permissionName) {
     
     try {
         const userInfo = JSON.parse(userInfoStr);
-        return !!(userInfo.permissionMap && userInfo.permissionMap[permissionName]);
+        return Boolean(userInfo.permissionMap && userInfo.permissionMap[permissionName]);
     } catch (error) {
         console.error('Error checking permission:', error);
         return false;
@@ -578,7 +578,7 @@ function hasAdminAccess() {
     
     try {
         const userInfo = JSON.parse(userInfoStr);
-        return !!(userInfo.hasAdminAccess);
+        return Boolean(userInfo.hasAdminAccess);
     } catch (error) {
         console.error('Error checking admin access:', error);
         return false;
