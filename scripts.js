@@ -291,6 +291,8 @@ function calculateDeliveryFeeFromDistance(distance) {
         fee = 7.00;
     } else if (distance <= 9) {
         fee = 9.00;
+    } else if (distance <= 11) {
+        fee = 11.00;
     } else if (distance <= 18) {
         fee = 18.00;
     } else {
@@ -348,6 +350,7 @@ function getDeliveryFee() {
     if (distance <= 5) return 5.00;
     if (distance <= 7) return 7.00;
     if (distance <= 9) return 9.00;
+    if (distance <= 11) return 11.00;
     if (distance <= 18) return 18.00;
     
     return 0; // Above 18 km, no delivery
