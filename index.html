@@ -29,6 +29,11 @@
         </ul>
     </nav>
 
+    <!-- Announcements/Notes Section -->
+    <div id="announcements-container" style="display: none;">
+        <!-- Active notes will be dynamically loaded here -->
+    </div>
+
     <main class="container">
         <!-- Hero Section -->
         <section class="hero">
@@ -99,10 +104,116 @@
     <script src="scripts.js"></script>
     <script src="auth.js"></script>
     <script>
+        // Load and display active notes/announcements
+        async function loadActiveNotes() {
+            try {
+                const response = await fetch('/api/admin/notes.php?action=list');
+                const data = await response.json();
+                
+                if (data.success && data.notes && data.notes.length > 0) {
+                    const container = document.getElementById('announcements-container');
+                    container.innerHTML = '';
+                    
+                    data.notes.forEach(note => {
+                        const noteEl = document.createElement('div');
+                        noteEl.className = `announcement-banner announcement-${note.note_type}`;
+                        noteEl.innerHTML = `
+                            <div class="announcement-icon">📢</div>
+                            <div class="announcement-content">
+                                <h3>${note.title}</h3>
+                                <p>${note.content}</p>
+                            </div>
+                        `;
+                        container.appendChild(noteEl);
+                    });
+                    
+                    container.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
         // Update navigation UI on page load
         document.addEventListener('DOMContentLoaded', async () => {
             await updateNavigationUI();
+            await loadActiveNotes();
         });
     </script>
+    <style>
+        #announcements-container {
+            margin: 20px auto;
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+        
+        .announcement-banner {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            animation: slideDown 0.5s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .announcement-info {
+            background: #d1ecf1;
+            border-left: 5px solid #0c5460;
+        }
+        
+        .announcement-warning {
+            background: #fff3cd;
+            border-left: 5px solid #856404;
+        }
+        
+        .announcement-success {
+            background: #d4edda;
+            border-left: 5px solid #155724;
+        }
+        
+        .announcement-promo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-left: 5px solid #fff;
+        }
+        
+        .announcement-promo .announcement-content h3,
+        .announcement-promo .announcement-content p {
+            color: white;
+        }
+        
+        .announcement-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .announcement-content {
+            flex: 1;
+        }
+        
+        .announcement-content h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        .announcement-content p {
+            margin: 0;
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
 </body>
 </html>

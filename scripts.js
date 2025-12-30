@@ -1,3 +1,13 @@
+/**
+ * Portuga Restaurant - Main JavaScript
+ * 
+ * Google Maps API Configuration (Optional):
+ * To enable Google Maps geocoding, add this line before including scripts.js:
+ * <script>window.GOOGLE_MAPS_API_KEY = 'your_api_key_here';</script>
+ * 
+ * Without an API key, the system will use OpenStreetMap Nominatim (free, no key required)
+ */
+
 const WHATSAPP_NUMBER = '5513997597759';
 
 function getCart() {
@@ -222,6 +232,29 @@ async function calculateDistanceFromAddress() {
 
 // Geocode address using Nominatim API
 async function geocodeAddress(address) {
+    // Check if Google Maps API key is available
+    const googleMapsKey = window.GOOGLE_MAPS_API_KEY || null;
+    
+    if (googleMapsKey) {
+        // Use Google Maps Geocoding API
+        try {
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${googleMapsKey}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.status === 'OK' && data.results.length > 0) {
+                const location = data.results[0].geometry.location;
+                return {
+                    lat: location.lat,
+                    lon: location.lng
+                };
+            }
+        } catch (error) {
+            console.error('Google Maps API error, falling back to OpenStreetMap:', error);
+        }
+    }
+    
+    // Fallback to OpenStreetMap Nominatim API (free, no key required)
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
     
     try {

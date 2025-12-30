@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliar - Portuga Restaurante</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .review-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .review-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .review-header h2 {
+            color: #e8c13f;
+            margin-bottom: 10px;
+        }
+        
+        .review-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .star-rating {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .star-rating .stars {
+            font-size: 3rem;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .star-rating .star {
+            cursor: pointer;
+            color: #ddd;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .star-rating .star:hover,
+        .star-rating .star.active {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        
+        .star-rating .star.active {
+            animation: starPulse 0.3s ease;
+        }
+        
+        @keyframes starPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1.1); }
+        }
+        
+        .rating-label {
+            color: #666;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #e8c13f;
+        }
+        
+        .login-required {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .login-required h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .login-required p {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .social-login-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .btn-social {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn-instagram {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        
+        .btn-instagram:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(188, 24, 136, 0.4);
+        }
+        
+        .btn-facebook {
+            background: #1877f2;
+        }
+        
+        .btn-facebook:hover {
+            background: #166fe5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(24, 119, 242, 0.4);
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success-message h3 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        
+        .success-message p {
+            color: #155724;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #721c24;
+            display: none;
+        }
+        
+        .rate-limit-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+            display: none;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: #e8c13f;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-submit:hover {
+            background: #d4ab2c;
+            transform: translateY(-2px);
+        }
+        
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Portuga</h1>
+            <p class="subtitle">Restaurante & Pizzaria</p>
+        </div>
+    </header>
+
+    <nav>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul id="nav-menu">
+            <li><a href="index.html">Início</a></li>
+            <li><a href="menu.html">Cardápio</a></li>
+            <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="admin.html">Admin</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <div class="review-container">
+            <div class="review-header">
+                <h2>⭐ Avalie Sua Experiência</h2>
+                <p>Sua opinião é muito importante para nós!</p>
+            </div>
+
+            <!-- Login Required Section (shown if not logged in) -->
+            <div id="login-required" class="login-required" style="display: none;">
+                <h3>🔒 Login Necessário</h3>
+                <p>Para garantir a autenticidade das avaliações, é necessário fazer login com Instagram ou Facebook.</p>
+                
+                <div class="social-login-buttons">
+                    <a href="#" class="btn-social btn-instagram" onclick="loginWithInstagram(); return false;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                        Instagram
+                    </a>
+                    
+                    <a href="#" class="btn-social btn-facebook" onclick="loginWithFacebook(); return false;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        Facebook
+                    </a>
+                </div>
+            </div>
+
+            <!-- Rate Limit Warning -->
+            <div id="rate-limit-warning" class="rate-limit-warning">
+                ⏰ Você já enviou uma avaliação recentemente. Por favor, aguarde 1 hora antes de enviar outra.
+            </div>
+
+            <!-- Error Message -->
+            <div id="error-message" class="error-message"></div>
+
+            <!-- Review Form (shown if logged in) -->
+            <form id="review-form" style="display: none;">
+                <div class="star-rating">
+                    <label>Classifique sua experiência:</label>
+                    <div class="stars" id="star-rating">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <div class="rating-label" id="rating-label">Clique nas estrelas para avaliar</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="comment">Deixe um comentário (opcional):</label>
+                    <textarea 
+                        id="comment" 
+                        name="comment" 
+                        placeholder="Conte-nos sobre sua experiência no Portuga..."
+                        maxlength="1000"
+                    ></textarea>
+                    <small style="color: #666;">0/1000 caracteres</small>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    Enviar Avaliação
+                </button>
+            </form>
+
+            <!-- Success Message -->
+            <div id="success-message" class="success-message">
+                <h3>✅ Avaliação Enviada!</h3>
+                <p>Sua avaliação está em análise. Se aprovada, será publicada no Instagram do restaurante!</p>
+                <button class="btn" onclick="window.location.href='index.html'" style="margin-top: 15px;">
+                    Voltar ao Início
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer style="background: #1a1a1a; color: white; text-align: center; padding: 20px; margin-top: 40px;">
+        <p>&copy; 2024 Portuga - Restaurante & Pizzaria. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="scripts.js"></script>
+    <script>
+        let selectedRating = 0;
+        let canSubmitReview = true;
+
+        // Check authentication status
+        function checkAuthStatus() {
+            // TODO: Implement proper authentication check
+            // For now, check if user is logged in via session/localStorage
+            const isLoggedIn = localStorage.getItem('user_token') || sessionStorage.getItem('user_id');
+            
+            if (isLoggedIn) {
+                document.getElementById('login-required').style.display = 'none';
+                document.getElementById('review-form').style.display = 'block';
+                checkCanReview();
+            } else {
+                document.getElementById('login-required').style.display = 'block';
+                document.getElementById('review-form').style.display = 'none';
+            }
+        }
+
+        // Check if user can submit review (rate limiting)
+        async function checkCanReview() {
+            try {
+                const response = await fetch('/api/reviews.php?action=can-review');
+                const data = await response.json();
+                
+                if (data.success && !data.can_review) {
+                    canSubmitReview = false;
+                    document.getElementById('rate-limit-warning').style.display = 'block';
+                    document.getElementById('submit-btn').disabled = true;
+                }
+            } catch (error) {
+                console.error('Error checking review status:', error);
+            }
+        }
+
+        // Star rating functionality
+        const stars = document.querySelectorAll('.star');
+        const ratingLabel = document.getElementById('rating-label');
+        
+        const ratingLabels = {
+            0: 'Clique nas estrelas para avaliar',
+            1: '⭐ Muito Ruim',
+            2: '⭐⭐ Ruim',
+            3: '⭐⭐⭐ Regular',
+            4: '⭐⭐⭐⭐ Bom',
+            5: '⭐⭐⭐⭐⭐ Excelente!'
+        };
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.rating);
+                updateStars(selectedRating);
+                ratingLabel.textContent = ratingLabels[selectedRating];
+            });
+
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.dataset.rating);
+                updateStars(rating);
+            });
+        });
+
+        document.querySelector('.stars').addEventListener('mouseleave', function() {
+            updateStars(selectedRating);
+        });
+
+        function updateStars(rating) {
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        // Comment character counter
+        const commentTextarea = document.getElementById('comment');
+        const charCounter = commentTextarea.nextElementSibling;
+
+        commentTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCounter.textContent = `${length}/1000 caracteres`;
+        });
+
+        // Form submission
+        document.getElementById('review-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (selectedRating === 0) {
+                showError('Por favor, selecione uma classificação de estrelas.');
+                return;
+            }
+
+            if (!canSubmitReview) {
+                showError('Você já enviou uma avaliação recentemente. Aguarde 1 hora.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Enviando...';
+
+            const reviewData = {
+                rating: selectedRating,
+                comment: commentTextarea.value.trim() || null
+            };
+
+            try {
+                const response = await fetch('/api/reviews.php?action=submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(reviewData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('review-form').style.display = 'none';
+                    document.getElementById('success-message').style.display = 'block';
+                } else {
+                    showError(data.message || 'Erro ao enviar avaliação. Tente novamente.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Enviar Avaliação';
+                }
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                showError('Erro ao enviar avaliação. Verifique sua conexão e tente novamente.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Enviar Avaliação';
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // OAuth login functions
+        function loginWithInstagram() {
+            // TODO: Implement Instagram OAuth
+            window.location.href = '/api/auth/oauth-callback.php?provider=instagram';
+        }
+
+        function loginWithFacebook() {
+            // TODO: Implement Facebook OAuth
+            window.location.href = '/api/auth/oauth-callback.php?provider=facebook';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+            updateCartBadge();
+        });
+
+        // Hamburger menu
+        document.getElementById('hamburger-btn').addEventListener('click', function() {
+            document.getElementById('nav-menu').classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
