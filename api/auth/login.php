@@ -40,8 +40,8 @@ try {
         throw new Exception('Invalid CSRF token');
     }
     
-    // Sanitize inputs (trim only, email validation done separately)
-    $email = trim($input['email'] ?? '');
+    // Sanitize inputs
+    $email = sanitizeInput($input['email'] ?? '');
     $password = $input['password'] ?? '';
     $rememberMe = isset($input['remember_me']) && $input['remember_me'] === true;
     
