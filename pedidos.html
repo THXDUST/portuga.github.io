@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhar Pedido - Portuga</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Portuga</h1>
+            <p class="subtitle">Acompanhe seu Pedido</p>
+        </div>
+    </header>
+
+    <nav>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul id="nav-menu">
+            <li><a href="index.html">Início</a></li>
+            <li><a href="menu.html">Cardápio</a></li>
+            <li><a href="carrinho.html">Carrinho</a></li>
+            <li><a href="pedidos.html" class="active">Meus Pedidos</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <section class="menu-section">
+            <h2>Status do Seu Pedido</h2>
+            
+            <div id="order-tracking" style="margin-top: 30px;">
+                <!-- Order tracking will be displayed here -->
+                <div class="tracking-kanban">
+                    <div class="tracking-stage" data-stage="recebido">
+                        <div class="stage-icon">📥</div>
+                        <h3>Recebido</h3>
+                        <p>Seu pedido foi recebido</p>
+                    </div>
+                    
+                    <div class="tracking-arrow">→</div>
+                    
+                    <div class="tracking-stage" data-stage="em_andamento">
+                        <div class="stage-icon">👨‍🍳</div>
+                        <h3>Em Preparo</h3>
+                        <p>Estamos preparando</p>
+                    </div>
+                    
+                    <div class="tracking-arrow">→</div>
+                    
+                    <div class="tracking-stage" data-stage="finalizado">
+                        <div class="stage-icon">✅</div>
+                        <h3>Pronto!</h3>
+                        <p>Pedido finalizado</p>
+                    </div>
+                </div>
+                
+                <div id="order-details" style="margin-top: 40px; background: #f8f9fa; padding: 25px; border-radius: 12px;">
+                    <h3 style="color: #e8c13f; margin-bottom: 15px;">Detalhes do Pedido</h3>
+                    <div id="order-info">
+                        <p style="color: #666; text-align: center;">
+                            Você ainda não fez nenhum pedido.<br>
+                            <a href="menu.html" class="btn" style="margin-top: 15px; display: inline-block;">Ver Cardápio</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="menu-section">
+            <h2>Histórico de Pedidos</h2>
+            <div id="order-history">
+                <p style="color: #666; text-align: center;">Carregando...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Portuga - Restaurante & Pizzaria</p>
+            <p>📍 Endereço do Restaurante | 📞 (13) 99759-7759</p>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+    <script src="pedidos.js"></script>
+</body>
+</html>

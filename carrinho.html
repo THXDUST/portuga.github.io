@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrinho - Portuga</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Carrinho</h1>
+            <p class="subtitle">Revise seu pedido</p>
+        </div>
+    </header>
+
+    <nav>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul id="nav-menu">
+            <li><a href="index.html">Início</a></li>
+            <li><a href="menu.html">Cardápio</a></li>
+            <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
+            <li><a href="login.html">Login</a></li>
+            <!--<li><a href="admin.html">Admin</a></li>-->
+        </ul>
+    </nav>
+
+    <main class="container cart-main">
+        <div class="cart-layout">
+            <div class="cart-items-section">
+                <div id="cart-items-container"></div>
+
+                <div id="empty-cart" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon"></div>
+                    <h3>Seu carrinho está vazio</h3>
+                    <p>Adicione itens do nosso cardápio para começar seu pedido</p>
+                    <a href="menu.html" class="btn empty-cart-btn">Ver Cardápio</a>
+                </div>
+            </div>
+
+            <div id="cart-summary" class="cart-summary" style="display: none;">
+                <h3 class="cart-summary-title">Resumo do Pedido</h3>
+
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">R$ 0,00</span>
+                </div>
+
+                <!-- Delivery Options -->
+                <div class="delivery-options" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <label style="display: flex; align-items: center; margin-bottom: 15px; cursor: pointer;">
+                        <input type="checkbox" id="for-delivery" onchange="toggleDeliveryFields()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span style="font-weight: 600; color: #333;">Para Viagem (Entrega)</span>
+                    </label>
+                    
+                    <!-- Table Number Field (for local orders when logged in) -->
+                    <div id="table-number-field" style="display: none; margin-top: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">🪑 Número da Mesa *</label>
+                        <input type="number" id="table-number" placeholder="Ex: 5" min="1" max="100" 
+                               style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Informe o número da mesa para pedido no local
+                        </small>
+                    </div>
+                    
+                    <div id="delivery-fields" style="display: none;">
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Rua *</label>
+                            <input type="text" id="delivery-street" placeholder="Ex: Rua das Flores" 
+                                   style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Número *</label>
+                                <input type="text" id="delivery-number" placeholder="Ex: 123" 
+                                       style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Bairro *</label>
+                                <input type="text" id="delivery-neighborhood" placeholder="Ex: Centro" 
+                                       style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Cidade *</label>
+                            <input type="text" id="delivery-city" placeholder="Ex: Ilha Comprida" value="Ilha Comprida" 
+                                   style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Complemento / Referência</label>
+                            <input type="text" id="delivery-complement" placeholder="Ex: Apt 101, próximo ao mercado" 
+                                   style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        
+                        <button type="button" id="calculate-distance-btn" class="btn" style="width: 100%; margin-top: 10px;" onclick="calculateDistanceFromAddress()">
+                            📍 Calcular Distância e Taxa
+                        </button>
+                        
+                        <div id="distance-result" style="display: none; margin-top: 10px; padding: 10px; background: #d4edda; color: #155724; border-radius: 8px;">
+                            <strong>Distância calculada:</strong> <span id="calculated-distance">0</span> km
+                        </div>
+                        
+                        <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 8px;">
+                            <small style="color: #856404; display: block;">
+                                <strong>Não conseguiu calcular?</strong> 
+                                <a href="#" onclick="showManualDistanceInput(); return false;" style="color: #856404; text-decoration: underline;">Informar distância manualmente</a>
+                            </small>
+                        </div>
+                        
+                        <div id="manual-distance-input" style="display: none; margin-top: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Distância (km):</label>
+                            <input type="number" id="manual-distance" placeholder="Ex: 5" step="0.1" min="0" max="50" 
+                                   onchange="calculateDeliveryFee()" 
+                                   style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="delivery-fee-row" class="summary-row" style="display: none; color: #17a2b8;">
+                    <span>Taxa de Entrega:</span>
+                    <span id="delivery-fee">R$ 0,00</span>
+                </div>
+
+                <div id="delivery-error" style="display: none; padding: 10px; background: #f8d7da; color: #721c24; border-radius: 8px; margin: 10px 0; font-size: 0.9rem;">
+                </div>
+
+                <!-- Pickup/Delivery Time -->
+                <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">⏰ Horário de Retirada/Entrega *</label>
+                    <input type="time" id="pickup-time" 
+                           style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Horário de funcionamento: 11:00 - 23:00
+                    </small>
+                </div>
+
+                <!-- Payment Options (only for delivery) -->
+                <div id="payment-options" style="display: none; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">💳 Forma de Pagamento *</label>
+                    
+                    <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
+                        <input type="radio" name="payment-method" value="card" onchange="toggleChangeField()" style="margin-right: 10px;">
+                        <span>Cartão (Maquininha)</span>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
+                        <input type="radio" name="payment-method" value="cash-with-change" onchange="toggleChangeField()" style="margin-right: 10px;">
+                        <span>Dinheiro - Preciso de troco</span>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
+                        <input type="radio" name="payment-method" value="cash-no-change" onchange="toggleChangeField()" style="margin-right: 10px;">
+                        <span>Dinheiro - Não preciso de troco</span>
+                    </label>
+                    
+                    <div id="change-amount-field" style="display: none; margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Troco para quanto? *</label>
+                        <input type="number" id="change-amount" placeholder="Ex: 100" step="0.01" min="0" 
+                               style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                    </div>
+                </div>
+
+                <div class="summary-row summary-total">
+                    <span>Total:</span>
+                    <span id="total">R$ 0,00</span>
+                </div>
+
+                <button id="finalize-order-btn" class="btn btn-finalize">
+                    Finalizar via WhatsApp
+                </button>
+
+                <button id="clear-cart-btn" class="btn btn-danger btn-clear">
+                    Limpar Carrinho
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Portuga - Restaurante & Pizzaria</p>
+            <p>Sabor português com tradição brasileira</p>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Update navigation UI
+            await updateNavigationUI();
+            
+            // Check for mesa parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const mesaNumber = urlParams.get('mesa');
+            
+            if (mesaNumber) {
+                // Store mesa number for use in order
+                sessionStorage.setItem('mesaNumber', mesaNumber);
+                
+                // Show banner for mesa order
+                const container = document.querySelector('.cart-layout');
+                if (container) {
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'background: #e8c13f; color: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;';
+                    banner.innerHTML = `🪑 Pedido para Mesa ${mesaNumber}`;
+                    container.insertBefore(banner, container.firstChild);
+                }
+                
+                // Disable delivery checkbox
+                const deliveryCheckbox = document.getElementById('for-delivery');
+                if (deliveryCheckbox) {
+                    deliveryCheckbox.checked = false;
+                    deliveryCheckbox.disabled = true;
+                    const label = deliveryCheckbox.parentElement;
+                    if (label) {
+                        label.style.opacity = '0.5';
+                        label.title = 'Entrega não disponível para pedidos de mesa';
+                    }
+                }
+            }
+            
+            renderCart();
+            document.getElementById('finalize-order-btn').addEventListener('click', finalizeOrder);
+
+            document.getElementById('clear-cart-btn').addEventListener('click', function() {
+                if (confirm('Tem certeza que deseja limpar o carrinho?')) {
+                    clearCart();
+                    renderCart();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio - Portuga</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Portuga</h1>
+            <p class="subtitle">Cardápio Completo</p>
+        </div>
+    </header>
+
+    <nav>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul id="nav-menu">
+            <li><a href="index.html">Início</a></li>
+            <li><a href="menu.html">Cardápio</a></li>
+            <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
+            <li><a href="login.html">Login</a></li>
+            <!--<li><a href="admin.html">Admin</a></li>-->
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- Pratos Individuais -->
+        <section class="menu-section">
+            <h2>Pratos Individuais</h2>
+            <div class="menu-items">
+                <div class="product-card">
+                    <img src="images/bife-cavalo.jpg" alt="Bife-Cavalo" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Bife-Cavalo'">
+                    <div class="product-info">
+                        <h3 class="product-name">Bife-Cavalo</h3>
+                        <p class="product-description">Delicioso bife coberto com ovo frito e acompanhamentos</p>
+                        <p class="product-price">R$ 35,00</p>
+                        <button class="btn" onclick="addToCart('Bife-Cavalo', 35.00, 'images/bife-cavalo.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/rondelli.jpg" alt="Rondelli" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Rondelli'">
+                    <div class="product-info">
+                        <h3 class="product-name">Rondelli</h3>
+                        <p class="product-description">Massa recheada gratinada ao forno</p>
+                        <p class="product-price">R$ 32,00</p>
+                        <button class="btn" onclick="addToCart('Rondelli', 32.00, 'images/rondelli.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/lasanha.jpg" alt="Lasanha" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Lasanha'">
+                    <div class="product-info">
+                        <h3 class="product-name">Lasanha</h3>
+                        <p class="product-description">Lasanha caseira com camadas de massa, molho e queijo</p>
+                        <p class="product-price">R$ 30,00</p>
+                        <button class="btn" onclick="addToCart('Lasanha', 30.00, 'images/lasanha.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/file-peixe.jpg" alt="Filé de Peixe" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=File+de+Peixe'">
+                    <div class="product-info">
+                        <h3 class="product-name">Filé de Peixe ao Molho de Camarão</h3>
+                        <p class="product-description">Filé de peixe grelhado com cremoso molho de camarão</p>
+                        <p class="product-price">R$ 42,00</p>
+                        <button class="btn" onclick="addToCart('Filé de Peixe ao Molho de Camarão', 42.00, 'images/file-peixe.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pratos para Família -->
+        <section class="menu-section">
+            <h2>Pratos para Família</h2>
+            <div class="menu-items">
+                <div class="product-card">
+                    <img src="images/parmegiana-carne.jpg" alt="Parmegiana de Carne" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Parmegiana+Carne'">
+                    <div class="product-info">
+                        <h3 class="product-name">Parmegiana de Carne</h3>
+                        <p class="product-description">Bife empanado com molho de tomate e queijo gratinado</p>
+                        <p class="product-price">R$ 75,00</p>
+                        <button class="btn" onclick="addToCart('Parmegiana de Carne', 75.00, 'images/parmegiana-carne.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/parmegiana-frango.jpg" alt="Parmegiana de Frango" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Parmegiana+Frango'">
+                    <div class="product-info">
+                        <h3 class="product-name">Parmegiana de Frango</h3>
+                        <p class="product-description">Frango empanado com molho de tomate e queijo gratinado</p>
+                        <p class="product-price">R$ 68,00</p>
+                        <button class="btn" onclick="addToCart('Parmegiana de Frango', 68.00, 'images/parmegiana-frango.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/caldeirada.jpg" alt="Caldeirada" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Caldeirada'">
+                    <div class="product-info">
+                        <h3 class="product-name">Caldeirada</h3>
+                        <p class="product-description">Peixe e frutos do mar em molho especial</p>
+                        <p class="product-price">R$ 85,00</p>
+                        <button class="btn" onclick="addToCart('Caldeirada', 85.00, 'images/caldeirada.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/paella.jpg" alt="Paella Marinera" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Paella+Marinera'">
+                    <div class="product-info">
+                        <h3 class="product-name">Paella Marinera</h3>
+                        <p class="product-description">Arroz com frutos do mar ao estilo espanhol</p>
+                        <p class="product-price">R$ 95,00</p>
+                        <button class="btn" onclick="addToCart('Paella Marinera', 95.00, 'images/paella.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/picanha.jpg" alt="Picanha" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Picanha'">
+                    <div class="product-info">
+                        <h3 class="product-name">Picanha à Terra Brasilis</h3>
+                        <p class="product-description">Picanha suculenta ao estilo brasileiro</p>
+                        <p class="product-price">R$ 88,00</p>
+                        <button class="btn" onclick="addToCart('Picanha à Terra Brasilis', 88.00, 'images/picanha.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Porções -->
+        <section class="menu-section">
+            <h2>Porções</h2>
+            <div class="menu-items">
+                <div class="product-card">
+                    <img src="images/camarao.jpg" alt="Camarão" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Camarao'">
+                    <div class="product-info">
+                        <h3 class="product-name">Camarão</h3>
+                        <p class="product-description">Porção de camarões frescos e temperados</p>
+                        <p class="product-price">R$ 45,00</p>
+                        <button class="btn" onclick="addToCart('Camarão', 45.00, 'images/camarao.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/fritas.jpg" alt="Fritas" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Fritas'">
+                    <div class="product-info">
+                        <h3 class="product-name">Fritas</h3>
+                        <p class="product-description">Batatas fritas crocantes e douradas</p>
+                        <p class="product-price">R$ 18,00</p>
+                        <button class="btn" onclick="addToCart('Fritas', 18.00, 'images/fritas.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/bolinho-bacalhau.jpg" alt="Bolinho de Bacalhau" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Bolinho+Bacalhau'">
+                    <div class="product-info">
+                        <h3 class="product-name">Bolinho de Bacalhau</h3>
+                        <p class="product-description">Bolinhos tradicionais portugueses de bacalhau</p>
+                        <p class="product-price">R$ 28,00</p>
+                        <button class="btn" onclick="addToCart('Bolinho de Bacalhau', 28.00, 'images/bolinho-bacalhau.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pizzas -->
+        <section class="menu-section">
+            <h2>Pizzas</h2>
+            <div class="menu-items">
+                <div class="product-card">
+                    <img src="images/pizza-4queijos.jpg" alt="Quatro Queijos" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=4+Queijos'">
+                    <div class="product-info">
+                        <h3 class="product-name">Quatro Queijos</h3>
+                        <p class="product-description">Mussarela, gorgonzola, parmesão e catupiry</p>
+                        <p class="product-price">R$ 52,00</p>
+                        <button class="btn" onclick="addToCart('Quatro Queijos', 52.00, 'images/pizza-4queijos.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/pizza-portuguesa.jpg" alt="Portuguesa" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Portuguesa'">
+                    <div class="product-info">
+                        <h3 class="product-name">Portuguesa</h3>
+                        <p class="product-description">Presunto, ovos, cebola, azeitonas e ervilhas</p>
+                        <p class="product-price">R$ 48,00</p>
+                        <button class="btn" onclick="addToCart('Portuguesa', 48.00, 'images/pizza-portuguesa.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/pizza-frutos-mar.jpg" alt="Frutos do Mar" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Frutos+do+Mar'">
+                    <div class="product-info">
+                        <h3 class="product-name">Frutos do Mar</h3>
+                        <p class="product-description">Camarão, lula, polvo e outros frutos do mar</p>
+                        <p class="product-price">R$ 65,00</p>
+                        <button class="btn" onclick="addToCart('Frutos do Mar', 65.00, 'images/pizza-frutos-mar.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/pizza-toscana.jpg" alt="Toscana" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Toscana'">
+                    <div class="product-info">
+                        <h3 class="product-name">Toscana</h3>
+                        <p class="product-description">Calabresa, catupiry e cebola</p>
+                        <p class="product-price">R$ 45,00</p>
+                        <button class="btn" onclick="addToCart('Toscana', 45.00, 'images/pizza-toscana.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/pizza-mussarela.jpg" alt="Mussarela" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Mussarela'">
+                    <div class="product-info">
+                        <h3 class="product-name">Mussarela</h3>
+                        <p class="product-description">Queijo mussarela, tomate e manjericão</p>
+                        <p class="product-price">R$ 38,00</p>
+                        <button class="btn" onclick="addToCart('Mussarela', 38.00, 'images/pizza-mussarela.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <img src="images/pizza-calabresa.jpg" alt="Calabresa" class="product-image" onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=Calabresa'">
+                    <div class="product-info">
+                        <h3 class="product-name">Calabresa</h3>
+                        <p class="product-description">Calabresa, cebola e azeitonas</p>
+                        <p class="product-price">R$ 40,00</p>
+                        <button class="btn" onclick="addToCart('Calabresa', 40.00, 'images/pizza-calabresa.jpg')">Adicionar ao Carrinho</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Portuga - Restaurante & Pizzaria</p>
+            <p>Sabor português com tradição brasileira</p>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Update navigation UI on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await updateNavigationUI();
+        });
+    </script>
+</body>
+</html>

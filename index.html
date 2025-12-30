@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portuga - Restaurante & Pizzaria</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Portuga</h1>
+            <p class="subtitle">Restaurante & Pizzaria</p>
+        </div>
+    </header>
+
+    <nav>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul id="nav-menu">
+            <li><a href="index.html">Início</a></li>
+            <li><a href="menu.html">Cardápio</a></li>
+            <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="admin.html">Admin</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h2>Bem-vindo ao Portuga!</h2>
+            <p>Sabor português com tradição brasileira. Há mais de 20 anos servindo os melhores pratos da culinária portuguesa e pizzas artesanais.</p>
+            <img src="images/restaurant.jpg" alt="Restaurante Portuga" class="restaurant-photo" onerror="this.style.display='none'">
+            <p>Venha nos visitar e experimentar nossas delícias! Agora com pedidos online via WhatsApp.</p>
+            <a href="menu.html" class="btn">Ver Cardápio</a>
+        </section>
+
+        <section class="menu-section">
+            <h2>Nossa História</h2>
+            <p style="color: #666; font-size: 1.1rem; line-height: 1.8;">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse et felis id lectus fringilla ornare. Ut ex justo, vulputate sed placerat quis, facilisis eget tortor. In egestas urna in ex pulvinar pretium. Sed at posuere lorem. Aenean a tincidunt urna, nec imperdiet quam. Curabitur tempor, massa at tincidunt sagittis, dui ex porttitor nunc, vel volutpat tellus lorem in magna. Nam sagittis, ipsum a tincidunt ullamcorper, tellus ex commodo magna, iaculis blandit nisl magna vitae quam.
+            </p>
+        </section>
+
+        <section class="menu-section">
+            <h2>Nossos Destaques</h2>
+            <div class="menu-items">
+                <div class="menu-item">
+                    <h3>Bacalhau à Portuguesa</h3>
+                    <p>Tradicional prato preparado com bacalhau autêntico</p>
+                </div>
+                <div class="menu-item">
+                    <h3>Pizzas Artesanais</h3>
+                    <p>Massa fresca preparada diariamente com ingredientes selecionados</p>
+                </div>
+                <div class="menu-item">
+                    <h3>Carnes Premium</h3>
+                    <p>Cortes nobres grelhados ao ponto perfeito</p>
+                </div>
+                <div class="menu-item">
+                    <h3>Frutos do Mar</h3>
+                    <p>Frescos e selecionados, direto do mar para sua mesa</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="menu-section">
+            <h2>Entre em Contato</h2>
+            <p style="color: #666; font-size: 1.1rem; line-height: 1.8;">
+                <strong>Endereço:</strong>Av. Beira Mar, 13050 - Balneário Britânia, Ilha Comprida - SP, 11925-000<br>
+                <strong>Telefone:</strong> (13) 3842-1013<br>
+                <strong>WhatsApp:</strong> (13) 98137-5008<br>
+                <strong>Horários de funcionamento:</strong> <br /> Cozinha: Todos os dias - 11h às 22h <br /> Pizzaria: Todos os dias - 18h às 24h <br /> Entregas: Todos os dias - 11h às 24h
+            </p>
+        </section>
+    </main>
+
+    <!-- Notes Pop-up Modal -->
+    <div id="notes-popup" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" onclick="closeNotesPopup()">&times;</span>
+            <div id="notes-popup-content">
+                <!-- Notes will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Portuga - Restaurante & Pizzaria</p>
+            <p>Sabor português com tradição brasileira</p>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Update navigation UI on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await updateNavigationUI();
+        });
+    </script>
+</body>
+</html>
