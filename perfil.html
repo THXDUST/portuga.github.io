@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Portuga</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .profile-header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .profile-photo-container {
+            position: relative;
+        }
+
+        .profile-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e8c13f;
+        }
+
+        .default-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            border: 4px solid #e8c13f;
+        }
+
+        .upload-photo-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: #e8c13f;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .upload-photo-btn:hover {
+            background: #d4ab2c;
+            transform: scale(1.1);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            color: #e8c13f;
+            margin: 0 0 10px 0;
+        }
+
+        .profile-email {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .profile-member-since {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .profile-roles {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .role-badge {
+            background: #e8c13f;
+            color: #1a1a1a;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .profile-sections {
+            display: grid;
+            gap: 20px;
+        }
+
+        .profile-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #e8c13f;
+            margin: 0;
+        }
+
+        .toggle-visibility {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .toggle-visibility:hover {
+            color: #e8c13f;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e8c13f;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .schedule-table th {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .schedule-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .top-dishes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .dish-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .dish-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .dish-quantity {
+            background: #e8c13f;
+            color: #1a1a1a;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .favorite-dish-selector {
+            margin-top: 15px;
+        }
+
+        .favorite-dish-selector label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .favorite-dish-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .admin-quick-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .quick-link-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .quick-link-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .quick-link-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .quick-link-card p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .pending-badge {
+            background: #dc3545;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Portuga</h1>
+            <p class="subtitle">Restaurante & Pizzaria</p>
+        </div>
+    </header>
+
+    <nav>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul id="nav-menu">
+            <li><a href="index.html">Início</a></li>
+            <li><a href="menu.html">Cardápio</a></li>
+            <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="admin.html">Admin</a></li>
+        </ul>
+    </nav>
+
+    <main class="profile-container">
+        <div id="loading" class="loading">
+            <p>⏳ Carregando perfil...</p>
+        </div>
+
+        <div id="profile-content" style="display: none;">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-photo-container">
+                    <img id="profile-photo" class="profile-photo hidden" src="" alt="Foto de perfil">
+                    <div id="default-avatar" class="default-avatar">👤</div>
+                    <button class="upload-photo-btn" onclick="document.getElementById('photo-upload').click()">📷</button>
+                    <input type="file" id="photo-upload" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="profile-info">
+                    <h1 class="profile-name" id="profile-name">Nome do Usuário</h1>
+                    <p class="profile-email" id="profile-email">email@example.com</p>
+                    <p class="profile-member-since" id="member-since">Membro desde: Janeiro 2024</p>
+                    <div class="profile-roles" id="profile-roles"></div>
+                </div>
+            </div>
+
+            <!-- Statistics Section (for all users) -->
+            <div class="profile-section" id="statistics-section">
+                <div class="section-header">
+                    <h2 class="section-title">📊 Estatísticas Pessoais</h2>
+                    <span class="toggle-visibility" onclick="toggleSection('statistics')" title="Ocultar/Mostrar">👁️</span>
+                </div>
+                <div id="statistics-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-spent">R$ 0,00</div>
+                            <div class="stat-label">💰 Total Gasto</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-orders">0</div>
+                            <div class="stat-label">📦 Pedidos Realizados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="most-ordered">-</div>
+                            <div class="stat-label">🍕 Prato Mais Pedido</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="last-review">-</div>
+                            <div class="stat-label">⭐ Última Avaliação</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Schedule Section (for employees only) -->
+            <div class="profile-section hidden" id="schedule-section">
+                <div class="section-header">
+                    <h2 class="section-title">📅 Meu Horário</h2>
+                </div>
+                <div id="schedule-content">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>Dia</th>
+                                <th>Entrada</th>
+                                <th>Almoço</th>
+                                <th>Retorno</th>
+                                <th>Saída</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-tbody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #666;">Nenhum horário configurado</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div id="next-shift" style="margin-top: 15px; padding: 15px; background: #e8f4f8; border-radius: 8px;"></div>
+                </div>
+            </div>
+
+            <!-- Employee Statistics (for employees only) -->
+            <div class="profile-section hidden" id="employee-stats-section">
+                <div class="section-header">
+                    <h2 class="section-title">📈 Estatísticas Profissionais</h2>
+                </div>
+                <div id="employee-stats-content">
+                    <h3 style="color: #333; margin-bottom: 15px;">🏆 Top 5 Pratos Mais Vendidos</h3>
+                    <div class="top-dishes-list" id="top-dishes-list">
+                        <p style="color: #666;">Carregando...</p>
+                    </div>
+
+                    <div class="favorite-dish-selector">
+                        <label for="favorite-dish">⭐ Meu Prato Favorito:</label>
+                        <select id="favorite-dish">
+                            <option value="">Selecione um prato...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Quick Panel (for admins only) -->
+            <div class="profile-section hidden" id="admin-panel-section">
+                <div class="section-header">
+                    <h2 class="section-title">⚡ Painel de Controle Rápido</h2>
+                </div>
+                <div class="admin-quick-panel">
+                    <a href="admin.html" class="quick-link-card">
+                        <h3>🎛️ Painel Admin</h3>
+                        <p>Acesse o painel administrativo completo</p>
+                    </a>
+                    <a href="admin.html#reviews" class="quick-link-card">
+                        <h3>⭐ Avaliações <span class="pending-badge" id="pending-reviews">0</span></h3>
+                        <p>Gerenciar avaliações pendentes</p>
+                    </a>
+                    <a href="admin.html#resumes" class="quick-link-card">
+                        <h3>👔 Currículos <span class="pending-badge" id="pending-resumes">0</span></h3>
+                        <p>Ver currículos recebidos</p>
+                    </a>
+                    <a href="admin.html#ouvidoria" class="quick-link-card">
+                        <h3>💬 Ouvidoria <span class="pending-badge" id="pending-ouvidoria">0</span></h3>
+                        <p>Atender mensagens da ouvidoria</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="background: #1a1a1a; color: white; text-align: center; padding: 20px; margin-top: 40px;">
+        <p>&copy; 2024 Portuga - Restaurante & Pizzaria. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="scripts.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        let userProfile = null;
+        let userStatistics = null;
+
+        // Load profile data
+        async function loadProfile() {
+            try {
+                // Get profile info
+                const profileResponse = await fetch('/api/profile.php?action=info');
+                const profileData = await profileResponse.json();
+
+                if (!profileData.success) {
+                    throw new Error('Failed to load profile');
+                }
+
+                userProfile = profileData.user;
+
+                // Display profile header
+                document.getElementById('profile-name').textContent = userProfile.full_name;
+                document.getElementById('profile-email').textContent = userProfile.email_censored;
+                
+                const memberSince = new Date(userProfile.created_at);
+                document.getElementById('member-since').textContent = 
+                    `Membro desde: ${memberSince.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
+
+                // Display roles
+                const rolesContainer = document.getElementById('profile-roles');
+                rolesContainer.innerHTML = '';
+                userProfile.roles.forEach(role => {
+                    const badge = document.createElement('span');
+                    badge.className = 'role-badge';
+                    badge.textContent = role.name;
+                    rolesContainer.appendChild(badge);
+                });
+
+                // Display profile photo
+                if (userProfile.photo_path) {
+                    document.getElementById('profile-photo').src = '/' + userProfile.photo_path;
+                    document.getElementById('profile-photo').classList.remove('hidden');
+                    document.getElementById('default-avatar').classList.add('hidden');
+                } else {
+                    const initial = userProfile.full_name.charAt(0).toUpperCase();
+                    document.getElementById('default-avatar').textContent = initial;
+                }
+
+                // Load statistics
+                await loadStatistics();
+
+                // Check if user is employee or admin
+                const roleNames = userProfile.roles.map(r => r.name);
+                const isEmployee = roleNames.some(r => ['Admin', 'Gerente', 'Atendente', 'Cozinha'].includes(r));
+                const isAdmin = roleNames.includes('Admin');
+
+                if (isEmployee) {
+                    document.getElementById('schedule-section').classList.remove('hidden');
+                    document.getElementById('employee-stats-section').classList.remove('hidden');
+                    await loadSchedule();
+                    await loadEmployeeStats();
+                }
+
+                if (isAdmin) {
+                    document.getElementById('admin-panel-section').classList.remove('hidden');
+                    await loadAdminPendingCounts();
+                }
+
+                // Show profile content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('profile-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                document.getElementById('loading').innerHTML = '<p style="color: #dc3545;">❌ Erro ao carregar perfil. <a href="login.html">Fazer login</a></p>';
+            }
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/profile.php?action=statistics');
+                const data = await response.json();
+
+                if (data.success) {
+                    userStatistics = data.statistics;
+
+                    // Display statistics
+                    document.getElementById('total-spent').textContent = 
+                        `R$ ${userStatistics.total_spent.toFixed(2)}`;
+                    document.getElementById('total-orders').textContent = userStatistics.total_orders;
+                    
+                    if (userStatistics.most_ordered) {
+                        document.getElementById('most-ordered').textContent = 
+                            `${userStatistics.most_ordered.item_name} (${userStatistics.most_ordered.total_quantity}x)`;
+                    }
+
+                    if (userStatistics.last_review) {
+                        const stars = '⭐'.repeat(userStatistics.last_review.rating);
+                        document.getElementById('last-review').textContent = stars;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Load schedule
+        async function loadSchedule() {
+            try {
+                const response = await fetch('/api/admin/schedule.php?action=my-schedule');
+                const data = await response.json();
+
+                if (data.success && data.schedules.length > 0) {
+                    const tbody = document.getElementById('schedule-tbody');
+                    tbody.innerHTML = '';
+
+                    data.schedules.forEach(schedule => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${capitalize(schedule.day_of_week)}</td>
+                            <td>${schedule.shift_start}</td>
+                            <td>${schedule.lunch_start || '-'}</td>
+                            <td>${schedule.lunch_end || '-'}</td>
+                            <td>${schedule.shift_end}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Display next shift
+                    if (data.next_shift) {
+                        const nextShiftEl = document.getElementById('next-shift');
+                        nextShiftEl.innerHTML = `
+                            <strong>📍 Próximo Turno:</strong> 
+                            ${capitalize(data.next_shift.day_of_week)}, 
+                            ${data.next_shift.shift_start} - ${data.next_shift.shift_end}
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+            }
+        }
+
+        // Load employee statistics
+        async function loadEmployeeStats() {
+            if (!userStatistics.employee_stats) return;
+
+            const topDishes = userStatistics.employee_stats.top_dishes;
+            const listEl = document.getElementById('top-dishes-list');
+            listEl.innerHTML = '';
+
+            topDishes.forEach((dish, index) => {
+                const item = document.createElement('div');
+                item.className = 'dish-item';
+                item.innerHTML = `
+                    <span class="dish-name">${index + 1}. ${dish.item_name}</span>
+                    <span class="dish-quantity">${dish.total_sold} vendidos</span>
+                `;
+                listEl.appendChild(item);
+            });
+
+            // Load menu items for favorite dish selector
+            // TODO: Implement menu items loading
+        }
+
+        // Load admin pending counts
+        async function loadAdminPendingCounts() {
+            try {
+                // Load pending reviews count
+                const reviewsResponse = await fetch('/api/reviews.php?action=list&status=pendente&per_page=1');
+                const reviewsData = await reviewsResponse.json();
+                if (reviewsData.success) {
+                    document.getElementById('pending-reviews').textContent = reviewsData.pagination.total;
+                }
+
+                // TODO: Load other pending counts (resumes, ouvidoria)
+            } catch (error) {
+                console.error('Error loading pending counts:', error);
+            }
+        }
+
+        // Toggle section visibility
+        function toggleSection(section) {
+            const contentEl = document.getElementById(`${section}-content`);
+            const isHidden = contentEl.classList.contains('hidden');
+            
+            if (isHidden) {
+                contentEl.classList.remove('hidden');
+            } else {
+                contentEl.classList.add('hidden');
+            }
+
+            // Save preference
+            // TODO: Call API to save preference
+        }
+
+        // Photo upload
+        document.getElementById('photo-upload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            try {
+                const response = await fetch('/api/profile.php?action=upload-photo', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update photo display
+                    document.getElementById('profile-photo').src = '/' + data.photo_path;
+                    document.getElementById('profile-photo').classList.remove('hidden');
+                    document.getElementById('default-avatar').classList.add('hidden');
+                    
+                    alert('✅ Foto atualizada com sucesso!');
+                } else {
+                    alert('❌ Erro ao enviar foto: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                alert('❌ Erro ao enviar foto');
+            }
+        });
+
+        // Favorite dish selection
+        document.getElementById('favorite-dish').addEventListener('change', async function(e) {
+            const menuItemId = e.target.value;
+            if (!menuItemId) return;
+
+            try {
+                const response = await fetch('/api/profile.php?action=update-favorite-dish', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ menu_item_id: menuItemId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Prato favorito atualizado!');
+                }
+            } catch (error) {
+                console.error('Error updating favorite dish:', error);
+            }
+        });
+
+        // Helper function
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+            updateCartBadge();
+        });
+
+        // Hamburger menu
+        document.getElementById('hamburger-btn').addEventListener('click', function() {
+            document.getElementById('nav-menu').classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
