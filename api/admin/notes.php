@@ -92,7 +92,15 @@ switch ($path) {
             exit();
         }
         
-        // TODO: Add admin authentication check
+        // Check admin authentication
+        $userId = getCurrentUser();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Authentication required']);
+            exit();
+        }
+        
+        // TODO: Add role/permission check for admin access
         
         try {
             $stmt = $pdo->query("
@@ -123,7 +131,15 @@ switch ($path) {
             exit();
         }
         
-        // TODO: Add admin authentication check
+        // Check admin authentication
+        $userId = getCurrentUser();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Authentication required']);
+            exit();
+        }
+        
+        // TODO: Add role/permission check for admin access
         
         $data = json_decode(file_get_contents('php://input'), true);
         $userId = getCurrentUser();
@@ -168,7 +184,15 @@ switch ($path) {
             exit();
         }
         
-        // TODO: Add admin authentication check
+        // Check admin authentication
+        $userId = getCurrentUser();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Authentication required']);
+            exit();
+        }
+        
+        // TODO: Add role/permission check for admin access
         
         $data = json_decode(file_get_contents('php://input'), true);
         
@@ -236,7 +260,15 @@ switch ($path) {
             exit();
         }
         
-        // TODO: Add admin authentication check
+        // Check admin authentication
+        $userId = getCurrentUser();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Authentication required']);
+            exit();
+        }
+        
+        // TODO: Add role/permission check for admin access
         
         $noteId = $_GET['id'] ?? null;
         

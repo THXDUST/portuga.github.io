@@ -161,7 +161,15 @@ switch ($path) {
             exit();
         }
         
-        // TODO: Add admin authentication check
+        // Check admin authentication
+        $userId = getCurrentUser();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Authentication required']);
+            exit();
+        }
+        
+        // TODO: Add role/permission check for admin access
         
         $status = $_GET['status'] ?? null;
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -220,10 +228,17 @@ switch ($path) {
             exit();
         }
         
-        // TODO: Add admin authentication check
+        // Check admin authentication
+        $userId = getCurrentUser();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Authentication required']);
+            exit();
+        }
+        
+        // TODO: Add role/permission check for admin access
         
         $data = json_decode(file_get_contents('php://input'), true);
-        $userId = getCurrentUser();
         
         if (!isset($data['review_id']) || !isset($data['status'])) {
             http_response_code(400);
@@ -317,7 +332,15 @@ switch ($path) {
             exit();
         }
         
-        // TODO: Add admin authentication check
+        // Check admin authentication
+        $userId = getCurrentUser();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Authentication required']);
+            exit();
+        }
+        
+        // TODO: Add role/permission check for admin access
         
         $reviewId = $_GET['review_id'] ?? null;
         
