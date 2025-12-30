@@ -1097,15 +1097,32 @@ function toggleRestaurantStatus() {
 
 function toggleMaintenanceMode() {
     const checkbox = document.getElementById('maintenance-mode');
+    const optionsDiv = document.getElementById('maintenance-options');
     
     if (checkbox && checkbox.checked) {
         if (!confirm('Ativar modo manutenção? Isso pode restringir o acesso ao site.')) {
             checkbox.checked = false;
             return;
         }
-        alert('Modo manutenção ativado!');
+        if (optionsDiv) optionsDiv.style.display = 'block';
     } else {
-        alert('Modo manutenção desativado!');
+        if (optionsDiv) optionsDiv.style.display = 'none';
+    }
+}
+
+function toggleRestrictAll() {
+    const restrictAll = document.getElementById('restrict-all');
+    const pageCheckboxes = document.querySelectorAll('.maintenance-page');
+    
+    if (restrictAll && restrictAll.checked) {
+        pageCheckboxes.forEach(cb => {
+            cb.checked = true;
+            cb.disabled = true;
+        });
+    } else {
+        pageCheckboxes.forEach(cb => {
+            cb.disabled = false;
+        });
     }
 }
 
@@ -1123,8 +1140,29 @@ function saveSettings() {
         maintenanceMode: document.getElementById('maintenance-mode')?.checked
     };
     
+    // Get maintenance mode configuration
+    if (settings.maintenanceMode) {
+        settings.restrictAll = document.getElementById('restrict-all')?.checked;
+        
+        const restrictedPages = [];
+        document.querySelectorAll('.maintenance-page:checked').forEach(cb => {
+            restrictedPages.push(cb.value);
+        });
+        settings.restrictedPages = restrictedPages;
+        settings.maintenanceMessage = document.getElementById('maintenance-message')?.value;
+        settings.maintenanceETA = document.getElementById('maintenance-eta')?.value;
+    }
+    
     // In a real implementation, this would save to the API
     console.log('Saving settings:', settings);
+    
+    // TODO: Call API to save maintenance mode settings
+    // fetch('/api/admin/maintenance.php?action=update', {
+    //     method: 'PUT',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(settings)
+    // });
+    
     alert('Configurações salvas com sucesso!');
 }
 

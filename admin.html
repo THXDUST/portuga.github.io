@@ -495,6 +495,67 @@
                         </label>
                         <span style="margin-left: 10px;">Ativar Modo Manutenção</span>
                     </div>
+                    
+                    <div id="maintenance-options" style="display: none; margin-top: 20px; padding: 20px; background: #fff3cd; border-radius: 8px;">
+                        <h4 style="color: #856404; margin-bottom: 15px;">⚠️ Configurar Páginas em Manutenção</h4>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="restrict-all" onchange="toggleRestrictAll()">
+                                <strong>Restringir TODAS as páginas (Modo Global)</strong>
+                            </label>
+                        </div>
+                        
+                        <div id="page-selection" style="margin-top: 15px;">
+                            <h5 style="margin-bottom: 10px;">Ou selecione páginas específicas:</h5>
+                            <div style="display: grid; gap: 8px;">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="index.html">
+                                    <span>🏠 index.html - Página Inicial</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="menu.html">
+                                    <span>🍕 menu.html - Cardápio</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="carrinho.html">
+                                    <span>🛒 carrinho.html - Carrinho de Compras</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="pedidos.html">
+                                    <span>📦 pedidos.html - Acompanhar Pedidos</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="avaliar.html">
+                                    <span>⭐ avaliar.html - Avaliar Restaurante</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="ouvidoria.html">
+                                    <span>💬 ouvidoria.html - Ouvidoria</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="enviar-curriculo.html">
+                                    <span>👔 enviar-curriculo.html - Trabalhe Conosco</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" class="maintenance-page" value="perfil.html">
+                                    <span>👤 perfil.html - Perfil do Usuário</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Mensagem Customizada:</label>
+                            <textarea id="maintenance-message" class="form-group" rows="3" 
+                                placeholder="Ex: Estamos em manutenção. Voltaremos em breve!"
+                                style="width: 100%; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Tempo Estimado de Retorno (opcional):</label>
+                            <input type="datetime-local" id="maintenance-eta" class="form-group" style="max-width: 300px;">
+                        </div>
+                    </div>
                 </div>
                 
                 <div style="margin-top: 30px;">

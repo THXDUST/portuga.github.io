@@ -774,3 +774,112 @@ function getActiveNotes() {
     const allNotes = JSON.parse(notes);
     return allNotes.filter(note => note.active === true);
 }
+
+// ============================================
+// MAINTENANCE MODE CHECK
+// ============================================
+
+/**
+ * Check if current page is in maintenance mode
+ * Should be called on every page load
+ */
+async function checkMaintenanceMode() {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
+    // Admin pages are never blocked
+    if (currentPage === 'admin.html' || currentPage === 'login.html') {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/maintenance.php?action=check&page=' + currentPage);
+        const data = await response.json();
+        
+        if (data.success && data.maintenance && data.maintenance.is_active) {
+            const maintenance = data.maintenance;
+            
+            // Check if this specific page is restricted
+            let isRestricted = maintenance.restrict_all;
+            
+            if (!isRestricted && maintenance.restricted_pages) {
+                const restrictedPages = JSON.parse(maintenance.restricted_pages);
+                isRestricted = restrictedPages.includes(currentPage);
+            }
+            
+            if (isRestricted) {
+                showMaintenanceOverlay(maintenance.custom_message, maintenance.estimated_return);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking maintenance mode:', error);
+        // Don't block on error
+    }
+}
+
+/**
+ * Display maintenance overlay
+ */
+function showMaintenanceOverlay(message, eta) {
+    const overlay = document.createElement('div');
+    overlay.id = 'maintenance-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white;
+        padding: 50px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 600px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    `;
+    
+    const icon = document.createElement('div');
+    icon.style.cssText = 'font-size: 5rem; margin-bottom: 20px;';
+    icon.textContent = '🔧';
+    
+    const title = document.createElement('h2');
+    title.style.cssText = 'color: #e8c13f; margin-bottom: 20px; font-size: 2rem;';
+    title.textContent = 'Em Manutenção';
+    
+    const messageEl = document.createElement('p');
+    messageEl.style.cssText = 'color: #666; font-size: 1.2rem; line-height: 1.6; margin-bottom: 20px;';
+    messageEl.textContent = message || 'Estamos realizando melhorias no sistema. Por favor, volte mais tarde.';
+    
+    content.appendChild(icon);
+    content.appendChild(title);
+    content.appendChild(messageEl);
+    
+    if (eta) {
+        const etaEl = document.createElement('p');
+        etaEl.style.cssText = 'color: #999; font-size: 1rem; margin-top: 15px;';
+        const etaDate = new Date(eta);
+        etaEl.textContent = `⏰ Previsão de retorno: ${etaDate.toLocaleString('pt-BR')}`;
+        content.appendChild(etaEl);
+    }
+    
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+    
+    // Disable scrolling
+    document.body.style.overflow = 'hidden';
+}
+
+// Auto-check maintenance mode on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkMaintenanceMode);
+} else {
+    checkMaintenanceMode();
+}
