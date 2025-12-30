@@ -54,6 +54,7 @@
                 <li><a href="#" class="nav-tab active" data-tab="dashboard">📊 Dashboard</a></li>
                 <li><a href="#" class="nav-tab" data-tab="orders">📦 Pedidos (Kanban)</a></li>
                 <li><a href="#" class="nav-tab" data-tab="menu">🍕 Cardápio</a></li>
+                <li><a href="#" class="nav-tab" data-tab="reviews">⭐ Avaliações</a></li>
                 <li><a href="#" class="nav-tab" data-tab="notes">📝 Notas</a></li>
                 <li><a href="#" class="nav-tab" data-tab="reports">📈 Relatórios</a></li>
                 <li><a href="#" class="nav-tab" data-tab="resumes">👔 Currículos</a></li>
@@ -62,6 +63,7 @@
                 <li><a href="#" class="nav-tab" data-tab="roles">👥 Cargos</a></li>
                 <li><a href="#" class="nav-tab" data-tab="users">👤 Usuários</a></li>
                 <li><a href="#" class="nav-tab" data-tab="settings">⚙️ Configurações</a></li>
+                <li><a href="#" class="nav-tab" data-tab="schedule">📅 Horários</a></li>
             </ul>
         </nav>
 
@@ -232,6 +234,72 @@
                 </div>
             </div>
             <!-- End Notes Tab -->
+
+            <!-- Reviews Tab -->
+            <div id="tab-reviews" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">⭐ Gestão de Avaliações</h2>
+                
+                <!-- Statistics Cards -->
+                <div class="stats-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="review-average">0.0</div>
+                        <div class="stat-label">⭐ Média Geral</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="review-total">0</div>
+                        <div class="stat-label">📊 Total de Avaliações</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="review-pending">0</div>
+                        <div class="stat-label">⏳ Pendentes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="review-approved">0</div>
+                        <div class="stat-label">✅ Aprovadas</div>
+                    </div>
+                </div>
+
+                <!-- Rating Distribution Chart -->
+                <div class="menu-section" style="margin-bottom: 30px;">
+                    <h3 style="color: #333; margin-bottom: 15px;">Distribuição por Estrelas</h3>
+                    <div id="rating-distribution" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">
+                    <label style="color: #666;">Filtrar por status:</label>
+                    <select id="review-status-filter" class="form-group" style="display: inline-block; width: auto;" onchange="loadReviews()">
+                        <option value="">Todos</option>
+                        <option value="pendente">Pendentes</option>
+                        <option value="aprovado">Aprovados</option>
+                        <option value="rejeitado">Rejeitados</option>
+                        <option value="arquivado">Arquivados</option>
+                    </select>
+                </div>
+
+                <!-- Reviews List -->
+                <div id="reviews-list">
+                    <p style="color: #666;">Carregando avaliações...</p>
+                </div>
+            </div>
+            <!-- End Reviews Tab -->
+
+            <!-- Schedule Tab -->
+            <div id="tab-schedule" class="admin-tab" style="display: none;">
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">📅 Gestão de Horários</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showAddScheduleModal()">➕ Adicionar Horário</button>
+                </div>
+
+                <!-- Schedule List -->
+                <div id="schedule-list">
+                    <p style="color: #666;">Carregando horários...</p>
+                </div>
+            </div>
+            <!-- End Schedule Tab -->
 
             <!-- Reports Tab -->
             <div id="tab-reports" class="admin-tab" style="display: none;">

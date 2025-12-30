@@ -78,6 +78,12 @@ function loadTabContent(tabName) {
         case 'notes':
             loadNotes();
             break;
+        case 'reviews':
+            loadReviews();
+            break;
+        case 'schedule':
+            loadSchedules();
+            break;
         case 'reports':
             initReportFilters();
             break;
@@ -1420,4 +1426,657 @@ function showAccessDenied(tabName) {
             </div>
         `;
     }
+}
+
+// ============================================
+// REVIEWS MANAGEMENT
+// ============================================
+
+/**
+ * Load reviews management
+ */
+async function loadReviews() {
+    try {
+        // Load statistics
+        const statsResponse = await fetch('/api/reviews.php?action=statistics');
+        const statsData = await statsResponse.json();
+        
+        if (statsData.success) {
+            const stats = statsData.statistics;
+            document.getElementById('review-average').textContent = stats.average_rating.toFixed(1);
+            document.getElementById('review-total').textContent = stats.total_reviews;
+            document.getElementById('review-approved').textContent = stats.approved_reviews;
+            
+            // Calculate pending (total - approved)
+            const pending = stats.total_reviews - stats.approved_reviews;
+            document.getElementById('review-pending').textContent = pending;
+            
+            // Display rating distribution
+            displayRatingDistribution(stats.rating_distribution);
+        }
+        
+        // Load reviews list
+        await loadReviewsList();
+        
+    } catch (error) {
+        console.error('Error loading reviews:', error);
+        document.getElementById('reviews-list').innerHTML = 
+            '<p style="color: #dc3545;">Erro ao carregar avaliações.</p>';
+    }
+}
+
+/**
+ * Display rating distribution chart
+ */
+function displayRatingDistribution(distribution) {
+    const container = document.getElementById('rating-distribution');
+    container.innerHTML = '';
+    
+    const total = distribution.reduce((sum, count) => sum + count, 0);
+    
+    for (let i = 5; i >= 1; i--) {
+        const count = distribution[i] || 0;
+        const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
+        
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+        row.innerHTML = `
+            <span style="min-width: 60px; color: #666;">${i} ⭐</span>
+            <div style="flex: 1; height: 30px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div style="height: 100%; background: #ffd700; width: ${percentage}%; transition: width 0.5s;"></div>
+            </div>
+            <span style="min-width: 80px; color: #666; text-align: right;">${count} (${percentage}%)</span>
+        `;
+        container.appendChild(row);
+    }
+}
+
+/**
+ * Load reviews list
+ */
+async function loadReviewsList() {
+    const statusFilter = document.getElementById('review-status-filter').value;
+    const container = document.getElementById('reviews-list');
+    
+    container.innerHTML = '<p style="color: #666;">Carregando avaliações...</p>';
+    
+    try {
+        let url = '/api/reviews.php?action=list&per_page=50';
+        if (statusFilter) {
+            url += `&status=${statusFilter}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (!data.success || data.reviews.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhuma avaliação encontrada.</p>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        data.reviews.forEach(review => {
+            const reviewCard = document.createElement('div');
+            reviewCard.className = 'order-card';
+            reviewCard.style.marginBottom = '15px';
+            
+            const stars = '⭐'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            const statusBadge = getReviewStatusBadge(review.status);
+            
+            reviewCard.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">${stars}</div>
+                        <div style="color: #666; font-size: 0.9rem;">
+                            <strong>${review.user_name || 'Anônimo'}</strong> • 
+                            ${new Date(review.created_at).toLocaleDateString('pt-BR')}
+                        </div>
+                    </div>
+                    <div>${statusBadge}</div>
+                </div>
+                ${review.comment ? `<p style="color: #666; margin: 15px 0;">${review.comment}</p>` : ''}
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    ${review.status === 'pendente' ? `
+                        <button class="btn btn-success" onclick="updateReviewStatus(${review.id}, 'aprovado')">
+                            ✅ Aprovar
+                        </button>
+                        <button class="btn btn-danger" onclick="updateReviewStatus(${review.id}, 'rejeitado')">
+                            ❌ Rejeitar
+                        </button>
+                    ` : ''}
+                    ${review.status !== 'arquivado' ? `
+                        <button class="btn btn-secondary" onclick="updateReviewStatus(${review.id}, 'arquivado')">
+                            📁 Arquivar
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-danger" onclick="deleteReview(${review.id})">
+                        🗑️ Deletar
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(reviewCard);
+        });
+        
+    } catch (error) {
+        console.error('Error loading reviews list:', error);
+        container.innerHTML = '<p style="color: #dc3545;">Erro ao carregar avaliações.</p>';
+    }
+}
+
+/**
+ * Get review status badge
+ */
+function getReviewStatusBadge(status) {
+    const badges = {
+        'pendente': '<span style="background: #ffc107; color: #856404; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">⏳ Pendente</span>',
+        'aprovado': '<span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">✅ Aprovado</span>',
+        'rejeitado': '<span style="background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">❌ Rejeitado</span>',
+        'arquivado': '<span style="background: #6c757d; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">📁 Arquivado</span>'
+    };
+    return badges[status] || '';
+}
+
+/**
+ * Update review status
+ */
+async function updateReviewStatus(reviewId, status) {
+    try {
+        const response = await fetch('/api/reviews.php?action=update-status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ review_id: reviewId, status: status })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Status atualizado com sucesso!');
+            loadReviews(); // Reload the list
+        } else {
+            alert('❌ Erro ao atualizar status: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error updating review status:', error);
+        alert('❌ Erro ao atualizar status');
+    }
+}
+
+/**
+ * Delete review
+ */
+async function deleteReview(reviewId) {
+    if (!confirm('Tem certeza que deseja deletar esta avaliação? Esta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reviews.php?action=delete&review_id=${reviewId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Avaliação deletada com sucesso!');
+            loadReviews();
+        } else {
+            alert('❌ Erro ao deletar avaliação: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        alert('❌ Erro ao deletar avaliação');
+    }
+}
+
+// ============================================
+// SCHEDULE MANAGEMENT
+// ============================================
+
+/**
+ * Load schedules management
+ */
+async function loadSchedules() {
+    const container = document.getElementById('schedule-list');
+    container.innerHTML = '<p style="color: #666;">Carregando horários...</p>';
+    
+    try {
+        const response = await fetch('/api/admin/schedule.php?action=list');
+        const data = await response.json();
+        
+        if (!data.success || data.schedules.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhum horário configurado.</p>';
+            return;
+        }
+        
+        // Group schedules by user
+        const schedulesByUser = {};
+        data.schedules.forEach(schedule => {
+            if (!schedulesByUser[schedule.user_id]) {
+                schedulesByUser[schedule.user_id] = {
+                    user_name: schedule.user_name,
+                    schedules: []
+                };
+            }
+            schedulesByUser[schedule.user_id].schedules.push(schedule);
+        });
+        
+        container.innerHTML = '';
+        
+        Object.keys(schedulesByUser).forEach(userId => {
+            const userData = schedulesByUser[userId];
+            
+            const userSection = document.createElement('div');
+            userSection.className = 'menu-section';
+            userSection.style.marginBottom = '30px';
+            
+            userSection.innerHTML = `
+                <h3 style="color: #333; margin-bottom: 15px;">👤 ${userData.user_name}</h3>
+                <table class="schedule-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Dia</th>
+                            <th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Entrada</th>
+                            <th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Almoço</th>
+                            <th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Retorno</th>
+                            <th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Saída</th>
+                            <th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${userData.schedules.map(schedule => `
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${capitalize(schedule.day_of_week)}</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.shift_start}</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.lunch_start || '-'}</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.lunch_end || '-'}</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.shift_end}</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">
+                                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" onclick="editSchedule(${schedule.id})">✏️</button>
+                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="deleteSchedule(${schedule.id})">🗑️</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.appendChild(userSection);
+        });
+        
+    } catch (error) {
+        console.error('Error loading schedules:', error);
+        container.innerHTML = '<p style="color: #dc3545;">Erro ao carregar horários.</p>';
+    }
+}
+
+/**
+ * Show add schedule modal
+ */
+function showAddScheduleModal() {
+    // TODO: Implement modal for adding schedule
+    alert('Funcionalidade de adicionar horário será implementada em breve.');
+}
+
+/**
+ * Edit schedule
+ */
+function editSchedule(scheduleId) {
+    // TODO: Implement schedule editing
+    alert('Funcionalidade de editar horário será implementada em breve.');
+}
+
+/**
+ * Delete schedule
+ */
+async function deleteSchedule(scheduleId) {
+    if (!confirm('Tem certeza que deseja deletar este horário?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/schedule.php?action=delete&id=${scheduleId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Horário deletado com sucesso!');
+            loadSchedules();
+        } else {
+            alert('❌ Erro ao deletar horário: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting schedule:', error);
+        alert('❌ Erro ao deletar horário');
+    }
+}
+
+/**
+ * Capitalize first letter
+ */
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ============================================
+// REVIEWS MANAGEMENT
+// ============================================
+
+/**
+ * Load reviews management
+ */
+async function loadReviews() {
+    try {
+        // Load statistics
+        const statsResponse = await fetch('/api/reviews.php?action=statistics');
+        const statsData = await statsResponse.json();
+        
+        if (statsData.success) {
+            const stats = statsData.statistics;
+            document.getElementById('review-average').textContent = stats.average_rating.toFixed(1);
+            document.getElementById('review-total').textContent = stats.total_reviews;
+            document.getElementById('review-approved').textContent = stats.approved_reviews;
+            
+            // Calculate pending (total - approved)
+            const pending = stats.total_reviews - stats.approved_reviews;
+            document.getElementById('review-pending').textContent = pending;
+            
+            // Display rating distribution
+            displayRatingDistribution(stats.rating_distribution);
+        }
+        
+        // Load reviews list
+        await loadReviewsList();
+        
+    } catch (error) {
+        console.error('Error loading reviews:', error);
+        document.getElementById('reviews-list').innerHTML = 
+            '<p style="color: #dc3545;">Erro ao carregar avaliações.</p>';
+    }
+}
+
+/**
+ * Display rating distribution chart
+ */
+function displayRatingDistribution(distribution) {
+    const container = document.getElementById('rating-distribution');
+    container.innerHTML = '';
+    
+    const total = distribution.reduce((sum, count) => sum + count, 0);
+    
+    for (let i = 5; i >= 1; i--) {
+        const count = distribution[i] || 0;
+        const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
+        
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+        row.innerHTML = `
+            <span style="min-width: 60px; color: #666;">${i} ⭐</span>
+            <div style="flex: 1; height: 30px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div style="height: 100%; background: #ffd700; width: ${percentage}%; transition: width 0.5s;"></div>
+            </div>
+            <span style="min-width: 80px; color: #666; text-align: right;">${count} (${percentage}%)</span>
+        `;
+        container.appendChild(row);
+    }
+}
+
+/**
+ * Load reviews list
+ */
+async function loadReviewsList() {
+    const statusFilter = document.getElementById('review-status-filter').value;
+    const container = document.getElementById('reviews-list');
+    
+    container.innerHTML = '<p style="color: #666;">Carregando avaliações...</p>';
+    
+    try {
+        let url = '/api/reviews.php?action=list&per_page=50';
+        if (statusFilter) {
+            url += '&status=' + statusFilter;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (!data.success || data.reviews.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhuma avaliação encontrada.</p>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        data.reviews.forEach(review => {
+            const reviewCard = document.createElement('div');
+            reviewCard.className = 'order-card';
+            reviewCard.style.marginBottom = '15px';
+            
+            const stars = '⭐'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            const statusBadge = getReviewStatusBadge(review.status);
+            
+            let actionsHtml = '<div style="display: flex; gap: 10px; margin-top: 15px;">';
+            if (review.status === 'pendente') {
+                actionsHtml += '<button class="btn btn-success" onclick="updateReviewStatus(' + review.id + ', \'aprovado\')">✅ Aprovar</button>';
+                actionsHtml += '<button class="btn btn-danger" onclick="updateReviewStatus(' + review.id + ', \'rejeitado\')">❌ Rejeitar</button>';
+            }
+            if (review.status !== 'arquivado') {
+                actionsHtml += '<button class="btn btn-secondary" onclick="updateReviewStatus(' + review.id + ', \'arquivado\')">📁 Arquivar</button>';
+            }
+            actionsHtml += '<button class="btn btn-danger" onclick="deleteReview(' + review.id + ')">🗑️ Deletar</button>';
+            actionsHtml += '</div>';
+            
+            reviewCard.innerHTML = 
+                '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">' +
+                '<div>' +
+                '<div style="font-size: 1.5rem; margin-bottom: 5px;">' + stars + '</div>' +
+                '<div style="color: #666; font-size: 0.9rem;">' +
+                '<strong>' + (review.user_name || 'Anônimo') + '</strong> • ' +
+                new Date(review.created_at).toLocaleDateString('pt-BR') +
+                '</div>' +
+                '</div>' +
+                '<div>' + statusBadge + '</div>' +
+                '</div>' +
+                (review.comment ? '<p style="color: #666; margin: 15px 0;">' + review.comment + '</p>' : '') +
+                actionsHtml;
+            
+            container.appendChild(reviewCard);
+        });
+        
+    } catch (error) {
+        console.error('Error loading reviews list:', error);
+        container.innerHTML = '<p style="color: #dc3545;">Erro ao carregar avaliações.</p>';
+    }
+}
+
+/**
+ * Get review status badge
+ */
+function getReviewStatusBadge(status) {
+    const badges = {
+        'pendente': '<span style="background: #ffc107; color: #856404; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">⏳ Pendente</span>',
+        'aprovado': '<span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">✅ Aprovado</span>',
+        'rejeitado': '<span style="background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">❌ Rejeitado</span>',
+        'arquivado': '<span style="background: #6c757d; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">📁 Arquivado</span>'
+    };
+    return badges[status] || '';
+}
+
+/**
+ * Update review status
+ */
+async function updateReviewStatus(reviewId, status) {
+    try {
+        const response = await fetch('/api/reviews.php?action=update-status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ review_id: reviewId, status: status })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Status atualizado com sucesso!');
+            loadReviews();
+        } else {
+            alert('❌ Erro ao atualizar status: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error updating review status:', error);
+        alert('❌ Erro ao atualizar status');
+    }
+}
+
+/**
+ * Delete review
+ */
+async function deleteReview(reviewId) {
+    if (!confirm('Tem certeza que deseja deletar esta avaliação? Esta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/reviews.php?action=delete&review_id=' + reviewId, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Avaliação deletada com sucesso!');
+            loadReviews();
+        } else {
+            alert('❌ Erro ao deletar avaliação: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        alert('❌ Erro ao deletar avaliação');
+    }
+}
+
+// ============================================
+// SCHEDULE MANAGEMENT
+// ============================================
+
+/**
+ * Load schedules management
+ */
+async function loadSchedules() {
+    const container = document.getElementById('schedule-list');
+    container.innerHTML = '<p style="color: #666;">Carregando horários...</p>';
+    
+    try {
+        const response = await fetch('/api/admin/schedule.php?action=list');
+        const data = await response.json();
+        
+        if (!data.success || data.schedules.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhum horário configurado.</p>';
+            return;
+        }
+        
+        // Group schedules by user
+        const schedulesByUser = {};
+        data.schedules.forEach(schedule => {
+            if (!schedulesByUser[schedule.user_id]) {
+                schedulesByUser[schedule.user_id] = {
+                    user_name: schedule.user_name,
+                    schedules: []
+                };
+            }
+            schedulesByUser[schedule.user_id].schedules.push(schedule);
+        });
+        
+        container.innerHTML = '';
+        
+        Object.keys(schedulesByUser).forEach(userId => {
+            const userData = schedulesByUser[userId];
+            
+            const userSection = document.createElement('div');
+            userSection.className = 'menu-section';
+            userSection.style.marginBottom = '30px';
+            
+            let tableHtml = '<table class="schedule-table" style="width: 100%; border-collapse: collapse;">' +
+                '<thead><tr>' +
+                '<th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Dia</th>' +
+                '<th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Entrada</th>' +
+                '<th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Almoço</th>' +
+                '<th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Retorno</th>' +
+                '<th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Saída</th>' +
+                '<th style="padding: 10px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e9ecef;">Ações</th>' +
+                '</tr></thead><tbody>';
+            
+            userData.schedules.forEach(schedule => {
+                tableHtml += '<tr>' +
+                    '<td style="padding: 10px; border-bottom: 1px solid #e9ecef;">' + capitalize(schedule.day_of_week) + '</td>' +
+                    '<td style="padding: 10px; border-bottom: 1px solid #e9ecef;">' + schedule.shift_start + '</td>' +
+                    '<td style="padding: 10px; border-bottom: 1px solid #e9ecef;">' + (schedule.lunch_start || '-') + '</td>' +
+                    '<td style="padding: 10px; border-bottom: 1px solid #e9ecef;">' + (schedule.lunch_end || '-') + '</td>' +
+                    '<td style="padding: 10px; border-bottom: 1px solid #e9ecef;">' + schedule.shift_end + '</td>' +
+                    '<td style="padding: 10px; border-bottom: 1px solid #e9ecef;">' +
+                    '<button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" onclick="editSchedule(' + schedule.id + ')">✏️</button> ' +
+                    '<button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="deleteSchedule(' + schedule.id + ')">🗑️</button>' +
+                    '</td></tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            
+            userSection.innerHTML = '<h3 style="color: #333; margin-bottom: 15px;">👤 ' + userData.user_name + '</h3>' + tableHtml;
+            
+            container.appendChild(userSection);
+        });
+        
+    } catch (error) {
+        console.error('Error loading schedules:', error);
+        container.innerHTML = '<p style="color: #dc3545;">Erro ao carregar horários.</p>';
+    }
+}
+
+/**
+ * Show add schedule modal
+ */
+function showAddScheduleModal() {
+    alert('Funcionalidade de adicionar horário será implementada em breve.');
+}
+
+/**
+ * Edit schedule
+ */
+function editSchedule(scheduleId) {
+    alert('Funcionalidade de editar horário será implementada em breve.');
+}
+
+/**
+ * Delete schedule
+ */
+async function deleteSchedule(scheduleId) {
+    if (!confirm('Tem certeza que deseja deletar este horário?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/schedule.php?action=delete&id=' + scheduleId, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Horário deletado com sucesso!');
+            loadSchedules();
+        } else {
+            alert('❌ Erro ao deletar horário: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting schedule:', error);
+        alert('❌ Erro ao deletar horário');
+    }
+}
+
+/**
+ * Capitalize first letter
+ */
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
