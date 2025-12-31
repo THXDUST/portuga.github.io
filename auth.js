@@ -213,10 +213,9 @@ async function handleLogin(e) {
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('session_token', data.session_token);
             
-            // Store full user info (including permissions) for immediate access
-            if (data.user.permissions) {
-                localStorage.setItem('userInfo', JSON.stringify(data.user));
-            }
+            // Store full user info for immediate access
+            // This ensures userInfo is always available for authenticated users
+            localStorage.setItem('userInfo', JSON.stringify(data.user));
             
             showAlert(data.message, 'success');
             

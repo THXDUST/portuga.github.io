@@ -49,12 +49,6 @@ try {
         $roleId = $_SESSION['role_id'] ?? null;
         $fullName = $_SESSION['full_name'] ?? 'Unknown User';
         
-        // Fetch permissions from database based on role_id
-        $permissions = [];
-        $permissionMap = [];
-        $roles = [];
-        $hasAdminAccess = false;
-        
         // Get hardcoded user details
         $hardcodedUsers = getHardcodedUsers();
         $currentUser = null;
@@ -84,7 +78,7 @@ try {
                 $roleData = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($roleData) {
-                    $roles[] = [
+                    $userData['roles'][] = [
                         'id' => $roleId,
                         'name' => $roleData['name'],
                         'description' => $roleData['description']
@@ -99,35 +93,12 @@ try {
                     WHERE rp.role_id = ?
                 ");
                 $stmt->execute([$roleId]);
-                $permissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                // Create permission map
-                foreach ($permissions as $perm) {
-                    $permissionMap[$perm['name']] = true;
-                    // Also add resource_action format
-                    $permissionMap[$perm['resource'] . '_' . $perm['action']] = true;
-                }
-                
-                // Check admin access
-                $hasAdminAccess = isset($permissionMap['admin_panel_access']);
+                $userData['permissions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
             } catch (Exception $e) {
                 error_log("Failed to fetch permissions for hardcoded user: " . $e->getMessage());
             }
         }
-        
-        // Set roles and permissions in userData
-        $userData['roles'] = $roles;
-        $userData['permissions'] = $permissions;
-        $userData['permissionMap'] = $permissionMap;
-        $userData['hasAdminAccess'] = $hasAdminAccess;
-        
-        // Return hardcoded user data
-        echo json_encode([
-            'success' => true,
-            'data' => $userData
-        ]);
-        exit();
     } else {
         // Get database user info
         try {
