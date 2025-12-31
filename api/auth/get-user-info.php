@@ -46,6 +46,9 @@ try {
     
     // Handle hardcoded users
     if ($isHardcodedUser) {
+        $roleId = $_SESSION['role_id'] ?? null;
+        
+        // Get hardcoded user details
         $hardcodedUsers = getHardcodedUsers();
         $currentUser = null;
         
@@ -61,107 +64,109 @@ try {
             $userData['user_type'] = $currentUser['user_type'];
             $userData['role'] = $currentUser['role'];
             $userData['role_id'] = $currentUser['role_id'];
-            
-            // Get permissions for hardcoded user's role
-            if ($currentUser['role_id']) {
-                $conn = getDBConnection();
-                $stmt = $conn->prepare("
-                    SELECT p.name, p.resource, p.action, p.description
+            $roleId = $currentUser['role_id'];
+        }
+        
+        // Fetch permissions from database based on role_id
+        // Note: Customer users have null role_id and no permissions, which is intentional
+        if ($roleId) {
+            try {
+                $pdo = getDBConnection();
+                
+                // Get role name
+                $stmt = $pdo->prepare("SELECT name, description FROM roles WHERE id = ?");
+                $stmt->execute([$roleId]);
+                $roleData = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($roleData) {
+                    $userData['roles'][] = [
+                        'id' => $roleId,
+                        'name' => $roleData['name'],
+                        'description' => $roleData['description']
+                    ];
+                }
+                
+                // Get permissions
+                $stmt = $pdo->prepare("
+                    SELECT p.id, p.name, p.resource, p.action, p.description
                     FROM permissions p
                     INNER JOIN role_permissions rp ON p.id = rp.permission_id
                     WHERE rp.role_id = ?
                 ");
-                $stmt->bind_param("i", $currentUser['role_id']);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                $stmt->execute([$roleId]);
+                $userData['permissions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
-                while ($row = $result->fetch_assoc()) {
-                    $userData['permissions'][] = $row;
-                }
-                
-                // Get role info
-                $stmt = $conn->prepare("SELECT id, name, description FROM roles WHERE id = ?");
-                $stmt->bind_param("i", $currentUser['role_id']);
-                $stmt->execute();
-                $roleResult = $stmt->get_result();
-                if ($roleData = $roleResult->fetch_assoc()) {
-                    $userData['roles'][] = $roleData;
-                }
-                
-                $conn->close();
-            }
-            
-            // Add default permissions for admin user type
-            if ($currentUser['user_type'] === 'admin') {
-                // Admin has all permissions by default
-                $userData['hasAdminAccess'] = true;
+            } catch (Exception $e) {
+                error_log("Failed to fetch permissions for hardcoded user: " . $e->getMessage());
             }
         }
     } else {
         // Get database user info
-        $conn = getDBConnection();
-        
-        $stmt = $conn->prepare("
-            SELECT id, full_name, email, email_verified, created_at, last_login
-            FROM users
-            WHERE id = ? AND is_active = 1
-        ");
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $dbUser = $result->fetch_assoc();
-        
-        if ($dbUser) {
-            $userData['email'] = $dbUser['email'];
-            $userData['email_verified'] = (bool)$dbUser['email_verified'];
-            $userData['created_at'] = $dbUser['created_at'];
-            $userData['last_login'] = $dbUser['last_login'];
+        try {
+            $pdo = getDBConnection();
             
-            // Get user roles
-            $stmt = $conn->prepare("
-                SELECT r.id, r.name, r.description
-                FROM roles r
-                INNER JOIN user_roles ur ON r.id = ur.role_id
-                WHERE ur.user_id = ?
+            $stmt = $pdo->prepare("
+                SELECT id, full_name, email, email_verified, created_at, last_login
+                FROM users
+                WHERE id = ? AND is_active = 1
             ");
-            $stmt->bind_param("i", $userId);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $stmt->execute([$userId]);
+            $dbUser = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            while ($row = $result->fetch_assoc()) {
-                $userData['roles'][] = $row;
+            if ($dbUser) {
+                $userData['email'] = $dbUser['email'];
+                $userData['email_verified'] = (bool)$dbUser['email_verified'];
+                $userData['created_at'] = $dbUser['created_at'];
+                $userData['last_login'] = $dbUser['last_login'];
+                
+                // Get user roles
+                $stmt = $pdo->prepare("
+                    SELECT r.id, r.name, r.description
+                    FROM roles r
+                    INNER JOIN user_roles ur ON r.id = ur.role_id
+                    WHERE ur.user_id = ?
+                ");
+                $stmt->execute([$userId]);
+                $userData['roles'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get user permissions
+                $stmt = $pdo->prepare("
+                    SELECT DISTINCT p.id, p.name, p.resource, p.action, p.description
+                    FROM permissions p
+                    INNER JOIN role_permissions rp ON p.id = rp.permission_id
+                    INNER JOIN user_roles ur ON rp.role_id = ur.role_id
+                    WHERE ur.user_id = ?
+                ");
+                $stmt->execute([$userId]);
+                $userData['permissions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
             
-            // Get user permissions
-            $stmt = $conn->prepare("
-                SELECT DISTINCT p.name, p.resource, p.action, p.description
-                FROM permissions p
-                INNER JOIN role_permissions rp ON p.id = rp.permission_id
-                INNER JOIN user_roles ur ON rp.role_id = ur.role_id
-                WHERE ur.user_id = ?
-            ");
-            $stmt->bind_param("i", $userId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            while ($row = $result->fetch_assoc()) {
-                $userData['permissions'][] = $row;
-            }
+        } catch (Exception $e) {
+            error_log("Failed to fetch database user info: " . $e->getMessage());
         }
-        
-        $conn->close();
+    }
+    
+    // Ensure permissions array is initialized
+    if (!isset($userData['permissions']) || !is_array($userData['permissions'])) {
+        $userData['permissions'] = [];
     }
     
     // Create a simple permission map for easier checking
     $userData['permissionMap'] = [];
     foreach ($userData['permissions'] as $perm) {
-        $key = $perm['resource'] . '_' . $perm['action'];
-        $userData['permissionMap'][$key] = true;
+        // Add null checks for permission fields
+        if (isset($perm['resource']) && isset($perm['action'])) {
+            $key = $perm['resource'] . '_' . $perm['action'];
+            $userData['permissionMap'][$key] = true;
+        }
         // Also add by name for legacy checks
-        $userData['permissionMap'][$perm['name']] = true;
+        if (isset($perm['name'])) {
+            $userData['permissionMap'][$perm['name']] = true;
+        }
     }
     
     // Check for admin panel access
+    // Note: 'admin_panel_access' is defined in database/setup.sql
     $userData['hasAdminAccess'] = 
         isset($userData['permissionMap']['admin_panel_access']) ||
         (isset($userData['user_type']) && $userData['user_type'] === 'admin');

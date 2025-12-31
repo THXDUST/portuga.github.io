@@ -33,10 +33,11 @@ function startSecureSession() {
  * Create session for hardcoded user (no database storage)
  * @param int $userId Hardcoded user ID (negative)
  * @param string $fullName User's full name
+ * @param int|null $roleId User's role ID
  * @param bool $rememberMe Whether to extend session
  * @return string Session token
  */
-function createSessionForHardcodedUser($userId, $fullName, $rememberMe = false) {
+function createSessionForHardcodedUser($userId, $fullName, $roleId = null, $rememberMe = false) {
     startSecureSession();
     
     // Generate session token
@@ -47,6 +48,7 @@ function createSessionForHardcodedUser($userId, $fullName, $rememberMe = false) 
     $_SESSION['user_id'] = $userId;
     $_SESSION['session_token'] = $sessionToken;
     $_SESSION['full_name'] = $fullName;
+    $_SESSION['role_id'] = $roleId;
     $_SESSION['is_hardcoded_user'] = true;
     $_SESSION['created'] = time();
     $_SESSION['expires_at'] = time() + ($expiresIn * 24 * 60 * 60);

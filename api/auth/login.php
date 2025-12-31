@@ -61,10 +61,56 @@ try {
         // Hardcoded user authentication successful
         // Skip rate limiting and database checks for hardcoded users
         
-        // Create session for hardcoded user
-        $sessionToken = createSessionForHardcodedUser($hardcodedUser['id'], $hardcodedUser['full_name'], $rememberMe);
+        // Fetch permissions from database based on role_id
+        // Note: Customer users have null role_id and no permissions, which is intentional
+        $permissions = [];
+        $permissionMap = [];
+        $hasAdminAccess = false;
         
-        // Return success response with user type and redirect URL
+        if ($hardcodedUser['role_id']) {
+            try {
+                $pdo = getDBConnection();
+                
+                // Get permissions for this role
+                $stmt = $pdo->prepare("
+                    SELECT p.id, p.name AS permission_name, p.description, p.resource, p.action
+                    FROM permissions p
+                    INNER JOIN role_permissions rp ON p.id = rp.permission_id
+                    WHERE rp.role_id = ?
+                ");
+                $stmt->execute([$hardcodedUser['role_id']]);
+                $permissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Create permission map for easy checking
+                foreach ($permissions as $perm) {
+                    // Add null checks for permission fields
+                    if (isset($perm['permission_name'])) {
+                        $permissionMap[$perm['permission_name']] = true;
+                    }
+                    // Also add resource_action format
+                    if (isset($perm['resource']) && isset($perm['action'])) {
+                        $permissionMap[$perm['resource'] . '_' . $perm['action']] = true;
+                    }
+                }
+                
+                // Check for admin panel access
+                // Note: 'admin_panel_access' is defined in database/setup.sql
+                $hasAdminAccess = isset($permissionMap['admin_panel_access']);
+                
+            } catch (Exception $e) {
+                error_log("Failed to fetch permissions for hardcoded user: " . $e->getMessage());
+            }
+        }
+        
+        // Create session for hardcoded user
+        $sessionToken = createSessionForHardcodedUser(
+            $hardcodedUser['id'], 
+            $hardcodedUser['full_name'], 
+            $hardcodedUser['role_id'],
+            $rememberMe
+        );
+        
+        // Return success response with full data including permissions
         http_response_code(200);
         echo json_encode([
             'success' => true,
@@ -75,7 +121,12 @@ try {
                 'email' => $hardcodedUser['email'],
                 'email_verified' => $hardcodedUser['email_verified'],
                 'user_type' => $hardcodedUser['user_type'],
-                'role' => $hardcodedUser['role']
+                'role' => $hardcodedUser['role'],
+                'role_id' => $hardcodedUser['role_id'],
+                'is_hardcoded' => true,
+                'permissions' => $permissions,
+                'permissionMap' => $permissionMap,
+                'hasAdminAccess' => $hasAdminAccess
             ],
             'session_token' => $sessionToken,
             'redirect_url' => getRedirectUrlForUserType($hardcodedUser['user_type'])
