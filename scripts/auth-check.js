@@ -45,7 +45,8 @@
                     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
                 `;
                 // Sanitize user_type to alphanumeric only for extra safety
-                const userType = (user.user_type || 'unknown').replace(/[^a-zA-Z0-9]/g, '');
+                const sanitized = (user.user_type || '').replace(/[^a-zA-Z0-9]/g, '');
+                const userType = sanitized || 'unknown';
                 badge.textContent = `🧪 Test User: ${userType}`;
                 
                 // Check if badge doesn't already exist

@@ -94,6 +94,7 @@ try {
                 }
                 
                 // Check for admin panel access
+                // Note: 'admin_panel_access' is defined in database/setup.sql
                 $hasAdminAccess = isset($permissionMap['admin_panel_access']);
                 
             } catch (Exception $e) {

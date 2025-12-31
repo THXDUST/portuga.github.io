@@ -146,9 +146,14 @@ try {
         }
     }
     
+    // Ensure permissions array is initialized
+    if (!isset($userData['permissions']) || !is_array($userData['permissions'])) {
+        $userData['permissions'] = [];
+    }
+    
     // Create a simple permission map for easier checking
     $userData['permissionMap'] = [];
-    foreach (($userData['permissions'] ?? []) as $perm) {
+    foreach ($userData['permissions'] as $perm) {
         // Add null checks for permission fields
         if (isset($perm['resource']) && isset($perm['action'])) {
             $key = $perm['resource'] . '_' . $perm['action'];
@@ -161,6 +166,7 @@ try {
     }
     
     // Check for admin panel access
+    // Note: 'admin_panel_access' is defined in database/setup.sql
     $userData['hasAdminAccess'] = 
         isset($userData['permissionMap']['admin_panel_access']) ||
         (isset($userData['user_type']) && $userData['user_type'] === 'admin');
