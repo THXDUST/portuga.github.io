@@ -38,15 +38,11 @@ async function loadPermissions() {
             
             perms.forEach(perm => {
                 html += `
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
                         <div>
                             <strong style="color: #333;">${perm.name}</strong>
                             <p style="color: #666; margin: 5px 0 0 0; font-size: 0.9rem;">${perm.description || 'Sem descrição'}</p>
                             <small style="color: #999;">Ação: ${perm.action}</small>
-                        </div>
-                        <div>
-                            <button class="btn btn-secondary" onclick="editPermission(${perm.id})" style="margin-right: 5px;">✏️</button>
-                            <button class="btn btn-danger" onclick="deletePermission(${perm.id})">🗑️</button>
                         </div>
                     </div>
                 `;

@@ -40,7 +40,11 @@ try {
             sendError('Method not allowed', 405);
     }
 } catch (Exception $e) {
+    error_log('Permissions API Error: ' . $e->getMessage());
     sendError($e->getMessage(), 500);
+} catch (Error $e) {
+    error_log('Permissions API Fatal Error: ' . $e->getMessage());
+    sendError('Internal server error', 500);
 }
 
 function handleGet($conn, $action) {
@@ -78,24 +82,25 @@ function handleGet($conn, $action) {
             break;
             
         case 'by-resource':
-            // Get permissions grouped by resource
+            // Get permissions grouped by resource (MySQL 5.7 compatible)
             $result = $conn->query("
-                SELECT resource, 
-                       JSON_ARRAYAGG(
-                           JSON_OBJECT(
-                               'id', id,
-                               'name', name,
-                               'action', action,
-                               'description', description
-                           )
-                       ) as permissions
+                SELECT id, name, action, description, resource
                 FROM permissions
-                GROUP BY resource
-                ORDER BY resource
+                ORDER BY resource, action
             ");
+            
             $grouped = [];
             while ($row = $result->fetch_assoc()) {
-                $grouped[$row['resource']] = json_decode($row['permissions'], true);
+                $resource = $row['resource'];
+                if (!isset($grouped[$resource])) {
+                    $grouped[$resource] = [];
+                }
+                $grouped[$resource][] = [
+                    'id' => (int)$row['id'],
+                    'name' => $row['name'],
+                    'action' => $row['action'],
+                    'description' => $row['description']
+                ];
             }
             sendSuccess($grouped);
             break;

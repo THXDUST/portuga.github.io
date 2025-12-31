@@ -447,11 +447,17 @@ function renderCart() {
     if (totalEl) totalEl.textContent = `R$ ${total.toFixed(2)}`;
 }
 
-function finalizeOrder() {
+async function finalizeOrder() {
     const cart = getCart();
     
     if (cart.length === 0) {
         alert('Seu carrinho está vazio!');
+        return;
+    }
+    
+    // Check if restaurant is open before proceeding
+    const canPlaceOrder = await validateCanPlaceOrder();
+    if (!canPlaceOrder) {
         return;
     }
     
@@ -883,3 +889,73 @@ if (document.readyState === 'loading') {
 } else {
     checkMaintenanceMode();
 }
+
+// ============================================
+// RESTAURANT STATUS CHECK
+// ============================================
+
+/**
+ * Check if restaurant is currently open
+ * @returns {Promise<boolean>}
+ */
+async function checkRestaurantStatus() {
+    try {
+        const response = await fetch('/api/admin/settings.php?action=all');
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            const isOpen = data.data.is_open === true || data.data.is_open === '1';
+            return isOpen;
+        }
+        
+        // If settings not available, assume open
+        return true;
+    } catch (error) {
+        console.error('Error checking restaurant status:', error);
+        // On error, assume open to not block orders
+        return true;
+    }
+}
+
+/**
+ * Show or hide the closed restaurant banner
+ */
+async function updateRestaurantBanner() {
+    const banner = document.getElementById('restaurant-closed-banner');
+    if (!banner) return;
+    
+    const isOpen = await checkRestaurantStatus();
+    
+    if (!isOpen) {
+        banner.style.display = 'block';
+        document.body.classList.add('restaurant-closed');
+    } else {
+        banner.style.display = 'none';
+        document.body.classList.remove('restaurant-closed');
+    }
+}
+
+/**
+ * Validate if orders can be placed (restaurant must be open)
+ * @returns {Promise<boolean>}
+ */
+async function validateCanPlaceOrder() {
+    const isOpen = await checkRestaurantStatus();
+    
+    if (!isOpen) {
+        alert('❌ Restaurante Fechado\n\nDesculpe, o restaurante está fechado no momento e não estamos aceitando pedidos. Por favor, tente novamente mais tarde.');
+        return false;
+    }
+    
+    return true;
+}
+
+// Check restaurant status on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateRestaurantBanner);
+} else {
+    updateRestaurantBanner();
+}
+
+// Refresh banner status every 2 minutes
+setInterval(updateRestaurantBanner, 120000);
