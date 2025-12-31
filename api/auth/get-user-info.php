@@ -148,10 +148,15 @@ try {
     // Create a simple permission map for easier checking
     $userData['permissionMap'] = [];
     foreach (($userData['permissions'] ?? []) as $perm) {
-        $key = $perm['resource'] . '_' . $perm['action'];
-        $userData['permissionMap'][$key] = true;
+        // Add null checks for permission fields
+        if (isset($perm['resource']) && isset($perm['action'])) {
+            $key = $perm['resource'] . '_' . $perm['action'];
+            $userData['permissionMap'][$key] = true;
+        }
         // Also add by name for legacy checks
-        $userData['permissionMap'][$perm['name']] = true;
+        if (isset($perm['name'])) {
+            $userData['permissionMap'][$perm['name']] = true;
+        }
     }
     
     // Check for admin panel access

@@ -82,9 +82,14 @@ try {
                 
                 // Create permission map for easy checking
                 foreach ($permissions as $perm) {
-                    $permissionMap[$perm['permission_name']] = true;
+                    // Add null checks for permission fields
+                    if (isset($perm['permission_name'])) {
+                        $permissionMap[$perm['permission_name']] = true;
+                    }
                     // Also add resource_action format
-                    $permissionMap[$perm['resource'] . '_' . $perm['action']] = true;
+                    if (isset($perm['resource']) && isset($perm['action'])) {
+                        $permissionMap[$perm['resource'] . '_' . $perm['action']] = true;
+                    }
                 }
                 
                 // Check for admin panel access
