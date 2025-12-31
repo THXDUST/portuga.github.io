@@ -68,6 +68,8 @@ try {
             $roleId = $currentUser['role_id'];
         }
         
+        // Fetch permissions from database based on role_id
+        // Note: Customer users have null role_id and no permissions, which is intentional
         if ($roleId) {
             try {
                 $pdo = getDBConnection();

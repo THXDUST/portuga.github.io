@@ -62,6 +62,7 @@ try {
         // Skip rate limiting and database checks for hardcoded users
         
         // Fetch permissions from database based on role_id
+        // Note: Customer users have null role_id and no permissions, which is intentional
         $permissions = [];
         $permissionMap = [];
         $hasAdminAccess = false;
