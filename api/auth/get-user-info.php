@@ -147,7 +147,7 @@ try {
     
     // Create a simple permission map for easier checking
     $userData['permissionMap'] = [];
-    foreach ($userData['permissions'] as $perm) {
+    foreach (($userData['permissions'] ?? []) as $perm) {
         $key = $perm['resource'] . '_' . $perm['action'];
         $userData['permissionMap'][$key] = true;
         // Also add by name for legacy checks

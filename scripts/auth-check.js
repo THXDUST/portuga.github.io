@@ -44,7 +44,7 @@
                     z-index: 9999;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
                 `;
-                badge.innerHTML = `🧪 Test User: ${user.user_type || 'unknown'}`;
+                badge.textContent = `🧪 Test User: ${user.user_type || 'unknown'}`;
                 
                 // Check if badge doesn't already exist
                 if (!document.getElementById('hardcoded-user-badge')) {
