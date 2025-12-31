@@ -317,15 +317,15 @@ function calculateDeliveryFeeFromDistance(distance) {
     let fee = 0;
     let error = '';
     
-    // Fixed delivery fee based on distance
+    // Fixed delivery fee based on distance (system requirement)
     if (distance <= 5) {
         fee = 5.00;
     } else if (distance <= 7) {
         fee = 7.00;
-    } else if (distance <= 9) {
-        fee = 9.00;
-    } else if (distance <= 11) {
-        fee = 11.00;
+    } else if (distance <= 10) {
+        fee = 10.00;
+    } else if (distance <= 15) {
+        fee = 15.00;
     } else if (distance <= 18) {
         fee = 18.00;
     } else {
