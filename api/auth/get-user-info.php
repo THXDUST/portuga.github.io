@@ -47,7 +47,6 @@ try {
     // Handle hardcoded users
     if ($isHardcodedUser) {
         $roleId = $_SESSION['role_id'] ?? null;
-        $fullName = $_SESSION['full_name'] ?? 'Unknown User';
         
         // Get hardcoded user details
         $hardcodedUsers = getHardcodedUsers();

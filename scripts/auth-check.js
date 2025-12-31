@@ -44,7 +44,9 @@
                     z-index: 9999;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
                 `;
-                badge.textContent = `🧪 Test User: ${user.user_type || 'unknown'}`;
+                // Sanitize user_type to alphanumeric only for extra safety
+                const userType = (user.user_type || 'unknown').replace(/[^a-zA-Z0-9]/g, '');
+                badge.textContent = `🧪 Test User: ${userType}`;
                 
                 // Check if badge doesn't already exist
                 if (!document.getElementById('hardcoded-user-badge')) {
