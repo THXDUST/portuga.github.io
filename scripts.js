@@ -318,18 +318,23 @@ function calculateDeliveryFeeFromDistance(distance) {
     let error = '';
     
     // Fixed delivery fee based on distance (system requirement)
-    if (distance <= 5) {
+    // Using explicit range checking for clarity and to avoid gaps
+    if (distance > 0 && distance <= 5) {
         fee = 5.00;
-    } else if (distance <= 7) {
+    } else if (distance > 5 && distance <= 7) {
         fee = 7.00;
-    } else if (distance <= 10) {
+    } else if (distance > 7 && distance <= 10) {
         fee = 10.00;
-    } else if (distance <= 15) {
+    } else if (distance > 10 && distance <= 15) {
         fee = 15.00;
-    } else if (distance <= 18) {
+    } else if (distance > 15 && distance <= 18) {
         fee = 18.00;
-    } else {
+    } else if (distance > 18) {
         error = 'Desculpe, não realizamos entregas para essa distância (acima de 18 km).';
+        fee = 0;
+    } else {
+        // Distance <= 0 or invalid
+        error = 'Por favor, informe uma distância válida.';
         fee = 0;
     }
     
@@ -958,4 +963,5 @@ if (document.readyState === 'loading') {
 }
 
 // Refresh banner status every 2 minutes
-setInterval(updateRestaurantBanner, 120000);
+const BANNER_UPDATE_INTERVAL_MS = 120000; // 2 minutes
+setInterval(updateRestaurantBanner, BANNER_UPDATE_INTERVAL_MS);

@@ -201,6 +201,9 @@ function handlePost($conn, $action) {
             validateRequired($data, ['items', 'order_type', 'payment_method']);
             
             // Check if restaurant is open
+            // Note: If settings table is empty or is_open setting doesn't exist,
+            // we default to allowing orders (fail-open) to prevent blocking legitimate orders
+            // during initial setup or if the setting is accidentally deleted.
             $settingsResult = $conn->query("
                 SELECT setting_value 
                 FROM restaurant_settings 
@@ -216,6 +219,7 @@ function handlePost($conn, $action) {
                     return;
                 }
             }
+            // If no setting found, default to open (fail-open behavior)
             
             $conn->begin_transaction();
             try {
