@@ -55,7 +55,7 @@ function handleGet($conn, $action) {
                 GROUP BY r.id
                 ORDER BY r.name
             ");
-            $roles = $result->fetch_all(MYSQLI_ASSOC);
+            $roles = $result->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($roles);
             break;
             
@@ -71,10 +71,8 @@ function handleGet($conn, $action) {
                 FROM roles
                 WHERE id = ?
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $role = $result->fetch_assoc();
+            $stmt->execute([$id]);
+            $role = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$role) {
                 sendError('Role not found', 404);
@@ -87,10 +85,8 @@ function handleGet($conn, $action) {
                 INNER JOIN role_permissions rp ON p.id = rp.permission_id
                 WHERE rp.role_id = ?
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $role['permissions'] = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$id]);
+            $role['permissions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             sendSuccess($role);
             break;
@@ -108,10 +104,8 @@ function handleGet($conn, $action) {
                 INNER JOIN user_roles ur ON r.id = ur.role_id
                 WHERE ur.user_id = ?
             ");
-            $stmt->bind_param("i", $userId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $roles = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$userId]);
+            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($roles);
             break;
             
@@ -132,10 +126,9 @@ function handlePost($conn, $action) {
                 INSERT INTO roles (name, description)
                 VALUES (?, ?)
             ");
-            $stmt->bind_param("ss", $data['name'], $data['description'] ?? null);
             
-            if ($stmt->execute()) {
-                $roleId = $conn->insert_id;
+            if ($stmt->execute([$data['name'], $data['description'] ?? null])) {
+                $roleId = $conn->lastInsertId();
                 
                 // Assign permissions if provided
                 if (isset($data['permission_ids']) && is_array($data['permission_ids'])) {
@@ -145,8 +138,7 @@ function handlePost($conn, $action) {
                     ");
                     
                     foreach ($data['permission_ids'] as $permId) {
-                        $stmt->bind_param("ii", $roleId, $permId);
-                        $stmt->execute();
+                        $stmt->execute([$roleId, $permId]);
                     }
                 }
                 
@@ -165,9 +157,8 @@ function handlePost($conn, $action) {
                 VALUES (?, ?, ?)
             ");
             $assignedBy = $_SESSION['user_id'] ?? null;
-            $stmt->bind_param("iii", $data['user_id'], $data['role_id'], $assignedBy);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$data['user_id'], $data['role_id'], $assignedBy])) {
                 sendSuccess(null, 'Role assigned to user');
             } else {
                 sendError('Failed to assign role');
@@ -192,9 +183,8 @@ function handlePut($conn, $action) {
                 SET name = ?, description = ?
                 WHERE id = ?
             ");
-            $stmt->bind_param("ssi", $data['name'], $data['description'] ?? null, $data['id']);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$data['name'], $data['description'] ?? null, $data['id']])) {
                 sendSuccess(null, 'Role updated successfully');
             } else {
                 sendError('Failed to update role');
@@ -217,18 +207,16 @@ function handleDelete($conn, $action) {
             
             // Check if role has users
             $stmt = $conn->prepare("SELECT COUNT(*) as count FROM user_roles WHERE role_id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
+            $stmt->execute([$id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($result['count'] > 0) {
                 sendError('Cannot delete role with assigned users', 400);
             }
             
             $stmt = $conn->prepare("DELETE FROM roles WHERE id = ?");
-            $stmt->bind_param("i", $id);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'Role deleted successfully');
             } else {
                 sendError('Failed to delete role');
@@ -248,9 +236,8 @@ function handleDelete($conn, $action) {
                 DELETE FROM user_roles 
                 WHERE user_id = ? AND role_id = ?
             ");
-            $stmt->bind_param("ii", $userId, $roleId);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$userId, $roleId])) {
                 sendSuccess(null, 'Role unassigned from user');
             } else {
                 sendError('Failed to unassign role');

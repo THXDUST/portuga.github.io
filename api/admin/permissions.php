@@ -56,7 +56,7 @@ function handleGet($conn, $action) {
                 FROM permissions 
                 ORDER BY resource, action
             ");
-            $permissions = $result->fetch_all(MYSQLI_ASSOC);
+            $permissions = $result->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($permissions);
             break;
             
@@ -74,10 +74,8 @@ function handleGet($conn, $action) {
                 WHERE rp.role_id = ?
                 ORDER BY p.resource, p.action
             ");
-            $stmt->bind_param("i", $roleId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $permissions = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$roleId]);
+            $permissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($permissions);
             break;
             
@@ -90,7 +88,7 @@ function handleGet($conn, $action) {
             ");
             
             $grouped = [];
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 $resource = $row['resource'];
                 if (!isset($grouped[$resource])) {
                     $grouped[$resource] = [];
@@ -122,15 +120,14 @@ function handlePost($conn, $action) {
                 INSERT INTO permissions (name, description, resource, action)
                 VALUES (?, ?, ?, ?)
             ");
-            $stmt->bind_param("ssss", 
+            
+            if ($stmt->execute([
                 $data['name'], 
                 $data['description'] ?? null, 
                 $data['resource'], 
                 $data['action']
-            );
-            
-            if ($stmt->execute()) {
-                sendSuccess(['id' => $conn->insert_id], 'Permission created successfully');
+            ])) {
+                sendSuccess(['id' => $conn->lastInsertId()], 'Permission created successfully');
             } else {
                 sendError('Failed to create permission');
             }
@@ -144,9 +141,8 @@ function handlePost($conn, $action) {
                 INSERT IGNORE INTO role_permissions (role_id, permission_id)
                 VALUES (?, ?)
             ");
-            $stmt->bind_param("ii", $data['role_id'], $data['permission_id']);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$data['role_id'], $data['permission_id']])) {
                 sendSuccess(null, 'Permission assigned to role');
             } else {
                 sendError('Failed to assign permission');
@@ -157,12 +153,11 @@ function handlePost($conn, $action) {
             // Assign multiple permissions to a role
             validateRequired($data, ['role_id', 'permission_ids']);
             
-            $conn->begin_transaction();
+            $conn->beginTransaction();
             try {
                 // First, remove existing permissions for this role
                 $stmt = $conn->prepare("DELETE FROM role_permissions WHERE role_id = ?");
-                $stmt->bind_param("i", $data['role_id']);
-                $stmt->execute();
+                $stmt->execute([$data['role_id']]);
                 
                 // Then add new permissions
                 $stmt = $conn->prepare("
@@ -171,14 +166,13 @@ function handlePost($conn, $action) {
                 ");
                 
                 foreach ($data['permission_ids'] as $permId) {
-                    $stmt->bind_param("ii", $data['role_id'], $permId);
-                    $stmt->execute();
+                    $stmt->execute([$data['role_id'], $permId]);
                 }
                 
                 $conn->commit();
                 sendSuccess(null, 'Permissions updated successfully');
             } catch (Exception $e) {
-                $conn->rollback();
+                $conn->rollBack();
                 sendError('Failed to update permissions: ' . $e->getMessage());
             }
             break;
@@ -201,15 +195,14 @@ function handlePut($conn, $action) {
                 SET name = ?, description = ?, resource = ?, action = ?
                 WHERE id = ?
             ");
-            $stmt->bind_param("ssssi", 
+            
+            if ($stmt->execute([
                 $data['name'], 
                 $data['description'] ?? null, 
                 $data['resource'], 
                 $data['action'],
                 $data['id']
-            );
-            
-            if ($stmt->execute()) {
+            ])) {
                 sendSuccess(null, 'Permission updated successfully');
             } else {
                 sendError('Failed to update permission');
@@ -231,9 +224,8 @@ function handleDelete($conn, $action) {
             }
             
             $stmt = $conn->prepare("DELETE FROM permissions WHERE id = ?");
-            $stmt->bind_param("i", $id);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'Permission deleted successfully');
             } else {
                 sendError('Failed to delete permission');
@@ -253,9 +245,8 @@ function handleDelete($conn, $action) {
                 DELETE FROM role_permissions 
                 WHERE role_id = ? AND permission_id = ?
             ");
-            $stmt->bind_param("ii", $roleId, $permId);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$roleId, $permId])) {
                 sendSuccess(null, 'Permission revoked from role');
             } else {
                 sendError('Failed to revoke permission');
