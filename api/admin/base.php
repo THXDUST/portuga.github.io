@@ -58,9 +58,8 @@ function checkPermission($conn, $userId, $resource, $action) {
         INNER JOIN permissions p ON rp.permission_id = p.id
         WHERE ur.user_id = ? AND p.resource = ? AND p.action = ?
     ");
-    $stmt->bind_param("iss", $userId, $resource, $action);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+    $stmt->execute([$userId, $resource, $action]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['count'] > 0;
 }
 
@@ -75,8 +74,7 @@ function logAdminAction($conn, $userId, $action, $resourceType, $resourceId = nu
         INSERT INTO admin_logs (user_id, action, resource_type, resource_id, details, ip_address)
         VALUES (?, ?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param("ississ", $userId, $action, $resourceType, $resourceId, $detailsJson, $ipAddress);
-    $stmt->execute();
+    $stmt->execute([$userId, $action, $resourceType, $resourceId, $detailsJson, $ipAddress]);
 }
 
 /**

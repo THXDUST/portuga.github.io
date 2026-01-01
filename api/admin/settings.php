@@ -44,7 +44,7 @@ function handleGet($conn, $action) {
                 ORDER BY setting_key
             ");
             $settings = [];
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 $value = $row['setting_value'];
                 
                 // Parse value based on type
@@ -82,10 +82,8 @@ function handleGet($conn, $action) {
                 FROM restaurant_settings
                 WHERE setting_key = ?
             ");
-            $stmt->bind_param("s", $key);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $setting = $result->fetch_assoc();
+            $stmt->execute([$key]);
+            $setting = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$setting) {
                 sendError('Setting not found', 404);
@@ -115,8 +113,7 @@ function handleGet($conn, $action) {
                 WHERE setting_key = 'is_open'
             ");
             $stmt->execute();
-            $result = $stmt->get_result();
-            $setting = $result->fetch_assoc();
+            $setting = $stmt->fetch(PDO::FETCH_ASSOC);
             
             $isOpen = ($setting['setting_value'] ?? 'true') === 'true';
             sendSuccess(['is_open' => $isOpen]);
@@ -154,15 +151,14 @@ function handleUpdate($conn, $action) {
                     updated_by = VALUES(updated_by)
             ");
             $updatedBy = $_SESSION['user_id'] ?? null;
-            $stmt->bind_param("ssssi", 
+            
+            if ($stmt->execute([
                 $data['key'], 
                 $value, 
                 $type,
                 $data['description'] ?? null,
                 $updatedBy
-            );
-            
-            if ($stmt->execute()) {
+            ])) {
                 sendSuccess(null, 'Setting updated successfully');
             } else {
                 sendError('Failed to update setting');
@@ -173,7 +169,7 @@ function handleUpdate($conn, $action) {
             // Update multiple settings at once
             validateRequired($data, ['settings']);
             
-            $conn->begin_transaction();
+            $conn->beginTransaction();
             try {
                 $stmt = $conn->prepare("
                     INSERT INTO restaurant_settings (setting_key, setting_value, setting_type, updated_by)
@@ -195,14 +191,13 @@ function handleUpdate($conn, $action) {
                         $value = $value ? 'true' : 'false';
                     }
                     
-                    $stmt->bind_param("sssi", $key, $value, $type, $updatedBy);
-                    $stmt->execute();
+                    $stmt->execute([$key, $value, $type, $updatedBy]);
                 }
                 
                 $conn->commit();
                 sendSuccess(null, 'Settings updated successfully');
             } catch (Exception $e) {
-                $conn->rollback();
+                $conn->rollBack();
                 sendError('Failed to update settings: ' . $e->getMessage());
             }
             break;
@@ -222,9 +217,8 @@ function handleUpdate($conn, $action) {
                 SET setting_value = ?, updated_by = ?
                 WHERE setting_key = 'is_open'
             ");
-            $stmt->bind_param("si", $value, $updatedBy);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$value, $updatedBy])) {
                 // Log this action
                 logAdminAction($conn, $updatedBy, 'toggle_status', 'settings', null, 
                     ['is_open' => $isOpen]);
@@ -255,9 +249,8 @@ function handleUpdate($conn, $action) {
                 SET setting_value = ?, updated_by = ?
                 WHERE setting_key = ?
             ");
-            $stmt->bind_param("sis", $hours, $updatedBy, $data['type']);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$hours, $updatedBy, $data['type']])) {
                 sendSuccess(null, 'Hours updated successfully');
             } else {
                 sendError('Failed to update hours');
