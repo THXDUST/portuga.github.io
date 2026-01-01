@@ -75,7 +75,7 @@ function handleGet($conn, $action) {
                 WHERE o.id = ?
             ");
             $stmt->execute([$id]);
-            $message = $result->fetch(PDO::FETCH_ASSOC);
+            $message = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$message) {
                 sendError('Message not found', 404);
@@ -97,7 +97,7 @@ function handleGet($conn, $action) {
                 WHERE protocol_number = ?
             ");
             $stmt->execute([$protocol]);
-            $message = $result->fetch(PDO::FETCH_ASSOC);
+            $message = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$message) {
                 sendError('Message not found', 404);

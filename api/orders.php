@@ -104,7 +104,7 @@ function handleGet($conn, $action) {
                 WHERE o.id = ?
             ");
             $stmt->execute([$id]);
-            $order = $result->fetch(PDO::FETCH_ASSOC);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$order) {
                 sendError('Order not found', 404);
@@ -204,13 +204,15 @@ function handlePost($conn, $action) {
                 WHERE setting_key = 'is_open'
             ");
             
-            if ($settingsResult && $settingsResult->num_rows > 0) {
+            if ($settingsResult) {
                 $setting = $settingsResult->fetch(PDO::FETCH_ASSOC);
-                $isOpen = ($setting['setting_value'] === '1' || $setting['setting_value'] === 'true');
-                
-                if (!$isOpen) {
-                    sendError('Desculpe, o restaurante está fechado no momento. Não estamos aceitando pedidos.', 400);
-                    return;
+                if ($setting) {
+                    $isOpen = ($setting['setting_value'] === '1' || $setting['setting_value'] === 'true');
+                    
+                    if (!$isOpen) {
+                        sendError('Desculpe, o restaurante está fechado no momento. Não estamos aceitando pedidos.', 400);
+                        return;
+                    }
                 }
             }
             // If no setting found, default to open (fail-open behavior)
