@@ -52,12 +52,14 @@ function handleGet($conn, $action) {
             if ($status) {
                 $sql .= " AND o.status = ?";
                 $stmt = $conn->prepare($sql . " ORDER BY o.created_at DESC");
-                $stmt->execute([$status]);
+                $stmt->bind_param("s", $status);
+                $stmt->execute();
+                $result = $stmt->get_result();
             } else {
                 $result = $conn->query($sql . " ORDER BY o.created_at DESC");
             }
             
-            $messages = $result->fetchAll(PDO::FETCH_ASSOC);
+            $messages = $result->fetch_all(MYSQLI_ASSOC);
             sendSuccess($messages);
             break;
             
@@ -74,8 +76,10 @@ function handleGet($conn, $action) {
                 LEFT JOIN users u ON o.responded_by = u.id
                 WHERE o.id = ?
             ");
-            $stmt->execute([$id]);
-            $message = $result->fetch(PDO::FETCH_ASSOC);
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $message = $result->fetch_assoc();
             
             if (!$message) {
                 sendError('Message not found', 404);
@@ -96,8 +100,10 @@ function handleGet($conn, $action) {
                 FROM ouvidoria
                 WHERE protocol_number = ?
             ");
-            $stmt->execute([$protocol]);
-            $message = $result->fetch(PDO::FETCH_ASSOC);
+            $stmt->bind_param("s", $protocol);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $message = $result->fetch_assoc();
             
             if (!$message) {
                 sendError('Message not found', 404);
@@ -127,9 +133,19 @@ function handlePost($conn, $action) {
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             
-            if ($stmt->execute([$protocolNumber, $data['full_name'], $data['email'], $data['phone'] ?? null, $data['subject'], $data['message'], $data['image_path'] ?? null])) {
+            $stmt->bind_param("sssssss",
+                $protocolNumber,
+                $data['full_name'],
+                $data['email'],
+                $data['phone'] ?? null,
+                $data['subject'],
+                $data['message'],
+                $data['image_path'] ?? null
+            );
+            
+            if ($stmt->execute()) {
                 sendSuccess([
-                    'id' => $conn->lastInsertId(),
+                    'id' => $conn->insert_id,
                     'protocol_number' => $protocolNumber
                 ], 'Message submitted successfully');
             } else {
@@ -157,7 +173,9 @@ function handlePut($conn, $action) {
             ");
             
             $respondedBy = $_SESSION['user_id'] ?? null;
-            if ($stmt->execute([$data['response'], $respondedBy, $data['id']])) {
+            $stmt->bind_param("sii", $data['response'], $respondedBy, $data['id']);
+            
+            if ($stmt->execute()) {
                 sendSuccess(null, 'Response sent successfully');
             } else {
                 sendError('Failed to send response');
@@ -178,7 +196,9 @@ function handlePut($conn, $action) {
                 SET status = ?
                 WHERE id = ?
             ");
-            if ($stmt->execute([$data['status'], $data['id']])) {
+            $stmt->bind_param("si", $data['status'], $data['id']);
+            
+            if ($stmt->execute()) {
                 sendSuccess(null, 'Status updated successfully');
             } else {
                 sendError('Failed to update status');

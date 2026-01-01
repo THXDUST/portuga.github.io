@@ -22,25 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration
-require_once __DIR__ . '/../config/database.php';
-
-// Get database connection
-function getDBConnection() {
-    $host = getenv('DB_HOST') ?: 'localhost';
-    $dbname = getenv('DB_NAME') ?: 'portuga_db';
-    $username = getenv('DB_USER') ?: 'root';
-    $password = getenv('DB_PASS') ?: '';
-    
-    try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $pdo;
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-        exit();
-    }
-}
+require_once __DIR__ . '/../../config/database.php';
 
 // Get current user from session
 function getCurrentUser() {
