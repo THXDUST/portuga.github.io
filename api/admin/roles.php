@@ -36,7 +36,11 @@ try {
             sendError('Method not allowed', 405);
     }
 } catch (Exception $e) {
+    error_log('Roles API Error: ' . $e->getMessage());
     sendError($e->getMessage(), 500);
+} catch (Error $e) {
+    error_log('Roles API Fatal Error: ' . $e->getMessage());
+    sendError('Internal server error', 500);
 }
 
 function handleGet($conn, $action) {

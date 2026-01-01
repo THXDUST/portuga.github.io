@@ -200,6 +200,27 @@ function handlePost($conn, $action) {
             // Create new order
             validateRequired($data, ['items', 'order_type', 'payment_method']);
             
+            // Check if restaurant is open
+            // Note: If settings table is empty or is_open setting doesn't exist,
+            // we default to allowing orders (fail-open) to prevent blocking legitimate orders
+            // during initial setup or if the setting is accidentally deleted.
+            $settingsResult = $conn->query("
+                SELECT setting_value 
+                FROM restaurant_settings 
+                WHERE setting_key = 'is_open'
+            ");
+            
+            if ($settingsResult && $settingsResult->num_rows > 0) {
+                $setting = $settingsResult->fetch_assoc();
+                $isOpen = ($setting['setting_value'] === '1' || $setting['setting_value'] === 'true');
+                
+                if (!$isOpen) {
+                    sendError('Desculpe, o restaurante está fechado no momento. Não estamos aceitando pedidos.', 400);
+                    return;
+                }
+            }
+            // If no setting found, default to open (fail-open behavior)
+            
             $conn->begin_transaction();
             try {
                 // Generate order number

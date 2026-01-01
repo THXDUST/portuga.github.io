@@ -63,7 +63,6 @@
                 <li><a href="#" class="nav-tab" data-tab="roles">👥 Cargos</a></li>
                 <li><a href="#" class="nav-tab" data-tab="users">👤 Usuários</a></li>
                 <li><a href="#" class="nav-tab" data-tab="settings">⚙️ Configurações</a></li>
-                <li><a href="#" class="nav-tab" data-tab="schedule">📅 Horários</a></li>
             </ul>
         </nav>
 
@@ -169,6 +168,10 @@
                     
                     <button class="btn btn-secondary" onclick="clearKanbanFilters()" style="padding: 8px 15px;">
                         🔄 Limpar Filtros
+                    </button>
+                    
+                    <button class="btn" onclick="createTestOrder()" style="padding: 8px 15px; background: #17a2b8; border-color: #17a2b8;">
+                        🧪 Criar Pedido de Teste
                     </button>
                 </div>
                 
@@ -381,8 +384,11 @@
             <div id="tab-permissions" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Permissões</h2>
                 
-                <div style="margin-bottom: 20px;">
-                    <button class="btn" onclick="showAddPermissionModal()">➕ Adicionar Permissão</button>
+                <div style="margin-bottom: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <p style="color: #856404; margin: 0;">
+                        ℹ️ <strong>Visualização Apenas:</strong> As permissões são pré-definidas no sistema. 
+                        Use a aba "Cargos" para atribuir permissões aos cargos.
+                    </p>
                 </div>
                 
                 <div id="permissions-list">
@@ -410,7 +416,9 @@
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Usuários</h2>
                 
                 <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
-                    <button class="btn" onclick="showAddUserModal()">➕ Adicionar Usuário</button>
+                    <input type="text" id="user-search" placeholder="🔍 Pesquisar usuário por nome ou email..." 
+                           class="form-group" style="flex: 1; min-width: 250px;"
+                           onkeyup="debounceUserSearch()">
                     
                     <select id="user-role-filter" class="form-group" onchange="loadUsers()">
                         <option value="">Todos os Cargos</option>
@@ -421,10 +429,14 @@
                         <option value="active">Ativos</option>
                         <option value="inactive">Inativos</option>
                     </select>
-                    
-                    <input type="text" id="user-search" placeholder="Buscar por nome/email..." 
-                           class="form-group" style="flex: 1; min-width: 200px;"
-                           onkeyup="debounceUserSearch()">
+                </div>
+                
+                <div style="margin-bottom: 20px; padding: 15px; background: #d1ecf1; border-radius: 8px; border-left: 4px solid #0c5460;">
+                    <p style="color: #0c5460; margin: 0;">
+                        ℹ️ <strong>Como usar:</strong> Use a pesquisa acima para encontrar usuários. 
+                        Clique em "Editar" ou "Cargos" para modificar as permissões de um usuário existente. 
+                        Novos usuários são criados quando fazem registro no site.
+                    </p>
                 </div>
                 
                 <div id="users-list">
@@ -478,10 +490,19 @@
                         <div>
                             <label>Distância Máxima (km):</label>
                             <input type="number" id="max-delivery-distance" class="form-group" value="18" step="0.5">
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                Entregas não serão aceitas acima desta distância.
+                            </small>
                         </div>
-                        <div>
-                            <label>Taxa por km (R$):</label>
-                            <input type="number" id="delivery-fee-per-km" class="form-group" value="2.5" step="0.1">
+                        <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #0066cc;">
+                            <strong style="color: #0066cc;">ℹ️ Taxas de Entrega (Fixas):</strong>
+                            <ul style="margin: 10px 0 0 20px; color: #555;">
+                                <li>Até 5 km: R$ 5,00</li>
+                                <li>Até 7 km: R$ 7,00</li>
+                                <li>Até 10 km: R$ 10,00</li>
+                                <li>Até 15 km: R$ 15,00</li>
+                                <li>Até 18 km: R$ 18,00</li>
+                            </ul>
                         </div>
                     </div>
                 </div>

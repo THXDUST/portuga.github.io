@@ -357,7 +357,39 @@ setInterval(function() {
 // ==========================================
 
 function loadKanbanBoard() {
+    console.log('🔍 Loading Kanban board...');
+    
     let orders = getOrders();
+    console.log('📦 Orders from localStorage:', orders);
+    
+    // If no orders in localStorage, show empty state with debug info
+    if (!orders || orders.length === 0) {
+        console.warn('⚠️ No orders found in localStorage');
+        
+        // Try to show helpful debug info
+        ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
+            const column = document.getElementById(`kanban-${status}`);
+            if (column) {
+                column.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #999;">
+                        <p style="margin-bottom: 10px;">Nenhum pedido encontrado</p>
+                        <small style="display: block; color: #666;">
+                            Os pedidos aparecerão aqui quando criados.<br>
+                            Status esperado: ${status}
+                        </small>
+                    </div>
+                `;
+            }
+        });
+        
+        // Update counts
+        ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
+            const countEl = document.getElementById(`count-${status}`);
+            if (countEl) countEl.textContent = '0';
+        });
+        
+        return;
+    }
     
     // Apply filters
     const typeFilter = document.getElementById('kanban-type-filter')?.value;
@@ -382,6 +414,8 @@ function loadKanbanBoard() {
         });
     }
     
+    console.log('📋 Orders after filters:', orders);
+    
     // Clear all columns
     ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
         const column = document.getElementById(`kanban-${status}`);
@@ -402,10 +436,16 @@ function loadKanbanBoard() {
         if (status === 'preparo') status = 'em_andamento';
         if (status === 'concluido') status = 'finalizado';
         
+        console.log(`📌 Order ${order.id} has status: ${order.status} -> mapped to: ${status}`);
+        
         if (kanbanData[status]) {
             kanbanData[status].push(order);
+        } else {
+            console.warn(`⚠️ Unknown status "${status}" for order ${order.id}`);
         }
     });
+    
+    console.log('📊 Kanban data:', kanbanData);
     
     // Render cards in each column
     Object.keys(kanbanData).forEach(status => {
@@ -436,7 +476,12 @@ function renderKanbanColumn(status, orders) {
     if (countEl) countEl.textContent = orders.length;
     
     if (orders.length === 0) {
-        column.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum pedido</p>';
+        column.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #999;">
+                <p style="margin-bottom: 5px;">Nenhum pedido</p>
+                <small style="color: #666;">Status: ${status}</small>
+            </div>
+        `;
         return;
     }
     
@@ -446,6 +491,31 @@ function renderKanbanColumn(status, orders) {
         const card = createKanbanCard(order);
         column.appendChild(card);
     });
+}
+
+// Debug function to create test order
+function createTestOrder() {
+    const testOrder = {
+        id: Date.now(),
+        status: 'recebido',
+        items: [
+            { name: 'Bacalhau à Portuguesa', price: 45.00, quantity: 1 }
+        ],
+        total: 45.00,
+        date: new Date().toISOString(),
+        delivery: {
+            forDelivery: false,
+            tableNumber: null
+        }
+    };
+    
+    const orders = getOrders();
+    orders.push(testOrder);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    
+    console.log('✅ Test order created:', testOrder);
+    alert('Pedido de teste criado! Recarregando Kanban...');
+    loadKanbanBoard();
 }
 
 function createKanbanCard(order) {
