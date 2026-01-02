@@ -258,5 +258,5 @@ O sistema está pronto para uso em ambiente de desenvolvimento e teste! 🚀
 
 ---
 
-**Data de Conclusão**: 2025-12-27
+**Data de Conclusão**: 2026-12-27
 **Desenvolvido com ❤️ para Portuga Restaurante**

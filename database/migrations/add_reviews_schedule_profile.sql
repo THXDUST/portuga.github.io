@@ -1,5 +1,5 @@
 -- Migration: Add Reviews, Schedule, Profile, and Enhanced Maintenance Tables
--- Created: 2025-12-30
+-- Created: 2026-12-30
 -- Description: Adds tables for review system, employee schedules, user profiles, and enhanced maintenance mode
 
 USE portuga_db;

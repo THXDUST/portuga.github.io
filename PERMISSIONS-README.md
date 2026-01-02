@@ -378,7 +378,7 @@ Usuários logados fazendo pedidos locais (não delivery) podem:
 ```javascript
 {
   id: 123456789,
-  date: "2024-01-01T12:00:00.000Z",
+  date: "2026-01-01T12:00:00.000Z",
   items: [...],
   total: 50.00,
   status: "pendente",
