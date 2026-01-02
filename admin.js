@@ -892,7 +892,22 @@ async function editGroup(groupId) {
             document.getElementById('group-description').value = group.description || '';
             
             // Populate parent group select (excluding self and descendants)
-            const parentGroups = groups.filter(g => !g.parent_id && g.id != groupId);
+            // Get all descendants of this group to prevent circular references
+            const getDescendants = (parentId, allGroups) => {
+                const descendants = [];
+                const directChildren = allGroups.filter(g => g.parent_id == parentId);
+                descendants.push(...directChildren);
+                directChildren.forEach(child => {
+                    descendants.push(...getDescendants(child.id, allGroups));
+                });
+                return descendants;
+            };
+            
+            const descendants = getDescendants(groupId, groups);
+            const descendantIds = descendants.map(d => d.id);
+            
+            // Only show parent groups that are not this group or its descendants
+            const parentGroups = groups.filter(g => !g.parent_id && g.id != groupId && !descendantIds.includes(g.id));
             parentSelect.innerHTML = '<option value="">Grupo Principal (sem grupo pai)</option>';
             parentGroups.forEach(pg => {
                 const selected = pg.id == group.parent_id ? 'selected' : '';
@@ -939,10 +954,18 @@ async function deleteGroup(groupId) {
                 return;
             }
             // Delete all items first
+            let deleteErrors = [];
             for (const item of groupItems) {
-                await fetch(`/api/admin/menu.php?action=delete-item&id=${item.id}`, {
+                const itemResponse = await fetch(`/api/admin/menu.php?action=delete-item&id=${item.id}`, {
                     method: 'DELETE'
                 });
+                const itemData = await itemResponse.json();
+                if (!itemData.success) {
+                    deleteErrors.push(item.name);
+                }
+            }
+            if (deleteErrors.length > 0) {
+                throw new Error(`Falha ao excluir itens: ${deleteErrors.join(', ')}`);
             }
         } else {
             if (!confirm('Tem certeza que deseja excluir este grupo?')) {
@@ -994,7 +1017,6 @@ async function showAddItemModal() {
             modalTitle.textContent = 'Adicionar Item';
             form.reset();
             document.getElementById('item-id').value = '';
-            document.getElementById('item-delivery').checked = true;
             document.getElementById('item-available').checked = true;
             
             // Populate group select with hierarchy
@@ -1038,7 +1060,6 @@ async function saveItem(event) {
     const description = document.getElementById('item-description')?.value;
     const price = parseFloat(document.getElementById('item-price')?.value);
     const image = document.getElementById('item-image')?.value;
-    const deliveryEnabled = document.getElementById('item-delivery')?.checked || false;
     const available = document.getElementById('item-available')?.checked || false;
     
     if (!groupId || !name || isNaN(price)) {
@@ -1144,7 +1165,6 @@ async function editItem(itemId) {
             document.getElementById('item-description').value = item.description || '';
             document.getElementById('item-price').value = item.price;
             document.getElementById('item-image').value = item.image_url || '';
-            document.getElementById('item-delivery').checked = true; // API doesn't have this field
             document.getElementById('item-available').checked = item.is_available;
             
             modal.style.display = 'block';
