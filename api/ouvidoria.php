@@ -53,11 +53,12 @@ function handleGet($conn, $action) {
                 $sql .= " AND o.status = ?";
                 $stmt = $conn->prepare($sql . " ORDER BY o.created_at DESC");
                 $stmt->execute([$status]);
+                $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
                 $result = $conn->query($sql . " ORDER BY o.created_at DESC");
+                $messages = $result->fetchAll(PDO::FETCH_ASSOC);
             }
             
-            $messages = $result->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($messages);
             break;
             
@@ -194,6 +195,8 @@ function handlePut($conn, $action) {
         case 'respond':
             // Respond to message
             validateRequired($data, ['id', 'response']);
+            
+            session_start();
             
             $stmt = $conn->prepare("
                 UPDATE ouvidoria 

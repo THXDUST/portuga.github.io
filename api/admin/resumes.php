@@ -151,6 +151,8 @@ function handlePut($conn, $action) {
                 sendError('Invalid status');
             }
             
+            session_start();
+            
             $stmt = $conn->prepare("
                 UPDATE resumes 
                 SET status = ?, notes = ?, reviewed_by = ?
@@ -170,6 +172,8 @@ function handlePut($conn, $action) {
         case 'add-note':
             // Add note to resume
             validateRequired($data, ['id', 'notes']);
+            
+            session_start();
             
             $stmt = $conn->prepare("
                 UPDATE resumes 

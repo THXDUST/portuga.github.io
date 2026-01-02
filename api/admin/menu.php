@@ -76,11 +76,12 @@ function handleGet($conn, $action) {
                 $sql .= " WHERE i.group_id = ?";
                 $stmt = $conn->prepare($sql . " ORDER BY i.display_order, i.name");
                 $stmt->execute([$groupId]);
+                $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
                 $result = $conn->query($sql . " ORDER BY g.name, i.display_order, i.name");
+                $items = $result->fetchAll(PDO::FETCH_ASSOC);
             }
             
-            $items = $result->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($items);
             break;
             
