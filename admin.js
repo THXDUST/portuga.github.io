@@ -166,9 +166,10 @@ async function updateStatistics() {
     const orders = await getOrders();
     
     const totalOrders = orders.length;
-    const pendingOrders = orders.filter(o => o.status === 'pendente').length;
-    const preparingOrders = orders.filter(o => o.status === 'preparo').length;
-    const completedOrders = orders.filter(o => o.status === 'concluido').length;
+    // Use new status values from API: recebido, em_andamento, finalizado
+    const pendingOrders = orders.filter(o => o.status === 'recebido' || o.status === 'pendente').length;
+    const preparingOrders = orders.filter(o => o.status === 'em_andamento' || o.status === 'preparo').length;
+    const completedOrders = orders.filter(o => o.status === 'finalizado' || o.status === 'concluido').length;
     
     const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
@@ -433,12 +434,14 @@ async function loadKanbanBoard() {
     
     if (typeFilter) {
         orders = orders.filter(order => {
+            // Handle both old format (order.delivery.*) and new format (order.table_number, order.order_type)
             if (typeFilter === 'table') {
-                return order.delivery && order.delivery.tableNumber;
+                return order.table_number || (order.delivery && order.delivery.tableNumber);
             } else if (typeFilter === 'delivery') {
-                return order.delivery && order.delivery.forDelivery;
+                return order.order_type === 'viagem' || (order.delivery && order.delivery.forDelivery);
             } else if (typeFilter === 'pickup') {
-                return !order.delivery || (!order.delivery.forDelivery && !order.delivery.tableNumber);
+                return (order.order_type === 'local' && !order.table_number) || 
+                       (!order.delivery || (!order.delivery.forDelivery && !order.delivery.tableNumber));
             }
             return true;
         });
@@ -446,7 +449,9 @@ async function loadKanbanBoard() {
     
     if (tableFilter && parseInt(tableFilter) > 0) {
         orders = orders.filter(order => {
-            return order.delivery && order.delivery.tableNumber === parseInt(tableFilter);
+            // Handle both old and new format
+            const tableNum = order.table_number || (order.delivery && order.delivery.tableNumber);
+            return tableNum === parseInt(tableFilter);
         });
     }
     
