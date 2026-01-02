@@ -1330,3 +1330,28 @@ nav ul li a:hover {
 .kanban-card-type {
     margin-bottom: 10px;
 }
+
+/* Collapsible Menu Sections */
+.collapsible-section {
+    margin-bottom: 20px;
+}
+
+.collapsible-header {
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+.collapsible-header:hover {
+    color: #d4a734;
+}
+
+.collapse-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.collapsible-content {
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+}

@@ -909,8 +909,13 @@ async function checkRestaurantStatus() {
         const data = await response.json();
         
         if (data.success && data.data) {
-            const isOpen = data.data.is_open === true || data.data.is_open === '1';
-            return isOpen;
+            // Settings are returned as objects with value, type, etc.
+            const isOpenSetting = data.data.is_open;
+            if (isOpenSetting && typeof isOpenSetting === 'object') {
+                return isOpenSetting.value === true || isOpenSetting.value === 'true' || isOpenSetting.value === '1';
+            }
+            // Fallback for backward compatibility
+            return data.data.is_open === true || data.data.is_open === '1';
         }
         
         // If settings not available, assume open

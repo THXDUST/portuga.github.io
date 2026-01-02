@@ -113,11 +113,11 @@
             return parentGroups;
         }
         
-        // Render menu structure as HTML
+        // Render menu structure as HTML with collapsible sections
         function renderMenuStructure(menuStructure) {
             let html = '';
             
-            menuStructure.forEach(group => {
+            menuStructure.forEach((group, index) => {
                 // Skip if group has no items and no subgroups with items
                 const hasItems = group.directItems.length > 0;
                 const hasSubgroupItems = group.subgroups && group.subgroups.some(sub => 
@@ -128,8 +128,18 @@
                     return; // Skip empty groups
                 }
                 
-                html += `<section class="menu-section">`;
-                html += `<h2>${escapeHtml(group.name)}</h2>`;
+                const groupId = `menu-group-${group.id || index}`;
+                const isFirstGroup = index === 0;
+                
+                html += `<section class="menu-section collapsible-section">`;
+                html += `
+                    <h2 class="collapsible-header" onclick="toggleMenuSection('${groupId}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${escapeHtml(group.name)}</span>
+                        <span class="collapse-icon" id="icon-${groupId}">${isFirstGroup ? '▼' : '▶'}</span>
+                    </h2>
+                `;
+                
+                html += `<div class="collapsible-content" id="${groupId}" style="display: ${isFirstGroup ? 'block' : 'none'};">`;
                 
                 if (group.description) {
                     html += `<p style="color: #666; margin-bottom: 20px;">${escapeHtml(group.description)}</p>`;
@@ -165,10 +175,27 @@
                     });
                 }
                 
+                html += `</div>`; // Close collapsible-content
                 html += `</section>`;
             });
             
             return html || '<p style="text-align: center; color: #666; padding: 40px;">Nenhum item disponível no momento.</p>';
+        }
+        
+        // Toggle menu section visibility
+        function toggleMenuSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const icon = document.getElementById(`icon-${sectionId}`);
+            
+            if (content && icon) {
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    icon.textContent = '▼';
+                } else {
+                    content.style.display = 'none';
+                    icon.textContent = '▶';
+                }
+            }
         }
         
         // Render a single menu item
