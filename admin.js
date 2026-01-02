@@ -93,9 +93,6 @@ function loadTabContent(tabName) {
         case 'ouvidoria':
             loadOuvidoriaMessages();
             break;
-        case 'permissions':
-            loadPermissions();
-            break;
         case 'roles':
             loadRoles();
             break;
@@ -312,8 +309,8 @@ function renderOrders() {
 }
 
 // Change order status
-function changeOrderStatus(orderId, newStatus) {
-    updateOrderStatus(orderId, newStatus);
+async function changeOrderStatus(orderId, newStatus) {
+    await updateOrderStatus(orderId, newStatus);
     loadDashboard();
 }
 
@@ -356,40 +353,49 @@ setInterval(function() {
 // KANBAN BOARD FUNCTIONS
 // ==========================================
 
-function loadKanbanBoard() {
+async function loadKanbanBoard() {
     console.log('🔍 Loading Kanban board...');
     
-    let orders = getOrders();
-    console.log('📦 Orders from localStorage:', orders);
-    
-    // If no orders in localStorage, show empty state with debug info
-    if (!orders || orders.length === 0) {
-        console.warn('⚠️ No orders found in localStorage');
+    try {
+        // Fetch orders from API instead of localStorage
+        const response = await fetch('/api/orders.php?action=list');
+        const data = await response.json();
         
-        // Try to show helpful debug info
-        ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
-            const column = document.getElementById(`kanban-${status}`);
-            if (column) {
-                column.innerHTML = `
-                    <div style="padding: 20px; text-align: center; color: #999;">
-                        <p style="margin-bottom: 10px;">Nenhum pedido encontrado</p>
-                        <small style="display: block; color: #666;">
-                            Os pedidos aparecerão aqui quando criados.<br>
-                            Status esperado: ${status}
-                        </small>
-                    </div>
-                `;
-            }
-        });
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar pedidos');
+        }
         
-        // Update counts
-        ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
-            const countEl = document.getElementById(`count-${status}`);
-            if (countEl) countEl.textContent = '0';
-        });
+        let orders = data.data || [];
+        console.log('📦 Orders from API:', orders);
         
-        return;
-    }
+        // If no orders found, show empty state
+        if (!orders || orders.length === 0) {
+            console.warn('⚠️ No orders found');
+            
+            // Show empty state
+            ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
+                const column = document.getElementById(`kanban-${status}`);
+                if (column) {
+                    column.innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: #999;">
+                            <p style="margin-bottom: 10px;">Nenhum pedido encontrado</p>
+                            <small style="display: block; color: #666;">
+                                Os pedidos aparecerão aqui quando criados.<br>
+                                Status esperado: ${status}
+                            </small>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Update counts
+            ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
+                const countEl = document.getElementById(`count-${status}`);
+                if (countEl) countEl.textContent = '0';
+            });
+            
+            return;
+        }
     
     // Apply filters
     const typeFilter = document.getElementById('kanban-type-filter')?.value;
@@ -454,6 +460,23 @@ function loadKanbanBoard() {
     
     // Initialize drag and drop
     initDragAndDrop();
+    
+    } catch (error) {
+        console.error('Error loading kanban board:', error);
+        
+        // Show error in all columns
+        ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
+            const column = document.getElementById(`kanban-${status}`);
+            if (column) {
+                column.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #dc3545;">
+                        <p>❌ Erro ao carregar pedidos</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        });
+    }
 }
 
 function clearKanbanFilters() {
@@ -618,7 +641,7 @@ function handleDragLeave(e) {
     this.classList.remove('drag-over');
 }
 
-function handleDrop(e) {
+async function handleDrop(e) {
     if (e.stopPropagation) {
         e.stopPropagation();
     }
@@ -630,7 +653,7 @@ function handleDrop(e) {
         const newStatus = this.closest('.kanban-column').dataset.status;
         
         // Update order status
-        updateOrderStatus(orderId, mapKanbanStatusToOld(newStatus));
+        await updateOrderStatus(orderId, mapKanbanStatusToOld(newStatus));
         
         // Reload kanban board
         loadKanbanBoard();
@@ -646,6 +669,34 @@ function mapKanbanStatusToOld(newStatus) {
         'finalizado': 'concluido'
     };
     return mapping[newStatus] || newStatus;
+}
+
+// Update order status via API
+async function updateOrderStatus(orderId, newStatus) {
+    try {
+        const response = await fetch('/api/orders.php?action=update-status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: orderId,
+                status: newStatus
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao atualizar status do pedido');
+        }
+        
+        console.log(`✅ Order ${orderId} status updated to ${newStatus}`);
+        return true;
+        
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        alert('Erro ao atualizar status do pedido: ' + error.message);
+        return false;
+    }
 }
 
 // ==========================================
@@ -1510,7 +1561,8 @@ async function loadUsers() {
             throw new Error(data.error || 'Erro ao carregar usuários');
         }
         
-        const users = data.data || [];
+        // Handle both array and object response formats
+        const users = Array.isArray(data.data) ? data.data : (data.data?.users || []);
         
         if (users.length === 0) {
             container.innerHTML = `
