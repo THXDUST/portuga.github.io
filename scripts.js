@@ -672,18 +672,49 @@ function saveOrder(cart, total, deliveryInfo = {}) {
     localStorage.setItem('orders', JSON.stringify(orders));
 }
 
-function getOrders() {
-    const orders = localStorage.getItem('orders');
-    return orders ? JSON.parse(orders) : [];
+// Fetch orders from API instead of localStorage
+async function getOrders() {
+    try {
+        const response = await fetch('/api/orders.php?action=list');
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('Error fetching orders:', data.error);
+            return [];
+        }
+        
+        return data.data || [];
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        return [];
+    }
 }
 
-function updateOrderStatus(orderId, newStatus) {
-    const orders = getOrders();
-    const order = orders.find(o => o.id === orderId);
-    
-    if (order) {
-        order.status = newStatus;
-        localStorage.setItem('orders', JSON.stringify(orders));
+// Update order status via API instead of localStorage
+async function updateOrderStatus(orderId, newStatus) {
+    try {
+        const response = await fetch('/api/orders.php?action=update-status', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: orderId,
+                status: newStatus
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('Error updating order status:', data.error);
+            throw new Error(data.error);
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        throw error;
     }
 }
 
