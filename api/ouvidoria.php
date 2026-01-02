@@ -207,9 +207,17 @@ function handlePut($conn, $action) {
             
             $respondedBy = $_SESSION['user_id'];
             
+            // Verify that the user exists in the database before attempting the foreign key reference
+            $checkUser = $conn->prepare("SELECT id FROM users WHERE id = ?");
+            $checkUser->execute([$respondedBy]);
+            if (!$checkUser->fetch()) {
+                sendError('Invalid user session. User does not exist in the database.', 403);
+                return;
+            }
+            
             $stmt = $conn->prepare("
                 UPDATE ouvidoria 
-                SET status = 'resolvido', response = ?, responded_by = ?
+                SET status = 'resolvido', response = ?, responded_by = ?, updated_at = NOW()
                 WHERE id = ?
             ");
             

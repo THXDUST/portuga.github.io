@@ -177,10 +177,11 @@ function handlePost($conn, $action) {
             
             $stmt = $conn->prepare("
                 INSERT INTO menu_items (group_id, name, description, price, image_url, 
-                                       ingredients, is_available, display_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                       ingredients, is_available, delivery_enabled, display_order)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $isAvailable = $data['is_available'] ?? true;
+            $deliveryEnabled = $data['delivery_enabled'] ?? true;
             
             if ($stmt->execute([
                 $data['group_id'],
@@ -190,6 +191,7 @@ function handlePost($conn, $action) {
                 $data['image_url'] ?? null,
                 $data['ingredients'] ?? null,
                 $isAvailable,
+                $deliveryEnabled,
                 $data['display_order'] ?? 0
             ])) {
                 sendSuccess(['id' => $conn->lastInsertId()], 'Item created successfully');
@@ -246,7 +248,7 @@ function handlePut($conn, $action) {
             $values = [];
             
             $fields = ['group_id', 'name', 'description', 'price', 'image_url', 
-                      'ingredients', 'is_available', 'display_order'];
+                      'ingredients', 'is_available', 'delivery_enabled', 'display_order'];
             
             foreach ($fields as $field) {
                 if (isset($data[$field])) {

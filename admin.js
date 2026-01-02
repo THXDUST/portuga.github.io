@@ -149,26 +149,27 @@ function logout() {
 }
 
 // Load dashboard data
-function loadDashboard() {
-    updateStatistics();
-    renderOrders();
-    calculatePopularItems();
+async function loadDashboard() {
+    await updateStatistics();
+    await renderOrders();
+    await calculatePopularItems();
     
     // Setup status filter
     const statusFilter = document.getElementById('status-filter');
     if (statusFilter) {
-        statusFilter.addEventListener('change', renderOrders);
+        statusFilter.addEventListener('change', () => renderOrders());
     }
 }
 
 // Update statistics
-function updateStatistics() {
-    const orders = getOrders();
+async function updateStatistics() {
+    const orders = await getOrders();
     
     const totalOrders = orders.length;
-    const pendingOrders = orders.filter(o => o.status === 'pendente').length;
-    const preparingOrders = orders.filter(o => o.status === 'preparo').length;
-    const completedOrders = orders.filter(o => o.status === 'concluido').length;
+    // Use new status values from API: recebido, em_andamento, finalizado
+    const pendingOrders = orders.filter(o => o.status === 'recebido' || o.status === 'pendente').length;
+    const preparingOrders = orders.filter(o => o.status === 'em_andamento' || o.status === 'preparo').length;
+    const completedOrders = orders.filter(o => o.status === 'finalizado' || o.status === 'concluido').length;
     
     const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
@@ -183,16 +184,19 @@ function updateStatistics() {
 }
 
 // Calculate most popular items
-function calculatePopularItems() {
-    const orders = getOrders();
+async function calculatePopularItems() {
+    const orders = await getOrders();
     const itemCounts = {};
     
     orders.forEach(order => {
-        order.items.forEach(item => {
-            if (itemCounts[item.name]) {
-                itemCounts[item.name] += item.quantity;
+        // Handle both old format (items array) and new format (order_items via API)
+        const items = order.items || order.order_items || [];
+        items.forEach(item => {
+            const itemName = item.name || item.item_name;
+            if (itemCounts[itemName]) {
+                itemCounts[itemName] += item.quantity;
             } else {
-                itemCounts[item.name] = item.quantity;
+                itemCounts[itemName] = item.quantity;
             }
         });
     });
@@ -226,8 +230,8 @@ function calculatePopularItems() {
 }
 
 // Render orders
-function renderOrders() {
-    const orders = getOrders();
+async function renderOrders() {
+    const orders = await getOrders();
     const container = document.getElementById('orders-container');
     const noOrders = document.getElementById('no-orders');
     const statusFilter = document.getElementById('status-filter');
@@ -315,20 +319,32 @@ async function changeOrderStatus(orderId, newStatus) {
 }
 
 // Delete order
-function deleteOrder(orderId) {
+async function deleteOrder(orderId) {
     if (!confirm('Tem certeza que deseja remover este pedido?')) {
         return;
     }
     
-    let orders = getOrders();
-    orders = orders.filter(o => o.id !== orderId);
-    localStorage.setItem('orders', JSON.stringify(orders));
-    
-    loadDashboard();
+    try {
+        const response = await fetch(`/api/orders.php?action=delete&id=${orderId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert('Erro ao remover pedido: ' + data.error);
+            return;
+        }
+        
+        await loadDashboard();
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        alert('Erro ao remover pedido.');
+    }
 }
 
 // Clear all orders
-function clearAllOrders() {
+async function clearAllOrders() {
     if (!confirm('ATENÇÃO: Isto irá remover todos os pedidos do sistema. Tem certeza?')) {
         return;
     }
@@ -337,9 +353,24 @@ function clearAllOrders() {
         return;
     }
     
-    localStorage.removeItem('orders');
-    loadDashboard();
-    alert('Todos os pedidos foram removidos com sucesso!');
+    try {
+        const response = await fetch('/api/orders.php?action=delete-all', {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert('Erro ao remover pedidos: ' + data.error);
+            return;
+        }
+        
+        await loadDashboard();
+        alert('Todos os pedidos foram removidos com sucesso!');
+    } catch (error) {
+        console.error('Error clearing orders:', error);
+        alert('Erro ao remover pedidos.');
+    }
 }
 
 // Auto-refresh dashboard every 30 seconds
@@ -403,12 +434,14 @@ async function loadKanbanBoard() {
     
     if (typeFilter) {
         orders = orders.filter(order => {
+            // Handle both old format (order.delivery.*) and new format (order.table_number, order.order_type)
             if (typeFilter === 'table') {
-                return order.delivery && order.delivery.tableNumber;
+                return order.table_number || (order.delivery && order.delivery.tableNumber);
             } else if (typeFilter === 'delivery') {
-                return order.delivery && order.delivery.forDelivery;
+                return order.order_type === 'viagem' || (order.delivery && order.delivery.forDelivery);
             } else if (typeFilter === 'pickup') {
-                return !order.delivery || (!order.delivery.forDelivery && !order.delivery.tableNumber);
+                return (order.order_type === 'local' && !order.table_number) || 
+                       (!order.delivery || (!order.delivery.forDelivery && !order.delivery.tableNumber));
             }
             return true;
         });
@@ -416,7 +449,9 @@ async function loadKanbanBoard() {
     
     if (tableFilter && parseInt(tableFilter) > 0) {
         orders = orders.filter(order => {
-            return order.delivery && order.delivery.tableNumber === parseInt(tableFilter);
+            // Handle both old and new format
+            const tableNum = order.table_number || (order.delivery && order.delivery.tableNumber);
+            return tableNum === parseInt(tableFilter);
         });
     }
     
@@ -517,28 +552,50 @@ function renderKanbanColumn(status, orders) {
 }
 
 // Debug function to create test order
-function createTestOrder() {
-    const testOrder = {
-        id: Date.now(),
-        status: 'recebido',
-        items: [
-            { name: 'Bacalhau à Portuguesa', price: 45.00, quantity: 1 }
-        ],
-        total: 45.00,
-        date: new Date().toISOString(),
-        delivery: {
-            forDelivery: false,
-            tableNumber: null
+async function createTestOrder() {
+    try {
+        const testOrder = {
+            order_number: 'TEST' + Date.now(),
+            status: 'recebido',
+            order_type: 'local',
+            payment_method: 'dinheiro',
+            table_number: 10,
+            subtotal: 45.00,
+            total: 45.00,
+            items: [
+                { 
+                    menu_item_id: null,
+                    item_name: 'Bacalhau à Portuguesa', 
+                    item_price: 45.00, 
+                    quantity: 1,
+                    subtotal: 45.00
+                }
+            ],
+            notes: 'Pedido de teste criado pelo admin'
+        };
+        
+        const response = await fetch('/api/orders.php?action=create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(testOrder)
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert('Erro ao criar pedido de teste: ' + data.error);
+            return;
         }
-    };
-    
-    const orders = getOrders();
-    orders.push(testOrder);
-    localStorage.setItem('orders', JSON.stringify(orders));
-    
-    console.log('✅ Test order created:', testOrder);
-    alert('Pedido de teste criado! Recarregando Kanban...');
-    loadKanbanBoard();
+        
+        console.log('✅ Test order created:', data);
+        alert('Pedido de teste criado! Recarregando Kanban...');
+        await loadKanbanBoard();
+    } catch (error) {
+        console.error('Error creating test order:', error);
+        alert('Erro ao criar pedido de teste.');
+    }
 }
 
 function createKanbanCard(order) {
@@ -547,23 +604,39 @@ function createKanbanCard(order) {
     card.draggable = true;
     card.dataset.orderId = order.id;
     
-    const date = new Date(order.date);
+    // Handle both old format (date) and new format (created_at)
+    const dateStr = order.date || order.created_at;
+    const date = new Date(dateStr);
     const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     
-    const itemsList = order.items.map(item => 
-        `${item.quantity}x ${item.name}`
-    ).join(', ');
+    // Handle both old format (items array) and new format (order_items from API)
+    const items = order.items || order.order_items || [];
+    const itemsList = items.map(item => {
+        const quantity = item.quantity;
+        const name = item.name || item.item_name;
+        return `${quantity}x ${name}`;
+    }).join(', ');
     
-    // Determine order type and details
+    // Determine order type and details - handle both old and new format
     let orderTypeInfo = '';
     let orderTypeClass = '';
     
-    if (order.delivery && order.delivery.tableNumber) {
-        orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.delivery.tableNumber}</span>`;
+    // New format uses order_type and table_number directly
+    if (order.table_number) {
+        orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.table_number}</span>`;
         orderTypeClass = ' kanban-card-table';
-    } else if (order.delivery && order.delivery.forDelivery) {
+    } else if (order.order_type === 'viagem' || (order.delivery && order.delivery.forDelivery)) {
         orderTypeInfo = '<span class="kanban-badge kanban-badge-delivery">🚚 Entrega</span>';
         orderTypeClass = ' kanban-card-delivery';
+    } else if (order.order_type === 'local' || order.delivery) {
+        // Old format check
+        if (order.delivery && order.delivery.tableNumber) {
+            orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.delivery.tableNumber}</span>`;
+            orderTypeClass = ' kanban-card-table';
+        } else {
+            orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">📦 Retirada</span>';
+            orderTypeClass = ' kanban-card-pickup';
+        }
     } else {
         orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">📦 Retirada</span>';
         orderTypeClass = ' kanban-card-pickup';
@@ -571,13 +644,18 @@ function createKanbanCard(order) {
     
     // Add user info if available
     let userInfo = '';
-    if (order.delivery && order.delivery.userId) {
+    if (order.customer_name) {
+        userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">👤 ${order.customer_name}</div>`;
+    } else if (order.delivery && order.delivery.userId) {
         userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">👤 Usuário ID: ${order.delivery.userId}</div>`;
     }
     
+    // Handle both old format (id) and new format (order_number)
+    const orderDisplay = order.order_number || `#${order.id}`;
+    
     card.innerHTML = `
         <div class="kanban-card-header">
-            <span class="kanban-card-id">Pedido #${order.id}</span>
+            <span class="kanban-card-id">Pedido ${orderDisplay}</span>
             <span class="kanban-card-time">${timeStr}</span>
         </div>
         <div class="kanban-card-type">
@@ -652,23 +730,18 @@ async function handleDrop(e) {
         const orderId = parseInt(draggedElement.dataset.orderId);
         const newStatus = this.closest('.kanban-column').dataset.status;
         
-        // Update order status
-        await updateOrderStatus(orderId, mapKanbanStatusToOld(newStatus));
-        
-        // Reload kanban board
-        loadKanbanBoard();
+        // Update order status via API (status values match database: recebido, em_andamento, finalizado)
+        try {
+            await updateOrderStatus(orderId, newStatus);
+            // Reload kanban board
+            await loadKanbanBoard();
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            alert('Erro ao atualizar status do pedido.');
+        }
     }
     
     return false;
-}
-
-function mapKanbanStatusToOld(newStatus) {
-    const mapping = {
-        'recebido': 'pendente',
-        'em_andamento': 'preparo',
-        'finalizado': 'concluido'
-    };
-    return mapping[newStatus] || newStatus;
 }
 
 // Update order status via API
@@ -1069,6 +1142,7 @@ async function showAddItemModal() {
             form.reset();
             document.getElementById('item-id').value = '';
             document.getElementById('item-available').checked = true;
+            document.getElementById('item-delivery-enabled').checked = true;
             
             // Populate group select with hierarchy
             groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
@@ -1112,6 +1186,7 @@ async function saveItem(event) {
     const price = parseFloat(document.getElementById('item-price')?.value);
     const image = document.getElementById('item-image')?.value;
     const available = document.getElementById('item-available')?.checked || false;
+    const deliveryEnabled = document.getElementById('item-delivery-enabled')?.checked || false;
     
     if (!groupId || !name || isNaN(price)) {
         alert('Por favor, preencha todos os campos obrigatórios.');
@@ -1125,7 +1200,8 @@ async function saveItem(event) {
             description: description || null,
             price,
             image_url: image || null,
-            is_available: available
+            is_available: available,
+            delivery_enabled: deliveryEnabled
         };
         
         let response;
@@ -1217,6 +1293,7 @@ async function editItem(itemId) {
             document.getElementById('item-price').value = item.price;
             document.getElementById('item-image').value = item.image_url || '';
             document.getElementById('item-available').checked = item.is_available;
+            document.getElementById('item-delivery-enabled').checked = item.delivery_enabled !== false; // Default to true if not set
             
             modal.style.display = 'block';
         }
@@ -1269,7 +1346,7 @@ function initReportFilters() {
     if (dateToInput) dateToInput.value = today.toISOString().split('T')[0];
 }
 
-function generateReport() {
+async function generateReport() {
     const reportType = document.getElementById('report-type')?.value;
     const dateFrom = document.getElementById('report-date-from')?.value;
     const dateTo = document.getElementById('report-date-to')?.value;
@@ -1279,9 +1356,9 @@ function generateReport() {
     
     resultsDiv.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">Gerando relatório...</p>';
     
-    // Simulate report generation based on local storage data
-    setTimeout(() => {
-        const orders = getOrders();
+    // Fetch orders from API
+    try {
+        const orders = await getOrders();
         
         if (reportType === 'revenue') {
             generateRevenueReport(orders, dateFrom, dateTo, resultsDiv);
@@ -1290,7 +1367,10 @@ function generateReport() {
         } else if (reportType === 'customer-flow') {
             generateCustomerFlowReport(orders, resultsDiv);
         }
-    }, 500);
+    } catch (error) {
+        console.error('Error generating report:', error);
+        resultsDiv.innerHTML = '<p style="color: #dc3545; text-align: center; padding: 40px;">Erro ao gerar relatório.</p>';
+    }
 }
 
 function generateRevenueReport(orders, dateFrom, dateTo, container) {
