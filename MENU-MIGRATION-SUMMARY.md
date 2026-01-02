@@ -266,3 +266,25 @@ Successfully migrated the menu management system from `localStorage` to REST API
 ## Conclusion
 
 The migration from localStorage to REST API has been completed successfully. All menu management operations now use the API, subgroup support has been added, and resumes/ouvidoria systems have been verified and fixed. The system is ready for testing.
+
+## Future Optimization Opportunities
+
+### 1. Recursive Descendant Checking Performance
+**Location**: `admin.js` - `editGroup()` function, lines 896-904
+
+**Current Implementation**: Uses recursive function to find all descendants when editing a group.
+
+**Potential Issue**: Could become inefficient with very deep hierarchies (e.g., 10+ levels deep).
+
+**Recommendation**: Add a depth limit or use an iterative approach with a stack. However, for typical restaurant menu structures (2-3 levels max), the current implementation is sufficient.
+
+### 2. Batch Delete for Group Items
+**Location**: `admin.js` - `deleteGroup()` function, lines 958-966
+
+**Current Implementation**: Sequentially deletes items one at a time (N+1 query pattern).
+
+**Potential Issue**: Can be slow for groups with many items (e.g., 50+ items).
+
+**Recommendation**: Create a batch delete endpoint in the API (e.g., `DELETE /api/admin/menu.php?action=delete-items-by-group&group_id=X`) to delete all items in a single request. This would improve performance significantly.
+
+**Note**: For typical restaurant menus with 5-20 items per group, the current implementation provides acceptable performance.
