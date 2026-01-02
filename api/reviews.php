@@ -100,6 +100,44 @@ switch ($path) {
             exit();
         }
         
+        // Check 4-hour window if order_id is provided
+        if (isset($data['order_id']) && $data['order_id']) {
+            $orderCheck = $pdo->prepare("
+                SELECT created_at, 
+                       TIMESTAMPDIFF(HOUR, created_at, NOW()) as hours_elapsed,
+                       TIMESTAMPDIFF(MINUTE, created_at, NOW()) as minutes_elapsed
+                FROM orders 
+                WHERE id = ? AND (user_id = ? OR user_id IS NULL)
+            ");
+            $orderCheck->execute([$data['order_id'], $userId]);
+            $order = $orderCheck->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$order) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Pedido não encontrado']);
+                exit();
+            }
+            
+            $hoursElapsed = (int)$order['hours_elapsed'];
+            $minutesElapsed = (int)$order['minutes_elapsed'];
+            
+            // Check if more than 4 hours have passed
+            if ($hoursElapsed >= 4) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'O prazo para avaliar este pedido expirou. Você pode avaliar apenas dentro de 4 horas após fazer o pedido.',
+                    'hours_elapsed' => $hoursElapsed
+                ]);
+                exit();
+            }
+            
+            // Calculate remaining time
+            $remainingMinutes = (4 * 60) - $minutesElapsed;
+            $remainingHours = floor($remainingMinutes / 60);
+            $remainingMins = $remainingMinutes % 60;
+        }
+        
         // Check rate limiting
         if (!canSubmitReview($pdo, $userId, $ipAddress)) {
             http_response_code(429);
@@ -124,9 +162,14 @@ switch ($path) {
                 $ipAddress
             ]);
             
+            $message = 'Sua avaliação está em análise. Se aprovada, será publicada no Instagram do restaurante!';
+            if (isset($remainingHours) && isset($remainingMins)) {
+                $message .= " (Você tinha {$remainingHours}h {$remainingMins}min restantes para avaliar este pedido)";
+            }
+            
             echo json_encode([
                 'success' => true, 
-                'message' => 'Sua avaliação está em análise. Se aprovada, será publicada no Instagram do restaurante!',
+                'message' => $message,
                 'review_id' => $pdo->lastInsertId()
             ]);
         } catch (PDOException $e) {
@@ -144,14 +187,71 @@ switch ($path) {
         
         $userId = getCurrentUser();
         $ipAddress = getClientIP();
+        $orderId = $_GET['order_id'] ?? null;
         
-        $canReview = canSubmitReview($pdo, $userId, $ipAddress);
-        
-        echo json_encode([
+        $response = [
             'success' => true,
-            'can_review' => $canReview,
-            'message' => $canReview ? 'Você pode enviar uma avaliação' : 'Aguarde 1 hora para enviar outra avaliação'
-        ]);
+            'can_review' => false,
+            'message' => '',
+            'remaining_time' => null
+        ];
+        
+        // Check if order_id is provided for time window check
+        if ($orderId) {
+            $orderCheck = $pdo->prepare("
+                SELECT created_at, 
+                       TIMESTAMPDIFF(HOUR, created_at, NOW()) as hours_elapsed,
+                       TIMESTAMPDIFF(MINUTE, created_at, NOW()) as minutes_elapsed
+                FROM orders 
+                WHERE id = ? AND (user_id = ? OR user_id IS NULL)
+            ");
+            $orderCheck->execute([$orderId, $userId]);
+            $order = $orderCheck->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$order) {
+                $response['message'] = 'Pedido não encontrado';
+                echo json_encode($response);
+                exit();
+            }
+            
+            $hoursElapsed = (int)$order['hours_elapsed'];
+            $minutesElapsed = (int)$order['minutes_elapsed'];
+            
+            // Check if more than 4 hours have passed
+            if ($hoursElapsed >= 4) {
+                $response['message'] = 'O prazo para avaliar este pedido expirou (4 horas após o pedido)';
+                $response['hours_elapsed'] = $hoursElapsed;
+                echo json_encode($response);
+                exit();
+            }
+            
+            // Calculate remaining time
+            $remainingMinutes = (4 * 60) - $minutesElapsed;
+            $remainingHours = floor($remainingMinutes / 60);
+            $remainingMins = $remainingMinutes % 60;
+            
+            $response['remaining_time'] = [
+                'hours' => $remainingHours,
+                'minutes' => $remainingMins,
+                'total_minutes' => $remainingMinutes
+            ];
+        }
+        
+        // Check rate limiting
+        $canReview = canSubmitReview($pdo, $userId, $ipAddress);
+        $response['can_review'] = $canReview;
+        
+        if ($canReview) {
+            if (isset($response['remaining_time'])) {
+                $response['message'] = "Você pode enviar uma avaliação. Tempo restante: {$remainingHours}h {$remainingMins}min";
+            } else {
+                $response['message'] = 'Você pode enviar uma avaliação';
+            }
+        } else {
+            $response['message'] = 'Aguarde 1 hora para enviar outra avaliação';
+        }
+        
+        echo json_encode($response);
         break;
         
     case 'list':

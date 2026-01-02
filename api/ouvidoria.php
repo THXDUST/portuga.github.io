@@ -39,7 +39,7 @@ try {
 function handleGet($conn, $action) {
     switch ($action) {
         case 'list':
-            // List all messages
+            // List all messages (admin)
             $status = $_GET['status'] ?? null;
             
             $sql = "
@@ -61,12 +61,37 @@ function handleGet($conn, $action) {
             sendSuccess($messages);
             break;
             
+        case 'my-chats':
+            // List user's own chats
+            session_start();
+            $userId = $_SESSION['user_id'] ?? null;
+            
+            if (!$userId) {
+                sendError('Authentication required', 401);
+            }
+            
+            $stmt = $conn->prepare("
+                SELECT id, protocol_number, subject, status, created_at, updated_at,
+                       CASE WHEN response IS NOT NULL THEN TRUE ELSE FALSE END as has_response
+                FROM ouvidoria
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+            ");
+            $stmt->execute([$userId]);
+            $chats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            sendSuccess($chats);
+            break;
+            
         case 'get':
-            // Get single message
+            // Get single message (admin or message owner)
             $id = $_GET['id'] ?? null;
             if (!$id) {
                 sendError('Message ID required');
             }
+            
+            session_start();
+            $userId = $_SESSION['user_id'] ?? null;
             
             $stmt = $conn->prepare("
                 SELECT o.*, u.full_name as responded_by_name
@@ -79,6 +104,13 @@ function handleGet($conn, $action) {
             
             if (!$message) {
                 sendError('Message not found', 404);
+            }
+            
+            // Check if user is authorized to view this message
+            if ($message['user_id'] && $message['user_id'] != $userId) {
+                // User can only view their own messages (unless admin)
+                // TODO: Add admin check here
+                sendError('Unauthorized', 403);
             }
             
             sendSuccess($message);
@@ -119,15 +151,28 @@ function handlePost($conn, $action) {
             // Submit new message (from public form)
             validateRequired($data, ['full_name', 'email', 'subject', 'message']);
             
+            // Get user_id if logged in
+            session_start();
+            $userId = $_SESSION['user_id'] ?? null;
+            
             // Generate protocol number
             $protocolNumber = 'OUV-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             
             $stmt = $conn->prepare("
-                INSERT INTO ouvidoria (protocol_number, full_name, email, phone, subject, message, image_path)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO ouvidoria (user_id, protocol_number, full_name, email, phone, subject, message, image_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
-            if ($stmt->execute([$protocolNumber, $data['full_name'], $data['email'], $data['phone'] ?? null, $data['subject'], $data['message'], $data['image_path'] ?? null])) {
+            if ($stmt->execute([
+                $userId,
+                $protocolNumber, 
+                $data['full_name'], 
+                $data['email'], 
+                $data['phone'] ?? null, 
+                $data['subject'], 
+                $data['message'], 
+                $data['image_path'] ?? null
+            ])) {
                 sendSuccess([
                     'id' => $conn->lastInsertId(),
                     'protocol_number' => $protocolNumber
