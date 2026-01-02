@@ -1753,6 +1753,113 @@ async function updateOuvidoriaStatus(messageId, newStatus) {
 }
 
 // ==========================================
+// TIME PERIODS MANAGEMENT FUNCTIONS
+// ==========================================
+
+let timePeriodCounters = {
+    kitchen: 0,
+    pizza: 0,
+    delivery: 0
+};
+
+/**
+ * Load time periods for a service type
+ */
+function loadTimePeriods(serviceType, periods) {
+    const container = document.getElementById(`${serviceType}-periods`);
+    if (!container) return;
+    
+    // Clear existing periods
+    container.innerHTML = '';
+    timePeriodCounters[serviceType] = 0;
+    
+    // Add periods
+    if (periods && periods.length > 0) {
+        periods.forEach(period => {
+            addTimePeriod(serviceType, period.start, period.end);
+        });
+    } else {
+        // Add one default empty period
+        addTimePeriod(serviceType);
+    }
+}
+
+/**
+ * Add a time period row
+ */
+function addTimePeriod(serviceType, startTime = '', endTime = '') {
+    const container = document.getElementById(`${serviceType}-periods`);
+    if (!container) return;
+    
+    const periodId = timePeriodCounters[serviceType]++;
+    
+    const periodRow = document.createElement('div');
+    periodRow.className = 'time-period-row';
+    periodRow.id = `${serviceType}-period-${periodId}`;
+    periodRow.innerHTML = `
+        <span style="color: #666; min-width: 30px;">#${periodId + 1}</span>
+        <input type="time" 
+               class="${serviceType}-start" 
+               value="${startTime}" 
+               placeholder="Início"
+               style="width: 120px;">
+        <span style="color: #666;">até</span>
+        <input type="time" 
+               class="${serviceType}-end" 
+               value="${endTime}" 
+               placeholder="Fim"
+               style="width: 120px;">
+        <button type="button" 
+                class="btn btn-danger" 
+                onclick="removeTimePeriod('${serviceType}', ${periodId})" 
+                style="padding: 6px 12px; font-size: 0.9rem;">
+            🗑️ Remover
+        </button>
+    `;
+    
+    container.appendChild(periodRow);
+}
+
+/**
+ * Remove a time period row
+ */
+function removeTimePeriod(serviceType, periodId) {
+    const container = document.getElementById(`${serviceType}-periods`);
+    const periodRow = document.getElementById(`${serviceType}-period-${periodId}`);
+    
+    if (periodRow && container) {
+        // Don't allow removing if it's the last period
+        const remainingPeriods = container.querySelectorAll('.time-period-row');
+        if (remainingPeriods.length <= 1) {
+            alert('Deve haver pelo menos um período de horário configurado.');
+            return;
+        }
+        
+        periodRow.remove();
+    }
+}
+
+/**
+ * Get all time periods for a service type
+ */
+function getTimePeriods(serviceType) {
+    const periods = [];
+    const startInputs = document.querySelectorAll(`.${serviceType}-start`);
+    const endInputs = document.querySelectorAll(`.${serviceType}-end`);
+    
+    for (let i = 0; i < startInputs.length; i++) {
+        const start = startInputs[i].value;
+        const end = endInputs[i].value;
+        
+        if (start && end) {
+            periods.push({ start, end });
+        }
+    }
+    
+    return periods;
+}
+
+// ==========================================
 // SETTINGS FUNCTIONS
 // ==========================================
 
@@ -1780,27 +1887,18 @@ async function loadSettings() {
             statusLabel.style.color = isOpen ? '#28a745' : '#dc3545';
         }
         
-        // Hours
-        if (settings.kitchen_hours?.value) {
-            const kitchenHours = settings.kitchen_hours.value;
-            if (kitchenHours.start) document.getElementById('kitchen-start').value = kitchenHours.start;
-            if (kitchenHours.end) document.getElementById('kitchen-end').value = kitchenHours.end;
-        } else {
-            // Set default kitchen start to 11:00
-            document.getElementById('kitchen-start').value = '11:00';
-        }
+        // Load time periods for kitchen, pizza, and delivery
+        // Kitchen hours with default 11:00 opening
+        const kitchenPeriods = settings.kitchen_hours?.value || [{ start: '11:00', end: '22:00' }];
+        loadTimePeriods('kitchen', Array.isArray(kitchenPeriods) ? kitchenPeriods : [kitchenPeriods]);
         
-        if (settings.pizza_hours?.value) {
-            const pizzaHours = settings.pizza_hours.value;
-            if (pizzaHours.start) document.getElementById('pizza-start').value = pizzaHours.start;
-            if (pizzaHours.end) document.getElementById('pizza-end').value = pizzaHours.end;
-        }
+        // Pizza hours
+        const pizzaPeriods = settings.pizza_hours?.value || [{ start: '18:00', end: '23:00' }];
+        loadTimePeriods('pizza', Array.isArray(pizzaPeriods) ? pizzaPeriods : [pizzaPeriods]);
         
-        if (settings.delivery_hours?.value) {
-            const deliveryHours = settings.delivery_hours.value;
-            if (deliveryHours.start) document.getElementById('delivery-start').value = deliveryHours.start;
-            if (deliveryHours.end) document.getElementById('delivery-end').value = deliveryHours.end;
-        }
+        // Delivery hours
+        const deliveryPeriods = settings.delivery_hours?.value || [{ start: '11:00', end: '23:00' }];
+        loadTimePeriods('delivery', Array.isArray(deliveryPeriods) ? deliveryPeriods : [deliveryPeriods]);
         
         // Max delivery distance
         if (settings.max_delivery_distance?.value) {
@@ -1895,35 +1993,38 @@ async function saveSettings() {
         const isOpen = document.getElementById('restaurant-status')?.checked || false;
         settings.is_open = { value: isOpen, type: 'boolean' };
         
-        // Kitchen hours
-        const kitchenStart = document.getElementById('kitchen-start')?.value;
-        const kitchenEnd = document.getElementById('kitchen-end')?.value;
-        if (kitchenStart && kitchenEnd) {
-            settings.kitchen_hours = {
-                value: { start: kitchenStart, end: kitchenEnd },
-                type: 'json'
-            };
+        // Get time periods for each service
+        const kitchenPeriods = getTimePeriods('kitchen');
+        const pizzaPeriods = getTimePeriods('pizza');
+        const deliveryPeriods = getTimePeriods('delivery');
+        
+        // Validate that at least one period is set for each
+        if (kitchenPeriods.length === 0) {
+            alert('❌ Por favor, configure pelo menos um período para a Cozinha.');
+            return;
+        }
+        if (pizzaPeriods.length === 0) {
+            alert('❌ Por favor, configure pelo menos um período para a Pizzaria.');
+            return;
+        }
+        if (deliveryPeriods.length === 0) {
+            alert('❌ Por favor, configure pelo menos um período para as Entregas.');
+            return;
         }
         
-        // Pizza hours
-        const pizzaStart = document.getElementById('pizza-start')?.value;
-        const pizzaEnd = document.getElementById('pizza-end')?.value;
-        if (pizzaStart && pizzaEnd) {
-            settings.pizza_hours = {
-                value: { start: pizzaStart, end: pizzaEnd },
-                type: 'json'
-            };
-        }
-        
-        // Delivery hours
-        const deliveryStart = document.getElementById('delivery-start')?.value;
-        const deliveryEnd = document.getElementById('delivery-end')?.value;
-        if (deliveryStart && deliveryEnd) {
-            settings.delivery_hours = {
-                value: { start: deliveryStart, end: deliveryEnd },
-                type: 'json'
-            };
-        }
+        // Save time periods as arrays
+        settings.kitchen_hours = {
+            value: kitchenPeriods,
+            type: 'json'
+        };
+        settings.pizza_hours = {
+            value: pizzaPeriods,
+            type: 'json'
+        };
+        settings.delivery_hours = {
+            value: deliveryPeriods,
+            type: 'json'
+        };
         
         // Max delivery distance
         const maxDistance = document.getElementById('max-delivery-distance')?.value;
