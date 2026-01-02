@@ -634,8 +634,8 @@ async function finalizeOrder() {
     message += '---\n';
     message += '_Por favor, confirme o pedido!_';
     
-    // Save order with all info
-    saveOrder(cart, total, {
+    // Save order with all info (await API call)
+    await saveOrder(cart, total, {
         forDelivery,
         deliveryDistance: calculatedDistance,
         deliveryAddress,
@@ -657,19 +657,53 @@ async function finalizeOrder() {
     renderCart();
 }
 
-function saveOrder(cart, total, deliveryInfo = {}) {
-    const orders = getOrders();
-    const order = {
-        id: Date.now(),
-        date: new Date().toISOString(),
-        items: cart,
-        total: total,
-        status: 'pendente',
-        delivery: deliveryInfo
-    };
-    
-    orders.push(order);
-    localStorage.setItem('orders', JSON.stringify(orders));
+async function saveOrder(cart, total, deliveryInfo = {}) {
+    try {
+        // Prepare order data for API
+        const orderData = {
+            order_number: 'WEB' + Date.now(),
+            order_type: deliveryInfo.forDelivery ? 'viagem' : 'local',
+            table_number: deliveryInfo.tableNumber || null,
+            status: 'recebido',
+            payment_method: deliveryInfo.paymentMethod ? 
+                (deliveryInfo.paymentMethod === 'card' ? 'cartao_debito' : 'dinheiro') : 'dinheiro',
+            change_for: deliveryInfo.changeAmount ? parseFloat(deliveryInfo.changeAmount) : null,
+            delivery_address: deliveryInfo.deliveryAddress || null,
+            delivery_distance: deliveryInfo.deliveryDistance || null,
+            delivery_fee: deliveryInfo.deliveryFee || 0,
+            pickup_time: deliveryInfo.pickupTime ? new Date(deliveryInfo.pickupTime).toISOString() : null,
+            subtotal: total - (deliveryInfo.deliveryFee || 0),
+            total: total,
+            items: cart.map(item => ({
+                menu_item_id: null,
+                item_name: item.name,
+                item_price: item.price,
+                quantity: item.quantity,
+                subtotal: item.price * item.quantity
+            })),
+            notes: 'Pedido via website/WhatsApp'
+        };
+        
+        const response = await fetch('/api/orders.php?action=create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData)
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('Error saving order:', data.error);
+            // Even if API fails, still allow WhatsApp order (fallback)
+        } else {
+            console.log('✅ Order saved to database:', data);
+        }
+    } catch (error) {
+        console.error('Error saving order:', error);
+        // Even if API fails, still allow WhatsApp order (fallback)
+    }
 }
 
 // Fetch orders from API instead of localStorage
