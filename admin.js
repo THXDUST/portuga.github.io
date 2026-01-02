@@ -1137,6 +1137,7 @@ async function showAddItemModal() {
             form.reset();
             document.getElementById('item-id').value = '';
             document.getElementById('item-available').checked = true;
+            document.getElementById('item-delivery-enabled').checked = true;
             
             // Populate group select with hierarchy
             groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
@@ -1180,6 +1181,7 @@ async function saveItem(event) {
     const price = parseFloat(document.getElementById('item-price')?.value);
     const image = document.getElementById('item-image')?.value;
     const available = document.getElementById('item-available')?.checked || false;
+    const deliveryEnabled = document.getElementById('item-delivery-enabled')?.checked || false;
     
     if (!groupId || !name || isNaN(price)) {
         alert('Por favor, preencha todos os campos obrigatórios.');
@@ -1193,7 +1195,8 @@ async function saveItem(event) {
             description: description || null,
             price,
             image_url: image || null,
-            is_available: available
+            is_available: available,
+            delivery_enabled: deliveryEnabled
         };
         
         let response;
@@ -1285,6 +1288,7 @@ async function editItem(itemId) {
             document.getElementById('item-price').value = item.price;
             document.getElementById('item-image').value = item.image_url || '';
             document.getElementById('item-available').checked = item.is_available;
+            document.getElementById('item-delivery-enabled').checked = item.delivery_enabled !== false; // Default to true if not set
             
             modal.style.display = 'block';
         }
