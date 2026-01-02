@@ -46,19 +46,81 @@ try {
 function handleGet($conn, $action) {
     switch ($action) {
         case 'list':
-            // List all users with their roles
-            $result = $conn->query("
+            // List users with search, filters, and pagination
+            $search = $_GET['search'] ?? '';
+            $roleFilter = $_GET['role'] ?? '';
+            $statusFilter = $_GET['status'] ?? '';
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $perPage = isset($_GET['per_page']) ? min(100, max(1, (int)$_GET['per_page'])) : 50;
+            $offset = ($page - 1) * $perPage;
+            
+            // Build WHERE clause
+            $where = [];
+            $params = [];
+            
+            // Search filter
+            if (!empty($search)) {
+                $where[] = "(u.full_name LIKE ? OR u.email LIKE ?)";
+                $searchTerm = "%{$search}%";
+                $params[] = $searchTerm;
+                $params[] = $searchTerm;
+            }
+            
+            // Status filter
+            if ($statusFilter === 'active') {
+                $where[] = "u.is_active = 1";
+            } elseif ($statusFilter === 'inactive') {
+                $where[] = "u.is_active = 0";
+            }
+            
+            $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+            
+            // Get total count
+            $countSql = "
+                SELECT COUNT(DISTINCT u.id) as total
+                FROM users u
+                $whereClause
+            ";
+            $countStmt = $conn->prepare($countSql);
+            $countStmt->execute($params);
+            $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            // Build main query
+            $sql = "
                 SELECT u.id, u.full_name, u.email, u.is_active, 
                        u.created_at, u.last_login,
-                       GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+                       GROUP_CONCAT(DISTINCT r.name SEPARATOR ', ') as roles
                 FROM users u
                 LEFT JOIN user_roles ur ON u.id = ur.user_id
                 LEFT JOIN roles r ON ur.role_id = r.id
-                GROUP BY u.id
-                ORDER BY u.created_at DESC
-            ");
-            $users = $result->fetchAll(PDO::FETCH_ASSOC);
-            sendSuccess($users);
+                $whereClause
+            ";
+            
+            // Add role filter (needs to be after GROUP BY for HAVING clause)
+            if (!empty($roleFilter)) {
+                $sql .= " GROUP BY u.id HAVING FIND_IN_SET(?, roles) > 0";
+                $params[] = $roleFilter;
+            } else {
+                $sql .= " GROUP BY u.id";
+            }
+            
+            $sql .= " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
+            $params[] = $perPage;
+            $params[] = $offset;
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            sendSuccess([
+                'users' => $users,
+                'pagination' => [
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'total_pages' => ceil($total / $perPage)
+                ]
+            ]);
             break;
             
         case 'get':
