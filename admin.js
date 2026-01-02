@@ -1457,6 +1457,161 @@ async function updateResumeStatus(resumeId, newStatus) {
 }
 
 // ==========================================
+// USERS MANAGEMENT FUNCTIONS
+// ==========================================
+
+let userSearchTimeout;
+
+/**
+ * Debounce user search to avoid too many API calls
+ */
+function debounceUserSearch() {
+    clearTimeout(userSearchTimeout);
+    userSearchTimeout = setTimeout(() => {
+        loadUsers();
+    }, 500); // Wait 500ms after user stops typing
+}
+
+/**
+ * Load users based on search and filters
+ */
+async function loadUsers() {
+    const container = document.getElementById('users-list');
+    if (!container) return;
+    
+    try {
+        const searchInput = document.getElementById('user-search')?.value || '';
+        const roleFilter = document.getElementById('user-role-filter')?.value || '';
+        const statusFilter = document.getElementById('user-status-filter')?.value || '';
+        
+        // Only load if there's a search query
+        if (!searchInput.trim() && !roleFilter && !statusFilter) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; background: #f8f9fa; border-radius: 12px; margin-top: 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🔍</div>
+                    <h3 style="color: #666; margin-bottom: 10px;">Pesquise para encontrar usuários</h3>
+                    <p style="color: #999;">Use a barra de pesquisa acima para buscar usuários por nome ou email.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '<p style="color: #666;">Carregando usuários...</p>';
+        
+        const params = new URLSearchParams({ action: 'list' });
+        if (searchInput.trim()) params.append('search', searchInput.trim());
+        if (roleFilter) params.append('role', roleFilter);
+        if (statusFilter) params.append('status', statusFilter);
+        
+        const response = await fetch(`/api/admin/users.php?${params.toString()}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar usuários');
+        }
+        
+        const users = data.data || [];
+        
+        if (users.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
+                    <p style="color: #666; margin: 0;">Nenhum usuário encontrado com os filtros aplicados.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div style="display: grid; gap: 15px;">';
+        
+        users.forEach(user => {
+            const statusBadge = user.is_active 
+                ? '<span style="background: #d4edda; color: #155724; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem;">Ativo</span>'
+                : '<span style="background: #f8d7da; color: #721c24; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem;">Inativo</span>';
+            
+            const lastLogin = user.last_login 
+                ? new Date(user.last_login).toLocaleString('pt-BR')
+                : 'Nunca';
+            
+            html += `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h3 style="color: #333; margin: 0 0 10px 0;">
+                                👤 ${user.full_name || 'Sem nome'}
+                                ${statusBadge}
+                            </h3>
+                            <p style="color: #666; margin: 0 0 5px 0;"><strong>Email:</strong> ${user.email}</p>
+                            <p style="color: #666; margin: 0 0 5px 0;"><strong>Cargos:</strong> ${user.roles || 'Nenhum cargo'}</p>
+                            <p style="color: #999; margin: 0; font-size: 0.9rem;">Último login: ${lastLogin}</p>
+                            <small style="color: #999;">Cadastrado em: ${new Date(user.created_at).toLocaleString('pt-BR')}</small>
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-direction: column;">
+                            <button class="btn" onclick="editUser(${user.id})" style="padding: 8px 16px;">✏️ Editar</button>
+                            <button class="btn btn-secondary" onclick="manageUserRoles(${user.id})" style="padding: 8px 16px;">🔐 Cargos</button>
+                            ${user.is_active 
+                                ? `<button class="btn btn-danger" onclick="toggleUserStatus(${user.id}, false)" style="padding: 8px 16px;">🚫 Desativar</button>`
+                                : `<button class="btn" onclick="toggleUserStatus(${user.id}, true)" style="padding: 8px 16px; background: #28a745; border-color: #28a745;">✅ Ativar</button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        
+        // Show pagination info if available
+        if (data.pagination) {
+            html += `
+                <div style="margin-top: 20px; text-align: center; color: #666;">
+                    Mostrando ${users.length} de ${data.pagination.total} usuário(s)
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading users:', error);
+        container.innerHTML = `<p style="color: #dc3545;">Erro ao carregar usuários: ${error.message}</p>`;
+    }
+}
+
+/**
+ * Toggle user active status
+ */
+async function toggleUserStatus(userId, makeActive) {
+    const action = makeActive ? 'ativar' : 'desativar';
+    
+    if (!confirm(`Tem certeza que deseja ${action} este usuário?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/users.php?action=update-status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: userId,
+                is_active: makeActive
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Status do usuário atualizado com sucesso!');
+            loadUsers();
+        } else {
+            alert('❌ Erro ao atualizar status: ' + (data.error || data.message));
+        }
+    } catch (error) {
+        console.error('Error toggling user status:', error);
+        alert('❌ Erro ao atualizar status do usuário');
+    }
+}
+
+// ==========================================
 // OUVIDORIA FUNCTIONS
 // ==========================================
 
@@ -1561,11 +1716,11 @@ async function respondOuvidoria(messageId) {
             alert('✅ Resposta enviada com sucesso!');
             loadOuvidoriaMessages();
         } else {
-            alert('❌ Erro ao enviar resposta: ' + data.message);
+            alert('❌ Erro ao enviar resposta: ' + (data.error || data.message || 'Erro desconhecido'));
         }
     } catch (error) {
         console.error('Error responding to ouvidoria:', error);
-        alert('❌ Erro ao enviar resposta');
+        alert('❌ Erro ao enviar resposta: ' + error.message);
     }
 }
 
@@ -1589,29 +1744,198 @@ async function updateOuvidoriaStatus(messageId, newStatus) {
             alert('✅ Status atualizado com sucesso!');
             loadOuvidoriaMessages();
         } else {
-            alert('❌ Erro ao atualizar status: ' + data.message);
+            alert('❌ Erro ao atualizar status: ' + (data.error || data.message || 'Erro desconhecido'));
         }
     } catch (error) {
         console.error('Error updating ouvidoria status:', error);
-        alert('❌ Erro ao atualizar status');
+        alert('❌ Erro ao atualizar status: ' + error.message);
     }
+}
+
+// ==========================================
+// TIME PERIODS MANAGEMENT FUNCTIONS
+// ==========================================
+
+let timePeriodCounters = {
+    kitchen: 0,
+    pizza: 0,
+    delivery: 0
+};
+
+/**
+ * Load time periods for a service type
+ */
+function loadTimePeriods(serviceType, periods) {
+    const container = document.getElementById(`${serviceType}-periods`);
+    if (!container) return;
+    
+    // Clear existing periods
+    container.innerHTML = '';
+    timePeriodCounters[serviceType] = 0;
+    
+    // Add periods
+    if (periods && periods.length > 0) {
+        periods.forEach(period => {
+            addTimePeriod(serviceType, period.start, period.end);
+        });
+    } else {
+        // Add one default empty period
+        addTimePeriod(serviceType);
+    }
+}
+
+/**
+ * Add a time period row
+ */
+function addTimePeriod(serviceType, startTime = '', endTime = '') {
+    const container = document.getElementById(`${serviceType}-periods`);
+    if (!container) return;
+    
+    const periodId = timePeriodCounters[serviceType]++;
+    
+    const periodRow = document.createElement('div');
+    periodRow.className = 'time-period-row';
+    periodRow.id = `${serviceType}-period-${periodId}`;
+    periodRow.innerHTML = `
+        <span style="color: #666; min-width: 30px;">#${periodId + 1}</span>
+        <input type="time" 
+               class="${serviceType}-start" 
+               value="${startTime}" 
+               placeholder="Início"
+               style="width: 120px;">
+        <span style="color: #666;">até</span>
+        <input type="time" 
+               class="${serviceType}-end" 
+               value="${endTime}" 
+               placeholder="Fim"
+               style="width: 120px;">
+        <button type="button" 
+                class="btn btn-danger" 
+                onclick="removeTimePeriod('${serviceType}', ${periodId})" 
+                style="padding: 6px 12px; font-size: 0.9rem;">
+            🗑️ Remover
+        </button>
+    `;
+    
+    container.appendChild(periodRow);
+}
+
+/**
+ * Remove a time period row
+ */
+function removeTimePeriod(serviceType, periodId) {
+    const container = document.getElementById(`${serviceType}-periods`);
+    const periodRow = document.getElementById(`${serviceType}-period-${periodId}`);
+    
+    if (periodRow && container) {
+        // Don't allow removing if it's the last period
+        const remainingPeriods = container.querySelectorAll('.time-period-row');
+        if (remainingPeriods.length <= 1) {
+            alert('Deve haver pelo menos um período de horário configurado.');
+            return;
+        }
+        
+        periodRow.remove();
+    }
+}
+
+/**
+ * Get all time periods for a service type
+ */
+function getTimePeriods(serviceType) {
+    const periods = [];
+    const startInputs = document.querySelectorAll(`.${serviceType}-start`);
+    const endInputs = document.querySelectorAll(`.${serviceType}-end`);
+    
+    for (let i = 0; i < startInputs.length; i++) {
+        const start = startInputs[i].value;
+        const end = endInputs[i].value;
+        
+        if (start && end) {
+            periods.push({ start, end });
+        }
+    }
+    
+    return periods;
 }
 
 // ==========================================
 // SETTINGS FUNCTIONS
 // ==========================================
 
-function loadSettings() {
-    // Load current settings
-    // In a real implementation, this would fetch from the API
-    const restaurantStatus = document.getElementById('restaurant-status');
-    const statusLabel = document.getElementById('restaurant-status-label');
-    
-    if (restaurantStatus && statusLabel) {
-        // Default to closed for demo
-        restaurantStatus.checked = false;
-        statusLabel.textContent = 'Fechado';
-        statusLabel.style.color = '#dc3545';
+async function loadSettings() {
+    try {
+        // Load current settings from API
+        const response = await fetch('/api/admin/settings.php?action=all');
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('Error loading settings:', data.error);
+            return;
+        }
+        
+        const settings = data.data || {};
+        
+        // Restaurant status
+        const restaurantStatus = document.getElementById('restaurant-status');
+        const statusLabel = document.getElementById('restaurant-status-label');
+        
+        if (restaurantStatus && statusLabel) {
+            const isOpen = settings.is_open?.value || false;
+            restaurantStatus.checked = isOpen;
+            statusLabel.textContent = isOpen ? 'Aberto' : 'Fechado';
+            statusLabel.style.color = isOpen ? '#28a745' : '#dc3545';
+        }
+        
+        // Load time periods for kitchen, pizza, and delivery
+        // Kitchen hours with default 11:00 opening
+        const kitchenPeriods = settings.kitchen_hours?.value || [{ start: '11:00', end: '22:00' }];
+        loadTimePeriods('kitchen', Array.isArray(kitchenPeriods) ? kitchenPeriods : [kitchenPeriods]);
+        
+        // Pizza hours
+        const pizzaPeriods = settings.pizza_hours?.value || [{ start: '18:00', end: '23:00' }];
+        loadTimePeriods('pizza', Array.isArray(pizzaPeriods) ? pizzaPeriods : [pizzaPeriods]);
+        
+        // Delivery hours
+        const deliveryPeriods = settings.delivery_hours?.value || [{ start: '11:00', end: '23:00' }];
+        loadTimePeriods('delivery', Array.isArray(deliveryPeriods) ? deliveryPeriods : [deliveryPeriods]);
+        
+        // Max delivery distance
+        if (settings.max_delivery_distance?.value) {
+            document.getElementById('max-delivery-distance').value = settings.max_delivery_distance.value;
+        }
+        
+        // Maintenance mode
+        const maintenanceMode = document.getElementById('maintenance-mode');
+        if (maintenanceMode && settings.maintenance_mode?.value) {
+            maintenanceMode.checked = settings.maintenance_mode.value;
+            if (settings.maintenance_mode.value) {
+                document.getElementById('maintenance-options').style.display = 'block';
+                
+                if (settings.maintenance_config?.value) {
+                    const config = settings.maintenance_config.value;
+                    if (config.restrictAll) {
+                        document.getElementById('restrict-all').checked = true;
+                        toggleRestrictAll();
+                    }
+                    if (config.restrictedPages) {
+                        config.restrictedPages.forEach(page => {
+                            const checkbox = document.querySelector(`.maintenance-page[value="${page}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        });
+                    }
+                    if (config.message) {
+                        document.getElementById('maintenance-message').value = config.message;
+                    }
+                    if (config.eta) {
+                        document.getElementById('maintenance-eta').value = config.eta;
+                    }
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading settings:', error);
     }
 }
 
@@ -1661,44 +1985,99 @@ function toggleRestrictAll() {
     }
 }
 
-function saveSettings() {
-    const settings = {
-        restaurantStatus: document.getElementById('restaurant-status')?.checked,
-        kitchenStart: document.getElementById('kitchen-start')?.value,
-        kitchenEnd: document.getElementById('kitchen-end')?.value,
-        pizzaStart: document.getElementById('pizza-start')?.value,
-        pizzaEnd: document.getElementById('pizza-end')?.value,
-        deliveryStart: document.getElementById('delivery-start')?.value,
-        deliveryEnd: document.getElementById('delivery-end')?.value,
-        maxDeliveryDistance: document.getElementById('max-delivery-distance')?.value,
-        deliveryFeePerKm: document.getElementById('delivery-fee-per-km')?.value,
-        maintenanceMode: document.getElementById('maintenance-mode')?.checked
-    };
-    
-    // Get maintenance mode configuration
-    if (settings.maintenanceMode) {
-        settings.restrictAll = document.getElementById('restrict-all')?.checked;
+async function saveSettings() {
+    try {
+        const settings = {};
         
-        const restrictedPages = [];
-        document.querySelectorAll('.maintenance-page:checked').forEach(cb => {
-            restrictedPages.push(cb.value);
+        // Restaurant status
+        const isOpen = document.getElementById('restaurant-status')?.checked || false;
+        settings.is_open = { value: isOpen, type: 'boolean' };
+        
+        // Get time periods for each service
+        const kitchenPeriods = getTimePeriods('kitchen');
+        const pizzaPeriods = getTimePeriods('pizza');
+        const deliveryPeriods = getTimePeriods('delivery');
+        
+        // Validate that at least one period is set for each
+        if (kitchenPeriods.length === 0) {
+            alert('❌ Por favor, configure pelo menos um período para a Cozinha.');
+            return;
+        }
+        if (pizzaPeriods.length === 0) {
+            alert('❌ Por favor, configure pelo menos um período para a Pizzaria.');
+            return;
+        }
+        if (deliveryPeriods.length === 0) {
+            alert('❌ Por favor, configure pelo menos um período para as Entregas.');
+            return;
+        }
+        
+        // Save time periods as arrays
+        settings.kitchen_hours = {
+            value: kitchenPeriods,
+            type: 'json'
+        };
+        settings.pizza_hours = {
+            value: pizzaPeriods,
+            type: 'json'
+        };
+        settings.delivery_hours = {
+            value: deliveryPeriods,
+            type: 'json'
+        };
+        
+        // Max delivery distance
+        const maxDistance = document.getElementById('max-delivery-distance')?.value;
+        if (maxDistance) {
+            settings.max_delivery_distance = {
+                value: parseFloat(maxDistance),
+                type: 'number'
+            };
+        }
+        
+        // Maintenance mode
+        const maintenanceMode = document.getElementById('maintenance-mode')?.checked || false;
+        settings.maintenance_mode = { value: maintenanceMode, type: 'boolean' };
+        
+        if (maintenanceMode) {
+            const maintenanceConfig = {
+                restrictAll: document.getElementById('restrict-all')?.checked || false,
+                restrictedPages: [],
+                message: document.getElementById('maintenance-message')?.value || '',
+                eta: document.getElementById('maintenance-eta')?.value || null
+            };
+            
+            document.querySelectorAll('.maintenance-page:checked').forEach(cb => {
+                maintenanceConfig.restrictedPages.push(cb.value);
+            });
+            
+            settings.maintenance_config = {
+                value: maintenanceConfig,
+                type: 'json'
+            };
+        }
+        
+        // Save to API
+        const response = await fetch('/api/admin/settings.php?action=update-multiple', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings })
         });
-        settings.restrictedPages = restrictedPages;
-        settings.maintenanceMessage = document.getElementById('maintenance-message')?.value;
-        settings.maintenanceETA = document.getElementById('maintenance-eta')?.value;
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Configurações salvas com sucesso!');
+            // Reload settings to ensure UI is in sync
+            await loadSettings();
+        } else {
+            alert('❌ Erro ao salvar configurações: ' + (data.error || data.message || 'Erro desconhecido'));
+        }
+        
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('❌ Erro ao salvar configurações: ' + error.message);
     }
-    
-    // In a real implementation, this would save to the API
-    console.log('Saving settings:', settings);
-    
-    // TODO: Call API to save maintenance mode settings
-    // fetch('/api/admin/maintenance.php?action=update', {
-    //     method: 'PUT',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(settings)
-    // });
-    
-    alert('Configurações salvas com sucesso!');
 }
 
 // ==========================================

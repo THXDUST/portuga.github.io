@@ -1330,3 +1330,56 @@ nav ul li a:hover {
 .kanban-card-type {
     margin-bottom: 10px;
 }
+
+/* Collapsible Menu Sections */
+.collapsible-section {
+    margin-bottom: 20px;
+}
+
+.collapsible-header {
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+.collapsible-header:hover {
+    color: #d4a734;
+}
+
+.collapse-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.collapsible-content {
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+}
+
+/* Time Periods Management */
+.time-periods-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.time-period-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #e8c13f;
+}
+
+.time-period-row input[type="time"] {
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+.time-period-row button {
+    margin-left: auto;
+}

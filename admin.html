@@ -462,24 +462,38 @@
                 
                 <div class="settings-section">
                     <h3>Horários de Funcionamento</h3>
-                    <div style="display: grid; gap: 15px; max-width: 600px;">
-                        <div>
-                            <label>Cozinha:</label>
-                            <input type="time" id="kitchen-start" class="form-group" style="width: 120px;">
-                            <span> até </span>
-                            <input type="time" id="kitchen-end" class="form-group" style="width: 120px;">
+                    <p style="color: #666; margin-bottom: 20px;">Configure os períodos de funcionamento. Você pode adicionar múltiplos períodos para cada serviço.</p>
+                    
+                    <!-- Kitchen Hours -->
+                    <div style="margin-bottom: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label style="font-weight: 600; color: #333;">🍳 Cozinha:</label>
+                            <button type="button" class="btn" onclick="addTimePeriod('kitchen')" style="padding: 6px 12px; font-size: 0.9rem;">➕ Adicionar Período</button>
                         </div>
-                        <div>
-                            <label>Pizzaria:</label>
-                            <input type="time" id="pizza-start" class="form-group" style="width: 120px;">
-                            <span> até </span>
-                            <input type="time" id="pizza-end" class="form-group" style="width: 120px;">
+                        <div id="kitchen-periods" class="time-periods-container">
+                            <!-- Time periods will be added here -->
                         </div>
-                        <div>
-                            <label>Entregas:</label>
-                            <input type="time" id="delivery-start" class="form-group" style="width: 120px;">
-                            <span> até </span>
-                            <input type="time" id="delivery-end" class="form-group" style="width: 120px;">
+                    </div>
+                    
+                    <!-- Pizza Hours -->
+                    <div style="margin-bottom: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label style="font-weight: 600; color: #333;">🍕 Pizzaria:</label>
+                            <button type="button" class="btn" onclick="addTimePeriod('pizza')" style="padding: 6px 12px; font-size: 0.9rem;">➕ Adicionar Período</button>
+                        </div>
+                        <div id="pizza-periods" class="time-periods-container">
+                            <!-- Time periods will be added here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery Hours -->
+                    <div style="margin-bottom: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label style="font-weight: 600; color: #333;">🚚 Entregas:</label>
+                            <button type="button" class="btn" onclick="addTimePeriod('delivery')" style="padding: 6px 12px; font-size: 0.9rem;">➕ Adicionar Período</button>
+                        </div>
+                        <div id="delivery-periods" class="time-periods-container">
+                            <!-- Time periods will be added here -->
                         </div>
                     </div>
                 </div>
