@@ -196,6 +196,8 @@ function handlePut($conn, $action) {
             // Respond to message
             validateRequired($data, ['id', 'response']);
             
+            session_start();
+            
             $stmt = $conn->prepare("
                 UPDATE ouvidoria 
                 SET status = 'resolvido', response = ?, responded_by = ?
