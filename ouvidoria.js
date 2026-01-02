@@ -62,7 +62,7 @@ async function loadMyChats() {
     if (!section || !container) return;
     
     // Check if user is logged in
-    if (!window.isUserLoggedIn || !isUserLoggedIn()) {
+    if (typeof isUserLoggedIn !== 'function' || !isUserLoggedIn()) {
         section.style.display = 'none';
         return;
     }

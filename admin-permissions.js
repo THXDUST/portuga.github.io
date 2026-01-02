@@ -2,6 +2,9 @@
 // PERMISSIONS MANAGEMENT
 // ============================================
 
+// Debounce timeout for user search
+let userSearchTimeout;
+
 /**
  * Load permissions list
  */

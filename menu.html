@@ -175,6 +175,7 @@
         function renderMenuItem(item) {
             const imageUrl = item.image_url || `https://via.placeholder.com/400x200/e8c13f/333?text=${encodeURIComponent(item.name)}`;
             const price = parseFloat(item.price).toFixed(2);
+            const itemId = parseInt(item.id) || 0;
             
             return `
                 <div class="product-card">
@@ -186,7 +187,7 @@
                         <h3 class="product-name">${escapeHtml(item.name)}</h3>
                         <p class="product-description">${escapeHtml(item.description || '')}</p>
                         <p class="product-price">R$ ${price}</p>
-                        <button class="btn" onclick="addToCart('${escapeHtml(item.name)}', ${item.price}, '${escapeHtml(imageUrl)}')">
+                        <button class="btn" data-item-id="${itemId}" data-item-name="${escapeHtml(item.name)}" data-item-price="${price}" data-item-image="${escapeHtml(imageUrl)}">
                             Adicionar ao Carrinho
                         </button>
                     </div>
@@ -205,6 +206,16 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await updateNavigationUI();
             await loadDynamicMenu();
+            
+            // Add event delegation for Add to Cart buttons
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('btn') && e.target.hasAttribute('data-item-name')) {
+                    const itemName = e.target.getAttribute('data-item-name');
+                    const itemPrice = parseFloat(e.target.getAttribute('data-item-price'));
+                    const itemImage = e.target.getAttribute('data-item-image');
+                    addToCart(itemName, itemPrice, itemImage);
+                }
+            });
         });
     </script>
 </body>

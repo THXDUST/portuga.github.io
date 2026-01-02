@@ -102,6 +102,8 @@ switch ($path) {
         
         // Check 4-hour window if order_id is provided
         if (isset($data['order_id']) && $data['order_id']) {
+            // Note: Orders without user_id (anonymous orders) can be reviewed by any logged-in user
+            // This is intentional to allow reviews for walk-in customers who later register
             $orderCheck = $pdo->prepare("
                 SELECT created_at, 
                        TIMESTAMPDIFF(HOUR, created_at, NOW()) as hours_elapsed,
