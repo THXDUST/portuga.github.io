@@ -55,9 +55,8 @@ function handleGet($conn, $action) {
                 GROUP BY period
                 ORDER BY period
             ");
-            $stmt->bind_param("sss", $dateFormat, $dateFrom, $dateTo);
-            $stmt->execute();
-            $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$dateFormat, $dateFrom, $dateTo]);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Calculate comparison with previous period
             $daysDiff = (strtotime($dateTo) - strtotime($dateFrom)) / 86400;
@@ -70,9 +69,8 @@ function handleGet($conn, $action) {
                 WHERE DATE(created_at) BETWEEN ? AND ?
                 AND status = 'finalizado'
             ");
-            $stmt->bind_param("ss", $prevDateFrom, $prevDateTo);
-            $stmt->execute();
-            $prevResult = $stmt->get_result()->fetch_assoc();
+            $stmt->execute([$prevDateFrom, $prevDateTo]);
+            $prevResult = $stmt->fetch(PDO::FETCH_ASSOC);
             
             sendSuccess([
                 'data' => $data,
@@ -100,9 +98,8 @@ function handleGet($conn, $action) {
                 ORDER BY total_quantity DESC
                 LIMIT ?
             ");
-            $stmt->bind_param("ssi", $dateFrom, $dateTo, $limit);
-            $stmt->execute();
-            $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$dateFrom, $dateTo, $limit]);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             sendSuccess($data);
             break;
@@ -123,9 +120,8 @@ function handleGet($conn, $action) {
                 GROUP BY hour
                 ORDER BY hour
             ");
-            $stmt->bind_param("ss", $dateFrom, $dateTo);
-            $stmt->execute();
-            $byHour = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$dateFrom, $dateTo]);
+            $byHour = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // By day of week
             $stmt = $conn->prepare("
@@ -139,9 +135,8 @@ function handleGet($conn, $action) {
                 GROUP BY day_name, day_num
                 ORDER BY day_num
             ");
-            $stmt->bind_param("ss", $dateFrom, $dateTo);
-            $stmt->execute();
-            $byDay = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$dateFrom, $dateTo]);
+            $byDay = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             sendSuccess([
                 'by_hour' => $byHour,
@@ -163,14 +158,12 @@ function handleGet($conn, $action) {
             if ($type) {
                 $sql .= " AND r.report_type = ?";
                 $stmt = $conn->prepare($sql . " ORDER BY r.created_at DESC");
-                $stmt->bind_param("s", $type);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                $stmt->execute([$type]);
             } else {
                 $result = $conn->query($sql . " ORDER BY r.created_at DESC");
             }
             
-            $reports = $result->fetch_all(MYSQLI_ASSOC);
+            $reports = $result->fetchAll(PDO::FETCH_ASSOC);
             
             // Parse JSON data
             foreach ($reports as &$report) {
@@ -201,17 +194,8 @@ function handlePost($conn, $action) {
             $dataJson = json_encode($data['data']);
             $createdBy = $_SESSION['user_id'] ?? null;
             
-            $stmt->bind_param("sssssi",
-                $data['report_type'],
-                $data['report_name'],
-                $data['date_from'],
-                $data['date_to'],
-                $dataJson,
-                $createdBy
-            );
-            
-            if ($stmt->execute()) {
-                sendSuccess(['id' => $conn->insert_id], 'Report saved successfully');
+            if ($stmt->execute([$data['report_type'], $data['report_name'], $data['date_from'], $data['date_to'], $dataJson, $createdBy])) {
+                sendSuccess(['id' => $conn->lastInsertId()], 'Report saved successfully');
             } else {
                 sendError('Failed to save report');
             }

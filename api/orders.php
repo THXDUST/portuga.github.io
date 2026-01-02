@@ -80,14 +80,13 @@ function handleGet($conn, $action) {
             
             if (!empty($params)) {
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param($types, ...$params);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                $stmt->execute($params);
+                $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
                 $result = $conn->query($sql);
+                $orders = $result->fetchAll(PDO::FETCH_ASSOC);
             }
             
-            $orders = $result->fetch_all(MYSQLI_ASSOC);
             sendSuccess($orders);
             break;
             
@@ -104,10 +103,8 @@ function handleGet($conn, $action) {
                 LEFT JOIN users u ON o.user_id = u.id
                 WHERE o.id = ?
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $order = $result->fetch_assoc();
+            $stmt->execute([$id]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$order) {
                 sendError('Order not found', 404);
@@ -117,9 +114,8 @@ function handleGet($conn, $action) {
             $stmt = $conn->prepare("
                 SELECT * FROM order_items WHERE order_id = ? ORDER BY id
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $order['items'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$id]);
+            $order['items'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Get order notes
             $stmt = $conn->prepare("
@@ -129,9 +125,8 @@ function handleGet($conn, $action) {
                 WHERE on.order_id = ?
                 ORDER BY on.created_at DESC
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $order['notes'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$id]);
+            $order['notes'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             sendSuccess($order);
             break;
@@ -153,7 +148,7 @@ function handleGet($conn, $action) {
                 'finalizado' => []
             ];
             
-            while ($order = $result->fetch_assoc()) {
+            while ($order = $result->fetch(PDO::FETCH_ASSOC)) {
                 $status = $order['status'];
                 if (isset($kanban[$status])) {
                     $kanban[$status][] = $order;
@@ -180,9 +175,8 @@ function handleGet($conn, $action) {
                 FROM orders
                 WHERE DATE(created_at) BETWEEN ? AND ?
             ");
-            $stmt->bind_param("ss", $dateFrom, $dateTo);
-            $stmt->execute();
-            $stats = $stmt->get_result()->fetch_assoc();
+            $stmt->execute([$dateFrom, $dateTo]);
+            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             
             sendSuccess($stats);
             break;
@@ -210,18 +204,20 @@ function handlePost($conn, $action) {
                 WHERE setting_key = 'is_open'
             ");
             
-            if ($settingsResult && $settingsResult->num_rows > 0) {
-                $setting = $settingsResult->fetch_assoc();
-                $isOpen = ($setting['setting_value'] === '1' || $setting['setting_value'] === 'true');
-                
-                if (!$isOpen) {
-                    sendError('Desculpe, o restaurante está fechado no momento. Não estamos aceitando pedidos.', 400);
-                    return;
+            if ($settingsResult) {
+                $setting = $settingsResult->fetch(PDO::FETCH_ASSOC);
+                if ($setting) {
+                    $isOpen = ($setting['setting_value'] === '1' || $setting['setting_value'] === 'true');
+                    
+                    if (!$isOpen) {
+                        sendError('Desculpe, o restaurante está fechado no momento. Não estamos aceitando pedidos.', 400);
+                        return;
+                    }
                 }
             }
             // If no setting found, default to open (fail-open behavior)
             
-            $conn->begin_transaction();
+            $conn->beginTransaction();
             try {
                 // Generate order number
                 $orderNumber = 'ORD-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
@@ -252,14 +248,11 @@ function handlePost($conn, $action) {
                 $productionStartTime = $data['production_start_time'] ?? null;
                 $notes = $data['notes'] ?? null;
                 
-                $stmt->bind_param("issssdddssddds",
-                    $userId, $orderNumber, $data['order_type'], $data['payment_method'],
+                $stmt->execute([$userId, $orderNumber, $data['order_type'], $data['payment_method'],
                     $changeFor, $deliveryAddress, $deliveryDistance, $deliveryFee,
                     $pickupTime, $productionStartTime, $subtotal, $total, $notes
-                );
-                
-                $stmt->execute();
-                $orderId = $conn->insert_id;
+                ]);
+                $orderId = $conn->lastInsertId();
                 
                 // Insert order items
                 $stmt = $conn->prepare("
@@ -272,11 +265,9 @@ function handlePost($conn, $action) {
                     $menuItemId = $item['menu_item_id'] ?? null;
                     $itemNotes = $item['notes'] ?? null;
                     
-                    $stmt->bind_param("iisdids",
-                        $orderId, $menuItemId, $item['name'], $item['price'],
+                    $stmt->execute([$orderId, $menuItemId, $item['name'], $item['price'],
                         $item['quantity'], $itemSubtotal, $itemNotes
-                    );
-                    $stmt->execute();
+                    ]);
                 }
                 
                 $conn->commit();
@@ -286,7 +277,7 @@ function handlePost($conn, $action) {
                 ], 'Order created successfully');
                 
             } catch (Exception $e) {
-                $conn->rollback();
+                $conn->rollBack();
                 sendError('Failed to create order: ' . $e->getMessage());
             }
             break;
@@ -300,10 +291,8 @@ function handlePost($conn, $action) {
                 VALUES (?, ?, ?)
             ");
             $userId = $_SESSION['user_id'] ?? null;
-            $stmt->bind_param("iis", $data['order_id'], $userId, $data['note']);
-            
-            if ($stmt->execute()) {
-                sendSuccess(['id' => $conn->insert_id], 'Note added successfully');
+            if ($stmt->execute([$data['order_id'], $userId, $data['note']])) {
+                sendSuccess(['id' => $conn->lastInsertId()], 'Note added successfully');
             } else {
                 sendError('Failed to add note');
             }
@@ -334,17 +323,14 @@ function handlePut($conn, $action) {
                 SET status = ?, completed_at = ?
                 WHERE id = ?
             ");
-            $stmt->bind_param("ssi", $data['status'], $completedAt, $data['id']);
-            
-            if ($stmt->execute()) {
+            if ($stmt->execute([$data['status'], $completedAt, $data['id']])) {
                 // Add automatic note
                 $noteStmt = $conn->prepare("
                     INSERT INTO order_notes (order_id, note)
                     VALUES (?, ?)
                 ");
                 $note = "Status alterado para: " . $data['status'];
-                $noteStmt->bind_param("is", $data['id'], $note);
-                $noteStmt->execute();
+                $noteStmt->execute([$data['id'], $note]);
                 
                 sendSuccess(null, 'Status updated successfully');
             } else {
@@ -357,7 +343,6 @@ function handlePut($conn, $action) {
             validateRequired($data, ['id']);
             
             $updates = [];
-            $types = '';
             $values = [];
             
             $allowedFields = ['order_type', 'payment_method', 'change_for', 
@@ -367,11 +352,6 @@ function handlePut($conn, $action) {
             foreach ($allowedFields as $field) {
                 if (isset($data[$field])) {
                     $updates[] = "$field = ?";
-                    if (in_array($field, ['delivery_distance', 'delivery_fee', 'change_for'])) {
-                        $types .= 'd';
-                    } else {
-                        $types .= 's';
-                    }
                     $values[] = $data[$field];
                 }
             }
@@ -381,13 +361,11 @@ function handlePut($conn, $action) {
             }
             
             $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = ?";
-            $types .= 'i';
             $values[] = $data['id'];
             
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param($types, ...$values);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute($values)) {
                 sendSuccess(null, 'Order updated successfully');
             } else {
                 sendError('Failed to update order');
@@ -409,9 +387,7 @@ function handleDelete($conn, $action) {
             }
             
             $stmt = $conn->prepare("UPDATE orders SET status = 'cancelado' WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'Order cancelled successfully');
             } else {
                 sendError('Failed to cancel order');
@@ -426,9 +402,7 @@ function handleDelete($conn, $action) {
             }
             
             $stmt = $conn->prepare("DELETE FROM orders WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'Order deleted successfully');
             } else {
                 sendError('Failed to delete order');

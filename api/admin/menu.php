@@ -56,7 +56,7 @@ function handleGet($conn, $action) {
                 GROUP BY g.id
                 ORDER BY g.parent_id, g.display_order, g.name
             ");
-            $groups = $result->fetch_all(MYSQLI_ASSOC);
+            $groups = $result->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($groups);
             break;
             
@@ -75,14 +75,12 @@ function handleGet($conn, $action) {
             if ($groupId) {
                 $sql .= " WHERE i.group_id = ?";
                 $stmt = $conn->prepare($sql . " ORDER BY i.display_order, i.name");
-                $stmt->bind_param("i", $groupId);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                $stmt->execute([$groupId]);
             } else {
                 $result = $conn->query($sql . " ORDER BY g.name, i.display_order, i.name");
             }
             
-            $items = $result->fetch_all(MYSQLI_ASSOC);
+            $items = $result->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($items);
             break;
             
@@ -99,10 +97,8 @@ function handleGet($conn, $action) {
                 INNER JOIN menu_groups g ON i.group_id = g.id
                 WHERE i.id = ?
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $item = $result->fetch_assoc();
+            $stmt->execute([$id]);
+            $item = $result->fetch(PDO::FETCH_ASSOC);
             
             if (!$item) {
                 sendError('Item not found', 404);
@@ -119,7 +115,7 @@ function handleGet($conn, $action) {
                 WHERE is_active = TRUE
                 ORDER BY parent_id, display_order, name
             ");
-            $groups = $result->fetch_all(MYSQLI_ASSOC);
+            $groups = $result->fetchAll(PDO::FETCH_ASSOC);
             
             $result = $conn->query("
                 SELECT id, group_id, name, description, price, image_url, 
@@ -128,7 +124,7 @@ function handleGet($conn, $action) {
                 WHERE is_available = TRUE
                 ORDER BY display_order, name
             ");
-            $items = $result->fetch_all(MYSQLI_ASSOC);
+            $items = $result->fetchAll(PDO::FETCH_ASSOC);
             
             // Organize items by group
             $menu = [];
@@ -160,16 +156,15 @@ function handlePost($conn, $action) {
                 VALUES (?, ?, ?, ?, ?)
             ");
             $isActive = $data['is_active'] ?? true;
-            $stmt->bind_param("ssiii", 
+            
+            if ($stmt->execute([
                 $data['name'], 
                 $data['description'] ?? null,
                 $data['parent_id'] ?? null,
                 $data['display_order'] ?? 0,
                 $isActive
-            );
-            
-            if ($stmt->execute()) {
-                sendSuccess(['id' => $conn->insert_id], 'Group created successfully');
+            ])) {
+                sendSuccess(['id' => $conn->lastInsertId()], 'Group created successfully');
             } else {
                 sendError('Failed to create group');
             }
@@ -185,7 +180,8 @@ function handlePost($conn, $action) {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $isAvailable = $data['is_available'] ?? true;
-            $stmt->bind_param("issdssii", 
+            
+            if ($stmt->execute([
                 $data['group_id'],
                 $data['name'],
                 $data['description'] ?? null,
@@ -194,10 +190,8 @@ function handlePost($conn, $action) {
                 $data['ingredients'] ?? null,
                 $isAvailable,
                 $data['display_order'] ?? 0
-            );
-            
-            if ($stmt->execute()) {
-                sendSuccess(['id' => $conn->insert_id], 'Item created successfully');
+            ])) {
+                sendSuccess(['id' => $conn->lastInsertId()], 'Item created successfully');
             } else {
                 sendError('Failed to create item');
             }
@@ -217,17 +211,11 @@ function handlePut($conn, $action) {
             validateRequired($data, ['id']);
             
             $updates = [];
-            $types = '';
             $values = [];
             
             foreach (['name', 'description', 'parent_id', 'display_order', 'is_active'] as $field) {
                 if (isset($data[$field])) {
                     $updates[] = "$field = ?";
-                    if ($field === 'name' || $field === 'description') {
-                        $types .= 's';
-                    } else {
-                        $types .= 'i';
-                    }
                     $values[] = $data[$field];
                 }
             }
@@ -237,13 +225,11 @@ function handlePut($conn, $action) {
             }
             
             $sql = "UPDATE menu_groups SET " . implode(', ', $updates) . " WHERE id = ?";
-            $types .= 'i';
             $values[] = $data['id'];
             
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param($types, ...$values);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute($values)) {
                 sendSuccess(null, 'Group updated successfully');
             } else {
                 sendError('Failed to update group');
@@ -264,13 +250,6 @@ function handlePut($conn, $action) {
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $updates[] = "$field = ?";
-                    if ($field === 'price') {
-                        $types .= 'd';
-                    } elseif (in_array($field, ['name', 'description', 'image_url', 'ingredients'])) {
-                        $types .= 's';
-                    } else {
-                        $types .= 'i';
-                    }
                     $values[] = $data[$field];
                 }
             }
@@ -280,13 +259,11 @@ function handlePut($conn, $action) {
             }
             
             $sql = "UPDATE menu_items SET " . implode(', ', $updates) . " WHERE id = ?";
-            $types .= 'i';
             $values[] = $data['id'];
             
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param($types, ...$values);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute($values)) {
                 sendSuccess(null, 'Item updated successfully');
             } else {
                 sendError('Failed to update item');
@@ -297,20 +274,19 @@ function handlePut($conn, $action) {
             // Reorder items/groups
             validateRequired($data, ['items']);
             
-            $conn->begin_transaction();
+            $conn->beginTransaction();
             try {
                 $table = $data['type'] === 'group' ? 'menu_groups' : 'menu_items';
                 $stmt = $conn->prepare("UPDATE $table SET display_order = ? WHERE id = ?");
                 
                 foreach ($data['items'] as $item) {
-                    $stmt->bind_param("ii", $item['order'], $item['id']);
-                    $stmt->execute();
+                    $stmt->execute([$item['order'], $item['id']]);
                 }
                 
                 $conn->commit();
                 sendSuccess(null, 'Order updated successfully');
             } catch (Exception $e) {
-                $conn->rollback();
+                $conn->rollBack();
                 sendError('Failed to update order: ' . $e->getMessage());
             }
             break;
@@ -331,18 +307,16 @@ function handleDelete($conn, $action) {
             
             // Check if group has items
             $stmt = $conn->prepare("SELECT COUNT(*) as count FROM menu_items WHERE group_id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
+            $stmt->execute([$id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($result['count'] > 0) {
                 sendError('Cannot delete group with items. Please move or delete items first.', 400);
             }
             
             $stmt = $conn->prepare("DELETE FROM menu_groups WHERE id = ?");
-            $stmt->bind_param("i", $id);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'Group deleted successfully');
             } else {
                 sendError('Failed to delete group');
@@ -357,9 +331,8 @@ function handleDelete($conn, $action) {
             }
             
             $stmt = $conn->prepare("DELETE FROM menu_items WHERE id = ?");
-            $stmt->bind_param("i", $id);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'Item deleted successfully');
             } else {
                 sendError('Failed to delete item');

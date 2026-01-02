@@ -52,14 +52,13 @@ function handleGet($conn, $action) {
             if ($status) {
                 $sql .= " AND r.status = ?";
                 $stmt = $conn->prepare($sql . " ORDER BY r.created_at DESC");
-                $stmt->bind_param("s", $status);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                $stmt->execute([$status]);
+                $resumes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
                 $result = $conn->query($sql . " ORDER BY r.created_at DESC");
+                $resumes = $result->fetchAll(PDO::FETCH_ASSOC);
             }
             
-            $resumes = $result->fetch_all(MYSQLI_ASSOC);
             sendSuccess($resumes);
             break;
             
@@ -76,10 +75,8 @@ function handleGet($conn, $action) {
                 LEFT JOIN users u ON r.reviewed_by = u.id
                 WHERE r.id = ?
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $resume = $result->fetch_assoc();
+            $stmt->execute([$id]);
+            $resume = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$resume) {
                 sendError('Resume not found', 404);
@@ -99,7 +96,7 @@ function handleGet($conn, $action) {
                     COUNT(DISTINCT desired_position) as positions_count
                 FROM resumes
             ");
-            $stats = $result->fetch_assoc();
+            $stats = $result->fetch(PDO::FETCH_ASSOC);
             
             sendSuccess($stats);
             break;
@@ -122,17 +119,15 @@ function handlePost($conn, $action) {
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             
-            $stmt->bind_param("ssssss",
+            if ($stmt->execute([
                 $data['full_name'],
                 $data['email'],
                 $data['phone'],
                 $data['desired_position'],
                 $data['resume_file_path'] ?? null,
                 $data['cover_letter'] ?? null
-            );
-            
-            if ($stmt->execute()) {
-                sendSuccess(['id' => $conn->insert_id], 'Resume submitted successfully');
+            ])) {
+                sendSuccess(['id' => $conn->lastInsertId()], 'Resume submitted successfully');
             } else {
                 sendError('Failed to submit resume');
             }
@@ -165,9 +160,7 @@ function handlePut($conn, $action) {
             $reviewedBy = $_SESSION['user_id'] ?? null;
             $notes = $data['notes'] ?? null;
             
-            $stmt->bind_param("ssii", $data['status'], $notes, $reviewedBy, $data['id']);
-            
-            if ($stmt->execute()) {
+            if ($stmt->execute([$data['status'], $notes, $reviewedBy, $data['id']])) {
                 sendSuccess(null, 'Status updated successfully');
             } else {
                 sendError('Failed to update status');
@@ -185,9 +178,8 @@ function handlePut($conn, $action) {
             ");
             
             $reviewedBy = $_SESSION['user_id'] ?? null;
-            $stmt->bind_param("sii", $data['notes'], $reviewedBy, $data['id']);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$data['notes'], $reviewedBy, $data['id']])) {
                 sendSuccess(null, 'Note added successfully');
             } else {
                 sendError('Failed to add note');

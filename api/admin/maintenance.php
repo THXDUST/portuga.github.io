@@ -41,7 +41,7 @@ function handleGet($conn, $action) {
             $result = $conn->query("
                 SELECT * FROM maintenance_mode WHERE id = 1
             ");
-            $status = $result->fetch_assoc();
+            $status = $result->fetch(PDO::FETCH_ASSOC);
             
             if (!$status) {
                 // Initialize if not exists
@@ -92,7 +92,7 @@ function handleUpdate($conn, $action) {
             $customMessage = $data['custom_message'] ?? null;
             $activatedBy = $_SESSION['user_id'] ?? null;
             
-            $stmt->bind_param("iiiisiii",
+            if ($stmt->execute([
                 $isActive,
                 $restrictAll,
                 $restrictOrders,
@@ -101,9 +101,7 @@ function handleUpdate($conn, $action) {
                 $isActive,
                 $isActive,
                 $activatedBy
-            );
-            
-            if ($stmt->execute()) {
+            ])) {
                 // Log this action
                 logAdminAction($conn, $activatedBy, 'maintenance_mode_toggle', 'maintenance', 1, [
                     'is_active' => $isActive,

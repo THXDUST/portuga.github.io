@@ -57,7 +57,7 @@ function handleGet($conn, $action) {
                 GROUP BY u.id
                 ORDER BY u.created_at DESC
             ");
-            $users = $result->fetch_all(MYSQLI_ASSOC);
+            $users = $result->fetchAll(PDO::FETCH_ASSOC);
             sendSuccess($users);
             break;
             
@@ -74,10 +74,8 @@ function handleGet($conn, $action) {
                 FROM users
                 WHERE id = ?
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $user = $result->fetch_assoc();
+            $stmt->execute([$id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$user) {
                 sendError('User not found', 404);
@@ -90,10 +88,8 @@ function handleGet($conn, $action) {
                 INNER JOIN user_roles ur ON r.id = ur.role_id
                 WHERE ur.user_id = ?
             ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $user['roles'] = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute([$id]);
+            $user['roles'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             sendSuccess($user);
             break;
@@ -113,9 +109,8 @@ function handlePost($conn, $action) {
             
             // Check if email already exists
             $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->bind_param("s", $data['email']);
-            $stmt->execute();
-            if ($stmt->get_result()->num_rows > 0) {
+            $stmt->execute([$data['email']]);
+            if ($stmt->fetch()) {
                 sendError('Email already exists', 400);
             }
             
@@ -126,10 +121,9 @@ function handlePost($conn, $action) {
                 INSERT INTO users (full_name, email, password_hash, email_verified, is_active)
                 VALUES (?, ?, ?, TRUE, TRUE)
             ");
-            $stmt->bind_param("sss", $data['full_name'], $data['email'], $passwordHash);
             
-            if ($stmt->execute()) {
-                $userId = $conn->insert_id;
+            if ($stmt->execute([$data['full_name'], $data['email'], $passwordHash])) {
+                $userId = $conn->lastInsertId();
                 
                 // Assign roles if provided
                 if (isset($data['role_ids']) && is_array($data['role_ids'])) {
@@ -140,8 +134,7 @@ function handlePost($conn, $action) {
                     $assignedBy = $_SESSION['user_id'] ?? null;
                     
                     foreach ($data['role_ids'] as $roleId) {
-                        $stmt->bind_param("iii", $userId, $roleId, $assignedBy);
-                        $stmt->execute();
+                        $stmt->execute([$userId, $roleId, $assignedBy]);
                     }
                 }
                 
@@ -165,24 +158,20 @@ function handlePut($conn, $action) {
             validateRequired($data, ['id']);
             
             $updates = [];
-            $types = '';
             $values = [];
             
             if (isset($data['full_name'])) {
                 $updates[] = 'full_name = ?';
-                $types .= 's';
                 $values[] = $data['full_name'];
             }
             
             if (isset($data['email'])) {
                 $updates[] = 'email = ?';
-                $types .= 's';
                 $values[] = $data['email'];
             }
             
             if (isset($data['is_active'])) {
                 $updates[] = 'is_active = ?';
-                $types .= 'i';
                 $values[] = $data['is_active'] ? 1 : 0;
             }
             
@@ -191,13 +180,11 @@ function handlePut($conn, $action) {
             }
             
             $sql = "UPDATE users SET " . implode(', ', $updates) . " WHERE id = ?";
-            $types .= 'i';
             $values[] = $data['id'];
             
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param($types, ...$values);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute($values)) {
                 sendSuccess(null, 'User updated successfully');
             } else {
                 sendError('Failed to update user');
@@ -211,9 +198,8 @@ function handlePut($conn, $action) {
             $passwordHash = password_hash(hash('sha256', $data['password']), PASSWORD_BCRYPT);
             
             $stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-            $stmt->bind_param("si", $passwordHash, $data['id']);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$passwordHash, $data['id']])) {
                 sendSuccess(null, 'Password updated successfully');
             } else {
                 sendError('Failed to update password');
@@ -235,9 +221,8 @@ function handleDelete($conn, $action) {
             }
             
             $stmt = $conn->prepare("UPDATE users SET is_active = FALSE WHERE id = ?");
-            $stmt->bind_param("i", $id);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'User deactivated successfully');
             } else {
                 sendError('Failed to deactivate user');
@@ -252,9 +237,8 @@ function handleDelete($conn, $action) {
             }
             
             $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-            $stmt->bind_param("i", $id);
             
-            if ($stmt->execute()) {
+            if ($stmt->execute([$id])) {
                 sendSuccess(null, 'User permanently deleted');
             } else {
                 sendError('Failed to delete user');
