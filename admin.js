@@ -652,81 +652,152 @@ function mapKanbanStatusToOld(newStatus) {
 // MENU MANAGEMENT FUNCTIONS
 // ==========================================
 
-function getMenuData() {
-    const menu = localStorage.getItem('menu_data');
-    return menu ? JSON.parse(menu) : { groups: [], items: [] };
-}
-
-function saveMenuData(menuData) {
-    localStorage.setItem('menu_data', JSON.stringify(menuData));
-}
-
-function loadMenuManagement() {
+async function loadMenuManagement() {
     const container = document.getElementById('menu-management');
     if (!container) return;
     
-    const menuData = getMenuData();
-    
-    if (menuData.groups.length === 0) {
-        container.innerHTML = '<p style="color: #666;">Nenhum grupo cadastrado ainda. Clique em "Adicionar Grupo" para criar um grupo de menu.</p>';
-        return;
-    }
-    
-    let html = '';
-    
-    menuData.groups.forEach(group => {
-        const groupItems = menuData.items.filter(item => item.groupId === group.id);
+    try {
+        container.innerHTML = '<p style="color: #666;">Carregando cardápio...</p>';
         
-        html += `
-            <div class="menu-group">
-                <div class="menu-group-header">
-                    <div>
-                        <h3 style="color: #e8c13f; margin-bottom: 5px;">${group.name}</h3>
-                        ${group.description ? `<p style="color: #666; font-size: 0.9rem;">${group.description}</p>` : ''}
+        // Fetch groups and items from API
+        const [groupsResponse, itemsResponse] = await Promise.all([
+            fetch('/api/admin/menu.php?action=groups'),
+            fetch('/api/admin/menu.php?action=items')
+        ]);
+        
+        const groupsData = await groupsResponse.json();
+        const itemsData = await itemsResponse.json();
+        
+        if (!groupsData.success || !itemsData.success) {
+            throw new Error('Erro ao carregar dados do cardápio');
+        }
+        
+        const groups = groupsData.data || [];
+        const items = itemsData.data || [];
+        
+        // Separate parent groups and subgroups
+        const parentGroups = groups.filter(g => !g.parent_id);
+        const subgroups = groups.filter(g => g.parent_id);
+        
+        if (parentGroups.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhum grupo cadastrado ainda. Clique em "Adicionar Grupo" para criar um grupo de menu.</p>';
+            return;
+        }
+        
+        let html = '';
+        
+        // Render parent groups with their subgroups and items
+        parentGroups.forEach(group => {
+            const groupSubgroups = subgroups.filter(sg => sg.parent_id == group.id);
+            const directItems = items.filter(item => item.group_id == group.id);
+            
+            html += `
+                <div class="menu-group">
+                    <div class="menu-group-header">
+                        <div>
+                            <h3 style="color: #e8c13f; margin-bottom: 5px;">${group.name}</h3>
+                            ${group.description ? `<p style="color: #666; font-size: 0.9rem;">${group.description}</p>` : ''}
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn" onclick="editGroup(${group.id})" style="padding: 8px 16px;">✏️ Editar</button>
+                            <button class="btn btn-danger" onclick="deleteGroup(${group.id})" style="padding: 8px 16px;">🗑️ Excluir</button>
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn" onclick="editGroup(${group.id})" style="padding: 8px 16px;">✏️ Editar</button>
-                        <button class="btn btn-danger" onclick="deleteGroup(${group.id})" style="padding: 8px 16px;">🗑️ Excluir</button>
-                    </div>
-                </div>
-                
-                ${groupItems.length > 0 ? `
-                    <div style="margin-top: 15px;">
-                        ${groupItems.map(item => `
-                            <div class="menu-item">
-                                <div class="menu-item-info">
-                                    <h4 style="color: #333; margin-bottom: 5px;">${item.name}</h4>
-                                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">${item.description || ''}</p>
-                                    <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${parseFloat(item.price).toFixed(2)}</p>
-                                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                                        ${item.deliveryEnabled ? '<span style="color: #28a745; font-size: 0.85rem;">🚚 Entrega</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">🚚 Sem Entrega</span>'}
-                                        ${item.available ? '<span style="color: #28a745; font-size: 0.85rem;">✅ Disponível</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">❌ Indisponível</span>'}
+                    
+                    ${directItems.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            ${directItems.map(item => renderMenuItem(item)).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${groupSubgroups.length > 0 ? `
+                        <div style="margin-top: 20px; margin-left: 30px;">
+                            ${groupSubgroups.map(subgroup => {
+                                const subgroupItems = items.filter(item => item.group_id == subgroup.id);
+                                return `
+                                    <div style="border-left: 3px solid #e8c13f; padding-left: 15px; margin-bottom: 20px;">
+                                        <div class="menu-group-header">
+                                            <div>
+                                                <h4 style="color: #333; margin-bottom: 5px;">↳ ${subgroup.name}</h4>
+                                                ${subgroup.description ? `<p style="color: #666; font-size: 0.9rem;">${subgroup.description}</p>` : ''}
+                                            </div>
+                                            <div style="display: flex; gap: 10px;">
+                                                <button class="btn" onclick="editGroup(${subgroup.id})" style="padding: 6px 12px; font-size: 0.9rem;">✏️ Editar</button>
+                                                <button class="btn btn-danger" onclick="deleteGroup(${subgroup.id})" style="padding: 6px 12px; font-size: 0.9rem;">🗑️ Excluir</button>
+                                            </div>
+                                        </div>
+                                        ${subgroupItems.length > 0 ? `
+                                            <div style="margin-top: 10px;">
+                                                ${subgroupItems.map(item => renderMenuItem(item)).join('')}
+                                            </div>
+                                        ` : '<p style="color: #999; font-style: italic; margin-top: 10px;">Nenhum item neste subgrupo</p>'}
                                     </div>
-                                </div>
-                                <div class="menu-item-actions">
-                                    <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;">✏️</button>
-                                    <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;">🗑️</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : '<p style="color: #999; font-style: italic; margin-top: 10px;">Nenhum item neste grupo</p>'}
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${directItems.length === 0 && groupSubgroups.length === 0 ? '<p style="color: #999; font-style: italic; margin-top: 10px;">Nenhum item ou subgrupo neste grupo</p>' : ''}
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading menu management:', error);
+        container.innerHTML = `<p style="color: #dc3545;">Erro ao carregar cardápio: ${error.message}</p>`;
+    }
 }
 
-function showAddGroupModal() {
+function renderMenuItem(item) {
+    return `
+        <div class="menu-item">
+            <div class="menu-item-info">
+                <h4 style="color: #333; margin-bottom: 5px;">${item.name}</h4>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">${item.description || ''}</p>
+                <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${parseFloat(item.price).toFixed(2)}</p>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    ${item.is_available ? '<span style="color: #28a745; font-size: 0.85rem;">✅ Disponível</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">❌ Indisponível</span>'}
+                </div>
+            </div>
+            <div class="menu-item-actions">
+                <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;">✏️</button>
+                <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;">🗑️</button>
+            </div>
+        </div>
+    `;
+}
+
+async function showAddGroupModal() {
     const modal = document.getElementById('group-modal');
     const modalTitle = document.getElementById('group-modal-title');
     const form = document.getElementById('group-form');
+    const parentSelect = document.getElementById('group-parent');
     
-    if (modal && modalTitle && form) {
+    if (modal && modalTitle && form && parentSelect) {
         modalTitle.textContent = 'Adicionar Grupo';
         form.reset();
         document.getElementById('group-id').value = '';
+        
+        // Populate parent group select
+        try {
+            const response = await fetch('/api/admin/menu.php?action=groups');
+            const data = await response.json();
+            
+            if (data.success) {
+                const groups = data.data || [];
+                const parentGroups = groups.filter(g => !g.parent_id);
+                
+                parentSelect.innerHTML = '<option value="">Grupo Principal (sem grupo pai)</option>';
+                parentGroups.forEach(group => {
+                    parentSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading groups:', error);
+        }
+        
         modal.style.display = 'block';
     }
 }
@@ -738,10 +809,11 @@ function closeGroupModal() {
     }
 }
 
-function saveGroup(event) {
+async function saveGroup(event) {
     event.preventDefault();
     
     const groupId = document.getElementById('group-id')?.value;
+    const parentId = document.getElementById('group-parent')?.value;
     const name = document.getElementById('group-name')?.value;
     const description = document.getElementById('group-description')?.value;
     
@@ -750,104 +822,203 @@ function saveGroup(event) {
         return;
     }
     
-    const menuData = getMenuData();
-    
-    if (groupId) {
-        // Edit existing group
-        const index = menuData.groups.findIndex(g => g.id === parseInt(groupId));
-        if (index !== -1) {
-            menuData.groups[index] = {
-                ...menuData.groups[index],
-                name,
-                description
-            };
-        }
-    } else {
-        // Add new group
-        const newGroup = {
-            id: Date.now(),
+    try {
+        const groupData = {
             name,
-            description
+            description: description || null,
+            parent_id: parentId || null,
+            is_active: true
         };
-        menuData.groups.push(newGroup);
-    }
-    
-    saveMenuData(menuData);
-    closeGroupModal();
-    loadMenuManagement();
-    alert('Grupo salvo com sucesso!');
-}
-
-function editGroup(groupId) {
-    const menuData = getMenuData();
-    const group = menuData.groups.find(g => g.id === groupId);
-    
-    if (!group) {
-        alert('Grupo não encontrado!');
-        return;
-    }
-    
-    const modal = document.getElementById('group-modal');
-    const modalTitle = document.getElementById('group-modal-title');
-    
-    if (modal && modalTitle) {
-        modalTitle.textContent = 'Editar Grupo';
-        document.getElementById('group-id').value = group.id;
-        document.getElementById('group-name').value = group.name;
-        document.getElementById('group-description').value = group.description || '';
-        modal.style.display = 'block';
-    }
-}
-
-function deleteGroup(groupId) {
-    const menuData = getMenuData();
-    const groupItems = menuData.items.filter(item => item.groupId === groupId);
-    
-    if (groupItems.length > 0) {
-        if (!confirm(`Este grupo possui ${groupItems.length} item(ns). Todos os itens serão excluídos. Tem certeza?`)) {
-            return;
-        }
-    } else {
-        if (!confirm('Tem certeza que deseja excluir este grupo?')) {
-            return;
-        }
-    }
-    
-    menuData.groups = menuData.groups.filter(g => g.id !== groupId);
-    menuData.items = menuData.items.filter(item => item.groupId !== groupId);
-    
-    saveMenuData(menuData);
-    loadMenuManagement();
-    alert('Grupo excluído com sucesso!');
-}
-
-function showAddItemModal() {
-    const menuData = getMenuData();
-    
-    if (menuData.groups.length === 0) {
-        alert('Por favor, crie um grupo primeiro antes de adicionar itens.');
-        return;
-    }
-    
-    const modal = document.getElementById('item-modal');
-    const modalTitle = document.getElementById('item-modal-title');
-    const form = document.getElementById('item-form');
-    const groupSelect = document.getElementById('item-group');
-    
-    if (modal && modalTitle && form && groupSelect) {
-        modalTitle.textContent = 'Adicionar Item';
-        form.reset();
-        document.getElementById('item-id').value = '';
-        document.getElementById('item-delivery').checked = true;
-        document.getElementById('item-available').checked = true;
         
-        // Populate group select
-        groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
-        menuData.groups.forEach(group => {
-            groupSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
+        let response;
+        if (groupId) {
+            // Update existing group
+            groupData.id = parseInt(groupId);
+            response = await fetch('/api/admin/menu.php?action=update-group', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(groupData)
+            });
+        } else {
+            // Create new group
+            response = await fetch('/api/admin/menu.php?action=create-group', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(groupData)
+            });
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar grupo');
+        }
+        
+        closeGroupModal();
+        await loadMenuManagement();
+        alert('Grupo salvo com sucesso!');
+        
+    } catch (error) {
+        console.error('Error saving group:', error);
+        alert('Erro ao salvar grupo: ' + error.message);
+    }
+}
+
+async function editGroup(groupId) {
+    try {
+        const response = await fetch('/api/admin/menu.php?action=groups');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error('Erro ao carregar grupos');
+        }
+        
+        const groups = data.data || [];
+        const group = groups.find(g => g.id == groupId);
+        
+        if (!group) {
+            alert('Grupo não encontrado!');
+            return;
+        }
+        
+        const modal = document.getElementById('group-modal');
+        const modalTitle = document.getElementById('group-modal-title');
+        const parentSelect = document.getElementById('group-parent');
+        
+        if (modal && modalTitle && parentSelect) {
+            modalTitle.textContent = 'Editar Grupo';
+            document.getElementById('group-id').value = group.id;
+            document.getElementById('group-name').value = group.name;
+            document.getElementById('group-description').value = group.description || '';
+            
+            // Populate parent group select (excluding self and descendants)
+            const parentGroups = groups.filter(g => !g.parent_id && g.id != groupId);
+            parentSelect.innerHTML = '<option value="">Grupo Principal (sem grupo pai)</option>';
+            parentGroups.forEach(pg => {
+                const selected = pg.id == group.parent_id ? 'selected' : '';
+                parentSelect.innerHTML += `<option value="${pg.id}" ${selected}>${pg.name}</option>`;
+            });
+            
+            modal.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('Error loading group for edit:', error);
+        alert('Erro ao carregar grupo: ' + error.message);
+    }
+}
+
+async function deleteGroup(groupId) {
+    try {
+        // Check if group has items or subgroups
+        const [groupsResponse, itemsResponse] = await Promise.all([
+            fetch('/api/admin/menu.php?action=groups'),
+            fetch('/api/admin/menu.php?action=items')
+        ]);
+        
+        const groupsData = await groupsResponse.json();
+        const itemsData = await itemsResponse.json();
+        
+        if (!groupsData.success || !itemsData.success) {
+            throw new Error('Erro ao verificar dependências do grupo');
+        }
+        
+        const groups = groupsData.data || [];
+        const items = itemsData.data || [];
+        
+        const subgroups = groups.filter(g => g.parent_id == groupId);
+        const groupItems = items.filter(item => item.group_id == groupId);
+        
+        if (subgroups.length > 0) {
+            alert(`Este grupo possui ${subgroups.length} subgrupo(s). Por favor, remova ou mova os subgrupos primeiro.`);
+            return;
+        }
+        
+        if (groupItems.length > 0) {
+            if (!confirm(`Este grupo possui ${groupItems.length} item(ns). Todos os itens serão excluídos. Tem certeza?`)) {
+                return;
+            }
+            // Delete all items first
+            for (const item of groupItems) {
+                await fetch(`/api/admin/menu.php?action=delete-item&id=${item.id}`, {
+                    method: 'DELETE'
+                });
+            }
+        } else {
+            if (!confirm('Tem certeza que deseja excluir este grupo?')) {
+                return;
+            }
+        }
+        
+        const response = await fetch(`/api/admin/menu.php?action=delete-group&id=${groupId}`, {
+            method: 'DELETE'
         });
         
-        modal.style.display = 'block';
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao excluir grupo');
+        }
+        
+        await loadMenuManagement();
+        alert('Grupo excluído com sucesso!');
+        
+    } catch (error) {
+        console.error('Error deleting group:', error);
+        alert('Erro ao excluir grupo: ' + error.message);
+    }
+}
+
+async function showAddItemModal() {
+    try {
+        const response = await fetch('/api/admin/menu.php?action=groups');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error('Erro ao carregar grupos');
+        }
+        
+        const groups = data.data || [];
+        
+        if (groups.length === 0) {
+            alert('Por favor, crie um grupo primeiro antes de adicionar itens.');
+            return;
+        }
+        
+        const modal = document.getElementById('item-modal');
+        const modalTitle = document.getElementById('item-modal-title');
+        const form = document.getElementById('item-form');
+        const groupSelect = document.getElementById('item-group');
+        
+        if (modal && modalTitle && form && groupSelect) {
+            modalTitle.textContent = 'Adicionar Item';
+            form.reset();
+            document.getElementById('item-id').value = '';
+            document.getElementById('item-delivery').checked = true;
+            document.getElementById('item-available').checked = true;
+            
+            // Populate group select with hierarchy
+            groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
+            
+            const parentGroups = groups.filter(g => !g.parent_id);
+            const subgroups = groups.filter(g => g.parent_id);
+            
+            parentGroups.forEach(parent => {
+                groupSelect.innerHTML += `<option value="${parent.id}">${parent.name}</option>`;
+                
+                // Add subgroups indented
+                const parentSubgroups = subgroups.filter(sg => sg.parent_id == parent.id);
+                parentSubgroups.forEach(sub => {
+                    groupSelect.innerHTML += `<option value="${sub.id}">   ↳ ${sub.name}</option>`;
+                });
+            });
+            
+            modal.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('Error loading groups:', error);
+        alert('Erro ao carregar grupos: ' + error.message);
     }
 }
 
@@ -858,7 +1029,7 @@ function closeItemModal() {
     }
 }
 
-function saveItem(event) {
+async function saveItem(event) {
     event.preventDefault();
     
     const itemId = document.getElementById('item-id')?.value;
@@ -875,91 +1046,139 @@ function saveItem(event) {
         return;
     }
     
-    const menuData = getMenuData();
-    
-    if (itemId) {
-        // Edit existing item
-        const index = menuData.items.findIndex(i => i.id === parseInt(itemId));
-        if (index !== -1) {
-            menuData.items[index] = {
-                ...menuData.items[index],
-                groupId,
-                name,
-                description,
-                price,
-                image,
-                deliveryEnabled,
-                available
-            };
-        }
-    } else {
-        // Add new item
-        const newItem = {
-            id: Date.now(),
-            groupId,
+    try {
+        const itemData = {
+            group_id: groupId,
             name,
-            description,
+            description: description || null,
             price,
-            image,
-            deliveryEnabled,
-            available
+            image_url: image || null,
+            is_available: available
         };
-        menuData.items.push(newItem);
-    }
-    
-    saveMenuData(menuData);
-    closeItemModal();
-    loadMenuManagement();
-    alert('Item salvo com sucesso!');
-}
-
-function editItem(itemId) {
-    const menuData = getMenuData();
-    const item = menuData.items.find(i => i.id === itemId);
-    
-    if (!item) {
-        alert('Item não encontrado!');
-        return;
-    }
-    
-    const modal = document.getElementById('item-modal');
-    const modalTitle = document.getElementById('item-modal-title');
-    const groupSelect = document.getElementById('item-group');
-    
-    if (modal && modalTitle && groupSelect) {
-        modalTitle.textContent = 'Editar Item';
         
-        // Populate group select
-        groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
-        menuData.groups.forEach(group => {
-            groupSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
-        });
+        let response;
+        if (itemId) {
+            // Update existing item
+            itemData.id = parseInt(itemId);
+            response = await fetch('/api/admin/menu.php?action=update-item', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(itemData)
+            });
+        } else {
+            // Create new item
+            response = await fetch('/api/admin/menu.php?action=create-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(itemData)
+            });
+        }
         
-        // Fill form
-        document.getElementById('item-id').value = item.id;
-        document.getElementById('item-group').value = item.groupId;
-        document.getElementById('item-name').value = item.name;
-        document.getElementById('item-description').value = item.description || '';
-        document.getElementById('item-price').value = item.price;
-        document.getElementById('item-image').value = item.image || '';
-        document.getElementById('item-delivery').checked = item.deliveryEnabled;
-        document.getElementById('item-available').checked = item.available;
+        const data = await response.json();
         
-        modal.style.display = 'block';
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar item');
+        }
+        
+        closeItemModal();
+        await loadMenuManagement();
+        alert('Item salvo com sucesso!');
+        
+    } catch (error) {
+        console.error('Error saving item:', error);
+        alert('Erro ao salvar item: ' + error.message);
     }
 }
 
-function deleteItem(itemId) {
+async function editItem(itemId) {
+    try {
+        const [groupsResponse, itemsResponse] = await Promise.all([
+            fetch('/api/admin/menu.php?action=groups'),
+            fetch('/api/admin/menu.php?action=items')
+        ]);
+        
+        const groupsData = await groupsResponse.json();
+        const itemsData = await itemsResponse.json();
+        
+        if (!groupsData.success || !itemsData.success) {
+            throw new Error('Erro ao carregar dados');
+        }
+        
+        const groups = groupsData.data || [];
+        const items = itemsData.data || [];
+        const item = items.find(i => i.id == itemId);
+        
+        if (!item) {
+            alert('Item não encontrado!');
+            return;
+        }
+        
+        const modal = document.getElementById('item-modal');
+        const modalTitle = document.getElementById('item-modal-title');
+        const groupSelect = document.getElementById('item-group');
+        
+        if (modal && modalTitle && groupSelect) {
+            modalTitle.textContent = 'Editar Item';
+            
+            // Populate group select with hierarchy
+            groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
+            
+            const parentGroups = groups.filter(g => !g.parent_id);
+            const subgroups = groups.filter(g => g.parent_id);
+            
+            parentGroups.forEach(parent => {
+                const selected = parent.id == item.group_id ? 'selected' : '';
+                groupSelect.innerHTML += `<option value="${parent.id}" ${selected}>${parent.name}</option>`;
+                
+                // Add subgroups indented
+                const parentSubgroups = subgroups.filter(sg => sg.parent_id == parent.id);
+                parentSubgroups.forEach(sub => {
+                    const subSelected = sub.id == item.group_id ? 'selected' : '';
+                    groupSelect.innerHTML += `<option value="${sub.id}" ${subSelected}>   ↳ ${sub.name}</option>`;
+                });
+            });
+            
+            // Fill form
+            document.getElementById('item-id').value = item.id;
+            document.getElementById('item-name').value = item.name;
+            document.getElementById('item-description').value = item.description || '';
+            document.getElementById('item-price').value = item.price;
+            document.getElementById('item-image').value = item.image_url || '';
+            document.getElementById('item-delivery').checked = true; // API doesn't have this field
+            document.getElementById('item-available').checked = item.is_available;
+            
+            modal.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('Error loading item for edit:', error);
+        alert('Erro ao carregar item: ' + error.message);
+    }
+}
+
+async function deleteItem(itemId) {
     if (!confirm('Tem certeza que deseja excluir este item?')) {
         return;
     }
     
-    const menuData = getMenuData();
-    menuData.items = menuData.items.filter(i => i.id !== itemId);
-    
-    saveMenuData(menuData);
-    loadMenuManagement();
-    alert('Item excluído com sucesso!');
+    try {
+        const response = await fetch(`/api/admin/menu.php?action=delete-item&id=${itemId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao excluir item');
+        }
+        
+        await loadMenuManagement();
+        alert('Item excluído com sucesso!');
+        
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        alert('Erro ao excluir item: ' + error.message);
+    }
 }
 
 // ==========================================
