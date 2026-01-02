@@ -1112,24 +1112,250 @@ function generateCustomerFlowReport(orders, container) {
 // RESUMES FUNCTIONS
 // ==========================================
 
-function loadResumes() {
+async function loadResumes() {
     const container = document.getElementById('resumes-list');
     if (!container) return;
     
-    container.innerHTML = '<p style="color: #666;">Nenhum currículo recebido ainda. Os currículos enviados pelo formulário aparecerão aqui.</p>';
-    // In a real implementation, this would fetch from the API
+    try {
+        container.innerHTML = '<p style="color: #666;">Carregando currículos...</p>';
+        
+        const statusFilter = document.getElementById('resume-status-filter')?.value || '';
+        const params = new URLSearchParams({ action: 'list' });
+        
+        if (statusFilter) {
+            params.append('status', statusFilter);
+        }
+        
+        const response = await fetch(`/api/admin/resumes.php?${params.toString()}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar currículos');
+        }
+        
+        const resumes = data.data;
+        
+        if (!resumes || resumes.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhum currículo recebido ainda. Os currículos enviados pelo formulário aparecerão aqui.</p>';
+            return;
+        }
+        
+        let html = '<div style="display: grid; gap: 15px;">';
+        
+        resumes.forEach(resume => {
+            const statusMap = {
+                'em_analise': { color: '#ffc107', label: 'Em Análise' },
+                'aprovado': { color: '#28a745', label: 'Aprovado' },
+                'rejeitado': { color: '#dc3545', label: 'Rejeitado' }
+            };
+            
+            const status = statusMap[resume.status] || statusMap['em_analise'];
+            
+            html += `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h3 style="color: #333; margin: 0 0 10px 0;">
+                                👤 ${resume.full_name}
+                                <span style="background: ${status.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; margin-left: 10px;">${status.label}</span>
+                            </h3>
+                            <p style="color: #666; margin: 0 0 5px 0;">📧 ${resume.email}</p>
+                            <p style="color: #666; margin: 0 0 5px 0;">📱 ${resume.phone}</p>
+                            <p style="color: #666; margin: 0 0 5px 0;">💼 Cargo Desejado: ${resume.desired_position}</p>
+                            ${resume.cover_letter ? `<p style="color: #666; margin: 10px 0 5px 0;"><strong>Carta de Apresentação:</strong><br>${resume.cover_letter}</p>` : ''}
+                            ${resume.notes ? `<p style="color: #999; margin: 10px 0 5px 0; font-style: italic;"><strong>Notas:</strong> ${resume.notes}</p>` : ''}
+                            <small style="color: #999;">Enviado em: ${new Date(resume.created_at).toLocaleString('pt-BR')}</small>
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-direction: column;">
+                            ${resume.resume_file_path ? `<a href="${resume.resume_file_path}" target="_blank" class="btn">📄 Ver Currículo</a>` : ''}
+                            <button class="btn btn-secondary" onclick="updateResumeStatus(${resume.id}, 'em_analise')">🔄 Em Análise</button>
+                            <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateResumeStatus(${resume.id}, 'aprovado')">✅ Aprovar</button>
+                            <button class="btn btn-danger" onclick="updateResumeStatus(${resume.id}, 'rejeitado')">❌ Rejeitar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading resumes:', error);
+        container.innerHTML = `<p style="color: #dc3545;">Erro ao carregar currículos: ${error.message}</p>`;
+    }
+}
+
+/**
+ * Update resume status
+ */
+async function updateResumeStatus(resumeId, newStatus) {
+    try {
+        const notes = prompt('Adicionar notas (opcional):');
+        
+        const response = await fetch('/api/admin/resumes.php?action=update-status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: resumeId,
+                status: newStatus,
+                notes: notes
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Status atualizado com sucesso!');
+            loadResumes();
+        } else {
+            alert('❌ Erro ao atualizar status: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error updating resume status:', error);
+        alert('❌ Erro ao atualizar status');
+    }
 }
 
 // ==========================================
 // OUVIDORIA FUNCTIONS
 // ==========================================
 
-function loadOuvidoriaMessages() {
+async function loadOuvidoriaMessages() {
     const container = document.getElementById('ouvidoria-list');
     if (!container) return;
     
-    container.innerHTML = '<p style="color: #666;">Nenhuma mensagem recebida ainda. As mensagens da ouvidoria aparecerão aqui.</p>';
-    // In a real implementation, this would fetch from the API
+    try {
+        container.innerHTML = '<p style="color: #666;">Carregando mensagens...</p>';
+        
+        const statusFilter = document.getElementById('ouvidoria-status-filter')?.value || '';
+        const params = new URLSearchParams({ action: 'list' });
+        
+        if (statusFilter) {
+            params.append('status', statusFilter);
+        }
+        
+        const response = await fetch(`/api/ouvidoria.php?${params.toString()}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar mensagens');
+        }
+        
+        const messages = data.data;
+        
+        if (!messages || messages.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhuma mensagem recebida ainda. As mensagens da ouvidoria aparecerão aqui.</p>';
+            return;
+        }
+        
+        let html = '<div style="display: grid; gap: 15px;">';
+        
+        messages.forEach(message => {
+            const statusMap = {
+                'pendente': { color: '#ffc107', label: 'Pendente' },
+                'em_atendimento': { color: '#17a2b8', label: 'Em Atendimento' },
+                'resolvido': { color: '#28a745', label: 'Resolvido' }
+            };
+            
+            const status = statusMap[message.status] || statusMap['pendente'];
+            
+            html += `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h3 style="color: #333; margin: 0 0 10px 0;">
+                                📝 ${message.protocol_number}
+                                <span style="background: ${status.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; margin-left: 10px;">${status.label}</span>
+                            </h3>
+                            <p style="color: #666; margin: 0 0 5px 0;"><strong>Assunto:</strong> ${message.subject}</p>
+                            <p style="color: #666; margin: 0 0 5px 0;"><strong>De:</strong> ${message.full_name} (${message.email})</p>
+                            ${message.phone ? `<p style="color: #666; margin: 0 0 5px 0;"><strong>Tel:</strong> ${message.phone}</p>` : ''}
+                            <p style="color: #666; margin: 10px 0;"><strong>Mensagem:</strong><br>${message.message}</p>
+                            ${message.response ? `<div style="background: #e7f3ff; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                                <strong style="color: #0066cc;">Resposta:</strong><br>${message.response}
+                                ${message.responded_by_name ? `<br><small style="color: #666;">Por: ${message.responded_by_name}</small>` : ''}
+                            </div>` : ''}
+                            <small style="color: #999;">Enviado em: ${new Date(message.created_at).toLocaleString('pt-BR')}</small>
+                            ${message.updated_at && message.updated_at !== message.created_at ? `<br><small style="color: #999;">Atualizado em: ${new Date(message.updated_at).toLocaleString('pt-BR')}</small>` : ''}
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-direction: column;">
+                            <button class="btn" onclick="respondOuvidoria(${message.id})">💬 Responder</button>
+                            <button class="btn btn-secondary" onclick="updateOuvidoriaStatus(${message.id}, 'em_atendimento')">🔄 Em Atendimento</button>
+                            <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateOuvidoriaStatus(${message.id}, 'resolvido')">✅ Resolver</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading ouvidoria messages:', error);
+        container.innerHTML = `<p style="color: #dc3545;">Erro ao carregar mensagens: ${error.message}</p>`;
+    }
+}
+
+/**
+ * Respond to ouvidoria message
+ */
+async function respondOuvidoria(messageId) {
+    const response = prompt('Digite sua resposta:');
+    
+    if (!response) return;
+    
+    try {
+        const result = await fetch('/api/ouvidoria.php?action=respond', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: messageId,
+                response: response
+            })
+        });
+        
+        const data = await result.json();
+        
+        if (data.success) {
+            alert('✅ Resposta enviada com sucesso!');
+            loadOuvidoriaMessages();
+        } else {
+            alert('❌ Erro ao enviar resposta: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error responding to ouvidoria:', error);
+        alert('❌ Erro ao enviar resposta');
+    }
+}
+
+/**
+ * Update ouvidoria status
+ */
+async function updateOuvidoriaStatus(messageId, newStatus) {
+    try {
+        const response = await fetch('/api/ouvidoria.php?action=update-status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: messageId,
+                status: newStatus
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Status atualizado com sucesso!');
+            loadOuvidoriaMessages();
+        } else {
+            alert('❌ Erro ao atualizar status: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error updating ouvidoria status:', error);
+        alert('❌ Erro ao atualizar status');
+    }
 }
 
 // ==========================================

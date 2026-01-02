@@ -475,46 +475,43 @@ async function loadUsers() {
     try {
         container.innerHTML = '<p style="color: #666;">Carregando usuários...</p>';
         
-        // Get filters
+        // Get filters and pagination
         const roleFilter = document.getElementById('user-role-filter')?.value || '';
         const statusFilter = document.getElementById('user-status-filter')?.value || '';
         const searchQuery = document.getElementById('user-search')?.value || '';
+        const page = window.currentUserPage || 1;
+        const perPage = 50;
         
-        const response = await fetch('/api/admin/users.php?action=list');
+        // Build query parameters
+        const params = new URLSearchParams({
+            action: 'list',
+            page: page,
+            per_page: perPage
+        });
+        
+        if (searchQuery) params.append('search', searchQuery);
+        if (roleFilter) params.append('role', roleFilter);
+        if (statusFilter) params.append('status', statusFilter);
+        
+        const response = await fetch(`/api/admin/users.php?${params.toString()}`);
         const data = await response.json();
         
         if (!data.success) {
             throw new Error(data.error || 'Erro ao carregar usuários');
         }
         
-        let users = data.data;
-        
-        // Apply filters
-        if (roleFilter) {
-            users = users.filter(u => u.roles && u.roles.includes(roleFilter));
-        }
-        
-        if (statusFilter === 'active') {
-            users = users.filter(u => u.is_active);
-        } else if (statusFilter === 'inactive') {
-            users = users.filter(u => !u.is_active);
-        }
-        
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            users = users.filter(u => 
-                u.full_name.toLowerCase().includes(query) || 
-                u.email.toLowerCase().includes(query)
-            );
-        }
+        const users = data.data.users;
+        const pagination = data.data.pagination;
         
         if (!users || users.length === 0) {
             container.innerHTML = '<p style="color: #666;">Nenhum usuário encontrado.</p>';
             return;
         }
         
-        // Populate role filter if empty
-        populateRoleFilter(data.data);
+        // Populate role filter if on first page and no search
+        if (page === 1 && !searchQuery) {
+            populateRoleFilter(users);
+        }
         
         let html = '<div style="display: grid; gap: 15px;">';
         
@@ -557,12 +554,53 @@ async function loadUsers() {
         });
         
         html += '</div>';
+        
+        // Add pagination controls
+        if (pagination.total_pages > 1) {
+            html += '<div style="margin-top: 20px; text-align: center;">';
+            html += `<p style="color: #666; margin-bottom: 10px;">Página ${pagination.page} de ${pagination.total_pages} (Total: ${pagination.total} usuários)</p>`;
+            html += '<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">';
+            
+            // Previous button
+            if (pagination.page > 1) {
+                html += `<button class="btn btn-secondary" onclick="loadUsersPage(${pagination.page - 1})">← Anterior</button>`;
+            }
+            
+            // Page numbers (show up to 5 pages around current)
+            const startPage = Math.max(1, pagination.page - 2);
+            const endPage = Math.min(pagination.total_pages, pagination.page + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const isCurrentPage = i === pagination.page;
+                html += `<button class="btn ${isCurrentPage ? '' : 'btn-secondary'}" 
+                         onclick="loadUsersPage(${i})" 
+                         ${isCurrentPage ? 'disabled' : ''}>
+                         ${i}
+                         </button>`;
+            }
+            
+            // Next button
+            if (pagination.page < pagination.total_pages) {
+                html += `<button class="btn btn-secondary" onclick="loadUsersPage(${pagination.page + 1})">Próxima →</button>`;
+            }
+            
+            html += '</div></div>';
+        }
+        
         container.innerHTML = html;
         
     } catch (error) {
         console.error('Error loading users:', error);
         container.innerHTML = `<p style="color: #dc3545;">Erro ao carregar usuários: ${error.message}</p>`;
     }
+}
+
+/**
+ * Load specific page of users
+ */
+function loadUsersPage(page) {
+    window.currentUserPage = page;
+    loadUsers();
 }
 
 /**
@@ -593,6 +631,7 @@ function populateRoleFilter(users) {
 function debounceUserSearch() {
     clearTimeout(userSearchTimeout);
     userSearchTimeout = setTimeout(() => {
+        window.currentUserPage = 1; // Reset to first page on search
         loadUsers();
     }, 300);
 }
