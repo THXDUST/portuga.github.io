@@ -757,7 +757,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Hamburger menu toggle
     const hamburgerBtn = document.getElementById('hamburger-btn');
-    const navMenu = document.getElementById('nav-menu');
+    // Support both nav-menu (main site) and admin-nav (admin panel)
+    const navMenu = document.getElementById('nav-menu') || document.getElementById('admin-nav');
     
     if (hamburgerBtn && navMenu) {
         hamburgerBtn.addEventListener('click', function() {

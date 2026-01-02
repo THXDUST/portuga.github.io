@@ -209,10 +209,7 @@ nav ul li a:hover {
     cursor: pointer;
     padding: 0;
     z-index: 101;
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    margin: 15px 20px;
 }
 
 .hamburger-menu span {
@@ -643,8 +640,16 @@ nav ul li a:hover {
     }
     
     /* Mobile Hamburger Menu */
+    nav {
+        display: flex;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 0;
+    }
+    
     .hamburger-menu {
         display: flex;
+        order: -1;
     }
     
     nav ul {
@@ -654,6 +659,8 @@ nav ul li a:hover {
         overflow: hidden;
         transition: max-height 0.3s ease;
         padding: 0;
+        width: 100%;
+        order: 1;
     }
     
     nav ul.active,
