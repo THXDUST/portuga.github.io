@@ -6,6 +6,9 @@
 
 require_once __DIR__ . '/admin/base.php';
 
+// Start session at the beginning to ensure user authentication is available
+session_start();
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -196,7 +199,13 @@ function handlePut($conn, $action) {
             // Respond to message
             validateRequired($data, ['id', 'response']);
             
-            session_start();
+            // Check if user is authenticated (session already started at top of file)
+            if (!isset($_SESSION['user_id']) || $_SESSION['user_id'] === null) {
+                sendError('Authentication required. Please log in to respond to messages.', 401);
+                return;
+            }
+            
+            $respondedBy = $_SESSION['user_id'];
             
             $stmt = $conn->prepare("
                 UPDATE ouvidoria 
@@ -204,7 +213,6 @@ function handlePut($conn, $action) {
                 WHERE id = ?
             ");
             
-            $respondedBy = $_SESSION['user_id'] ?? null;
             if ($stmt->execute([$data['response'], $respondedBy, $data['id']])) {
                 sendSuccess(null, 'Response sent successfully');
             } else {
