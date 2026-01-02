@@ -326,15 +326,15 @@ try {
         
         <?php if ($response['success']): ?>
             <div class="alert alert-success">
-                <h2><? php echo $response['message']; ?></h2>
+                <h2><?php echo $response['message']; ?></h2>
             </div>
         <?php elseif (!empty($response['errors'])): ?>
             <div class="alert alert-error">
-                <h2><? php echo $response['message']; ?></h2>
+                <h2><?php echo $response['message']; ?></h2>
             </div>
         <?php else: ?>
             <div class="alert alert-warning">
-                <h2><? php echo $response['message']; ?></h2>
+                <h2><?php echo $response['message']; ?></h2>
             </div>
         <?php endif; ?>
         
@@ -343,7 +343,7 @@ try {
                 <h3>📋 Detalhes da Execução</h3>
                 <ul>
                     <?php foreach ($response['details'] as $detail): ?>
-                        <li><? php echo htmlspecialchars($detail); ?></li>
+                        <li><?php echo htmlspecialchars($detail); ?></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
