@@ -8,7 +8,7 @@
  */
 
 // Include database configuration
-require_once __DIR__ . '/config/database. php';
+require_once __DIR__ . '/config/database.php';
 
 // Set execution time limit for large SQL files
 set_time_limit(300);
@@ -26,7 +26,7 @@ try {
     $sqlFile = __DIR__ . '/database/setup.sql';
     
     if (! file_exists($sqlFile)) {
-        throw new Exception("Arquivo setup.sql não encontrado em: " . $sqlFile);
+        throw new Exception("Arquivo setup.sql não encontrado em:  " . $sqlFile);
     }
     
     // Read SQL file
@@ -37,7 +37,7 @@ try {
     }
     
     // Get database connection (without specifying database initially)
-    $dsn = "mysql:host=" .  DB_HOST . ";charset=" . DB_CHARSET;
+    $dsn = "mysql:host=" . DB_HOST . ";charset=" . DB_CHARSET;
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
         PDO::ATTR_ERRMODE => PDO:: ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
@@ -82,7 +82,7 @@ try {
             if (stripos($statement, 'CREATE DATABASE') !== false) {
                 $response['details'][] = "✓ Banco de dados criado";
             } elseif (stripos($statement, 'CREATE TABLE') !== false) {
-                preg_match('/CREATE TABLE.*?`? (\w+)`?\s/i', $statement, $matches);
+                preg_match('/CREATE TABLE.*?`?(\w+)`?\s/i', $statement, $matches);
                 if (isset($matches[1])) {
                     $response['details'][] = "✓ Tabela criada: " . $matches[1];
                 }
@@ -111,7 +111,7 @@ try {
     $response['details'][] = "\n=== RESUMO ===";
     $response['details'][] = "Comandos executados: " . $executedCount;
     $response['details'][] = "Comandos ignorados (já existem): " . $skippedCount;
-    $response['details'][] = "Erros:  " . $errorCount;
+    $response['details'][] = "Erros: " . $errorCount;
     
     if ($errorCount === 0) {
         $response['success'] = true;
@@ -138,7 +138,7 @@ try {
 }
 
 ?>
-<! DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -153,7 +153,7 @@ try {
         
         body {
             font-family:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -170,9 +170,9 @@ try {
             padding: 40px;
         }
         
-        . header {
-            text-align: center;
-            margin-bottom: 30px;
+        .header {
+            text-align:  center;
+            margin-bottom:  30px;
         }
         
         .header h1 {
@@ -190,10 +190,10 @@ try {
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left:  4px solid;
+            border-left: 4px solid;
         }
         
-        . alert-success {
+        .alert-success {
             background:  #d4edda;
             border-color: #28a745;
             color: #155724;
@@ -207,19 +207,19 @@ try {
         
         .alert-warning {
             background: #fff3cd;
-            border-color:  #ffc107;
+            border-color: #ffc107;
             color: #856404;
         }
         
         .alert h2 {
             font-size: 20px;
-            margin-bottom:  10px;
+            margin-bottom: 10px;
         }
         
         .details {
             background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
+            border:  1px solid #dee2e6;
+            border-radius:  6px;
             padding: 20px;
             margin-top: 20px;
             max-height: 400px;
@@ -259,7 +259,7 @@ try {
         }
         
         .errors ul {
-            list-style: disc;
+            list-style:  disc;
             margin-left: 20px;
         }
         
@@ -285,7 +285,7 @@ try {
             margin-bottom: 10px;
         }
         
-        . warning-box p {
+        .warning-box p {
             color: #856404;
             font-size:  14px;
         }
@@ -311,7 +311,7 @@ try {
                 padding: 20px;
             }
             
-            . header h1 {
+            .header h1 {
                 font-size: 24px;
             }
         }
@@ -324,11 +324,11 @@ try {
             <p>Portuga - Restaurante & Pizzaria</p>
         </div>
         
-        <? php if ($response['success']): ?>
+        <?php if ($response['success']): ?>
             <div class="alert alert-success">
                 <h2><? php echo $response['message']; ?></h2>
             </div>
-        <?php elseif (! empty($response['errors'])): ?>
+        <?php elseif (!empty($response['errors'])): ?>
             <div class="alert alert-error">
                 <h2><? php echo $response['message']; ?></h2>
             </div>
@@ -355,14 +355,14 @@ try {
                 <ul>
                     <?php foreach ($response['errors'] as $error): ?>
                         <li><?php echo htmlspecialchars($error); ?></li>
-                    <?php endforeach; ?>
+                    <? php endforeach; ?>
                 </ul>
             </div>
         <?php endif; ?>
         
         <div class="warning-box">
             <strong>⚠️ AVISO DE SEGURANÇA</strong>
-            <p>Este arquivo deve ser DELETADO após a configuração inicial do banco de dados!</p>
+            <p>Este arquivo deve ser DELETADO após a configuração inicial do banco de dados! </p>
             <p>Manter este arquivo acessível é um risco de segurança. </p>
         </div>
         
