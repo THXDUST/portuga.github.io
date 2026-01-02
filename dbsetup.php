@@ -338,7 +338,7 @@ try {
             </div>
         <?php endif; ?>
         
-        <? php if (!empty($response['details'])): ?>
+        <?php if (!empty($response['details'])): ?>
             <div class="details">
                 <h3>📋 Detalhes da Execução</h3>
                 <ul>
@@ -355,7 +355,7 @@ try {
                 <ul>
                     <?php foreach ($response['errors'] as $error): ?>
                         <li><?php echo htmlspecialchars($error); ?></li>
-                    <? php endforeach; ?>
+                    <?php endforeach; ?>
                 </ul>
             </div>
         <?php endif; ?>
