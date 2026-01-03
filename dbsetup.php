@@ -25,7 +25,7 @@ try {
     // Check if setup. sql exists
     $sqlFile = __DIR__ . '/database/setup.sql';
     
-    if (! file_exists($sqlFile)) {
+    if (!file_exists($sqlFile)) {
         throw new Exception("Arquivo setup.sql não encontrado em: " . $sqlFile);
     }
     
