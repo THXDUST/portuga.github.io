@@ -418,7 +418,7 @@ try {
         </div>
         
         <div style="text-align: center;">
-            <a href="index.php" class="btn">Voltar para Home</a>
+            <a href="index.html" class="btn">Voltar para Home</a>
         </div>
     </div>
 </body>
