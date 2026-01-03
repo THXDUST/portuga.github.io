@@ -41,17 +41,18 @@ function handleGet($conn, $action) {
             $dateTo = $_GET['date_to'] ?? date('Y-m-d');
             $groupBy = $_GET['group_by'] ?? 'day'; // day, week, month
             
-            $dateFormat = $groupBy === 'month' ? '%Y-%m' : ($groupBy === 'week' ? '%Y-%u' : '%Y-%m-%d');
+            // PostgreSQL date format patterns
+            $dateFormat = $groupBy === 'month' ? 'YYYY-MM' : ($groupBy === 'week' ? 'IYYY-IW' : 'YYYY-MM-DD');
             
             $stmt = $conn->prepare("
                 SELECT 
-                    DATE_FORMAT(created_at, ?) as period,
+                    TO_CHAR(created_at, ?) as period,
                     COUNT(*) as order_count,
                     SUM(total) as revenue,
                     AVG(total) as avg_order_value,
                     SUM(CASE WHEN status = 'finalizado' THEN total ELSE 0 END) as completed_revenue
                 FROM orders
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at::date BETWEEN ? AND ?
                 GROUP BY period
                 ORDER BY period
             ");
@@ -66,7 +67,7 @@ function handleGet($conn, $action) {
             $stmt = $conn->prepare("
                 SELECT SUM(total) as prev_revenue
                 FROM orders
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at::date BETWEEN ? AND ?
                 AND status = 'finalizado'
             ");
             $stmt->execute([$prevDateFrom, $prevDateTo]);
@@ -93,7 +94,7 @@ function handleGet($conn, $action) {
                     SUM(oi.subtotal) as total_revenue
                 FROM order_items oi
                 INNER JOIN orders o ON oi.order_id = o.id
-                WHERE DATE(o.created_at) BETWEEN ? AND ?
+                WHERE o.created_at::date BETWEEN ? AND ?
                 GROUP BY oi.item_name
                 ORDER BY total_quantity DESC
                 LIMIT ?
@@ -112,11 +113,11 @@ function handleGet($conn, $action) {
             // By hour
             $stmt = $conn->prepare("
                 SELECT 
-                    HOUR(created_at) as hour,
+                    EXTRACT(HOUR FROM created_at) as hour,
                     COUNT(*) as order_count,
                     AVG(total) as avg_order_value
                 FROM orders
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at::date BETWEEN ? AND ?
                 GROUP BY hour
                 ORDER BY hour
             ");
@@ -126,12 +127,12 @@ function handleGet($conn, $action) {
             // By day of week
             $stmt = $conn->prepare("
                 SELECT 
-                    DAYNAME(created_at) as day_name,
-                    DAYOFWEEK(created_at) as day_num,
+                    TO_CHAR(created_at, 'Day') as day_name,
+                    EXTRACT(DOW FROM created_at) as day_num,
                     COUNT(*) as order_count,
                     SUM(total) as revenue
                 FROM orders
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at::date BETWEEN ? AND ?
                 GROUP BY day_name, day_num
                 ORDER BY day_num
             ");
