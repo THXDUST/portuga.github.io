@@ -50,7 +50,7 @@ switch ($path) {
                 SELECT id, title, content, note_type, display_order, created_at
                 FROM notes
                 WHERE is_active = TRUE
-                AND (expires_at IS NULL OR expires_at > NOW())
+                AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
                 ORDER BY display_order ASC, created_at DESC
             ");
             

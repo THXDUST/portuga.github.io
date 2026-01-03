@@ -27,12 +27,13 @@ require_once __DIR__ . '/../config/database.php';
 // Get database connection
 function getDBConnection() {
     $host = getenv('DB_HOST') ?: 'localhost';
+    $port = getenv('DB_PORT') ?: 5432;
     $dbname = getenv('DB_NAME') ?: 'portuga_db';
-    $username = getenv('DB_USER') ?: 'root';
+    $username = getenv('DB_USER') ?: 'postgres';
     $password = getenv('DB_PASS') ?: '';
     
     try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $pdo;
     } catch (PDOException $e) {
@@ -106,8 +107,8 @@ switch ($path) {
             // This is intentional to allow reviews for walk-in customers who later register
             $orderCheck = $pdo->prepare("
                 SELECT created_at, 
-                       TIMESTAMPDIFF(HOUR, created_at, NOW()) as hours_elapsed,
-                       TIMESTAMPDIFF(MINUTE, created_at, NOW()) as minutes_elapsed
+                       EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - created_at))/3600 as hours_elapsed,
+                       EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - created_at))/60 as minutes_elapsed
                 FROM orders 
                 WHERE id = ? AND (user_id = ? OR user_id IS NULL)
             ");
@@ -202,8 +203,8 @@ switch ($path) {
         if ($orderId) {
             $orderCheck = $pdo->prepare("
                 SELECT created_at, 
-                       TIMESTAMPDIFF(HOUR, created_at, NOW()) as hours_elapsed,
-                       TIMESTAMPDIFF(MINUTE, created_at, NOW()) as minutes_elapsed
+                       EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - created_at))/3600 as hours_elapsed,
+                       EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - created_at))/60 as minutes_elapsed
                 FROM orders 
                 WHERE id = ? AND (user_id = ? OR user_id IS NULL)
             ");
@@ -360,7 +361,7 @@ switch ($path) {
                 UPDATE reviews 
                 SET status = ?, 
                     approved_by = ?,
-                    approved_at = NOW()
+                    approved_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ");
             

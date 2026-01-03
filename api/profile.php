@@ -323,14 +323,23 @@ switch ($path) {
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
             try {
                 // Save to database
+                // Note: user_profile_photos table is not in setup.sql - this feature may not be fully implemented
+                // If this feature is needed, add the table definition to setup.sql:
+                // CREATE TABLE IF NOT EXISTS user_profile_photos (
+                //     user_id INTEGER PRIMARY KEY,
+                //     photo_path VARCHAR(512) NOT NULL,
+                //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                //     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                // );
                 $stmt = $pdo->prepare("
-                    INSERT INTO user_profile_photos (user_id, photo_path)
-                    VALUES (?, ?)
-                    ON DUPLICATE KEY UPDATE photo_path = ?, updated_at = NOW()
+                    INSERT INTO user_profile_photos (user_id, photo_path, updated_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT (user_id) 
+                    DO UPDATE SET photo_path = EXCLUDED.photo_path, updated_at = CURRENT_TIMESTAMP
                 ");
                 
                 $photoPath = 'uploads/profiles/' . $filename;
-                $stmt->execute([$userId, $photoPath, $photoPath]);
+                $stmt->execute([$userId, $photoPath]);
                 
                 echo json_encode([
                     'success' => true,
@@ -371,13 +380,23 @@ switch ($path) {
         }
         
         try {
+            // Note: user_favorite_dishes table is not in setup.sql - this feature may not be fully implemented
+            // If this feature is needed, add the table definition to setup.sql:
+            // CREATE TABLE IF NOT EXISTS user_favorite_dishes (
+            //     user_id INTEGER PRIMARY KEY,
+            //     menu_item_id INTEGER NOT NULL,
+            //     set_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            //     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            //     FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+            // );
             $stmt = $pdo->prepare("
-                INSERT INTO user_favorite_dishes (user_id, menu_item_id)
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE menu_item_id = ?, set_at = NOW()
+                INSERT INTO user_favorite_dishes (user_id, menu_item_id, set_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT (user_id)
+                DO UPDATE SET menu_item_id = EXCLUDED.menu_item_id, set_at = CURRENT_TIMESTAMP
             ");
             
-            $stmt->execute([$userId, $data['menu_item_id'], $data['menu_item_id']]);
+            $stmt->execute([$userId, $data['menu_item_id']]);
             
             echo json_encode([
                 'success' => true,

@@ -79,8 +79,8 @@ function handleUpdate($conn, $action) {
                     restrict_orders = ?,
                     restrict_menu = ?,
                     custom_message = ?,
-                    activated_at = CASE WHEN ? = 1 THEN NOW() ELSE activated_at END,
-                    deactivated_at = CASE WHEN ? = 0 THEN NOW() ELSE deactivated_at END,
+                    activated_at = CASE WHEN ? = 1 THEN CURRENT_TIMESTAMP ELSE activated_at END,
+                    deactivated_at = CASE WHEN ? = 0 THEN CURRENT_TIMESTAMP ELSE deactivated_at END,
                     activated_by = ?
                 WHERE id = 1
             ");

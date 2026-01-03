@@ -84,7 +84,7 @@ function isLoggedIn() {
             SELECT s.*, u.is_active 
             FROM sessions s
             JOIN users u ON s.user_id = u.id
-            WHERE s.session_token = ? AND s.user_id = ? AND s.expires_at > NOW()
+            WHERE s.session_token = ? AND s.user_id = ? AND s.expires_at > CURRENT_TIMESTAMP
         ");
         $stmt->execute([$_SESSION['session_token'], $_SESSION['user_id']]);
         $session = $stmt->fetch();
@@ -156,7 +156,7 @@ function createSession($userId, $rememberMe = false) {
         $stmt->execute([$userId, $sessionToken, $ip, $userAgent, $expiresAt]);
         
         // Update user's last login
-        $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$userId]);
         
         // Set session variables
@@ -213,7 +213,7 @@ function refreshSession() {
         $pdo = getDBConnection();
         $stmt = $pdo->prepare("
             UPDATE sessions 
-            SET expires_at = DATE_ADD(NOW(), INTERVAL 1 DAY)
+            SET expires_at = CURRENT_TIMESTAMP + INTERVAL '1 day'
             WHERE session_token = ?
         ");
         $stmt->execute([$_SESSION['session_token']]);
@@ -228,7 +228,7 @@ function refreshSession() {
 function cleanupExpiredSessions() {
     try {
         $pdo = getDBConnection();
-        $stmt = $pdo->prepare("DELETE FROM sessions WHERE expires_at < NOW()");
+        $stmt = $pdo->prepare("DELETE FROM sessions WHERE expires_at < CURRENT_TIMESTAMP");
         $stmt->execute();
     } catch (Exception $e) {
         error_log("Failed to cleanup expired sessions: " . $e->getMessage());
