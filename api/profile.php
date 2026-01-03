@@ -323,6 +323,14 @@ switch ($path) {
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
             try {
                 // Save to database
+                // Note: user_profile_photos table is not in setup.sql - this feature may not be fully implemented
+                // If this feature is needed, add the table definition to setup.sql:
+                // CREATE TABLE IF NOT EXISTS user_profile_photos (
+                //     user_id INTEGER PRIMARY KEY,
+                //     photo_path VARCHAR(512) NOT NULL,
+                //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                //     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                // );
                 $stmt = $pdo->prepare("
                     INSERT INTO user_profile_photos (user_id, photo_path, updated_at)
                     VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -372,6 +380,15 @@ switch ($path) {
         }
         
         try {
+            // Note: user_favorite_dishes table is not in setup.sql - this feature may not be fully implemented
+            // If this feature is needed, add the table definition to setup.sql:
+            // CREATE TABLE IF NOT EXISTS user_favorite_dishes (
+            //     user_id INTEGER PRIMARY KEY,
+            //     menu_item_id INTEGER NOT NULL,
+            //     set_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            //     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            //     FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+            // );
             $stmt = $pdo->prepare("
                 INSERT INTO user_favorite_dishes (user_id, menu_item_id, set_at)
                 VALUES (?, ?, CURRENT_TIMESTAMP)

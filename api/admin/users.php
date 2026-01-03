@@ -73,6 +73,16 @@ function handleGet($conn, $action) {
                 $where[] = "u.is_active = 0";
             }
             
+            // Add role filter using EXISTS subquery for better performance
+            if (!empty($roleFilter)) {
+                $where[] = "EXISTS (
+                    SELECT 1 FROM user_roles ur 
+                    JOIN roles r ON ur.role_id = r.id 
+                    WHERE ur.user_id = u.id AND r.name = ?
+                )";
+                $params[] = $roleFilter;
+            }
+            
             $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
             
             // Get total count
@@ -94,17 +104,10 @@ function handleGet($conn, $action) {
                 LEFT JOIN user_roles ur ON u.id = ur.user_id
                 LEFT JOIN roles r ON ur.role_id = r.id
                 $whereClause
+                GROUP BY u.id, u.full_name, u.email, u.is_active, u.created_at, u.last_login
+                ORDER BY u.created_at DESC LIMIT ? OFFSET ?
             ";
             
-            // Add role filter (needs to be after GROUP BY for HAVING clause)
-            if (!empty($roleFilter)) {
-                $sql .= " GROUP BY u.id HAVING ? = ANY(STRING_TO_ARRAY(STRING_AGG(DISTINCT r.name, ', '), ', '))";
-                $params[] = $roleFilter;
-            } else {
-                $sql .= " GROUP BY u.id, u.full_name, u.email, u.is_active, u.created_at, u.last_login";
-            }
-            
-            $sql .= " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
             $params[] = $perPage;
             $params[] = $offset;
             

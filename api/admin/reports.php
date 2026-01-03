@@ -52,7 +52,7 @@ function handleGet($conn, $action) {
                     AVG(total) as avg_order_value,
                     SUM(CASE WHEN status = 'finalizado' THEN total ELSE 0 END) as completed_revenue
                 FROM orders
-                WHERE created_at::date BETWEEN ? AND ?
+                WHERE created_at >= ?::date AND created_at < (?::date + INTERVAL '1 day')
                 GROUP BY period
                 ORDER BY period
             ");
@@ -67,7 +67,7 @@ function handleGet($conn, $action) {
             $stmt = $conn->prepare("
                 SELECT SUM(total) as prev_revenue
                 FROM orders
-                WHERE created_at::date BETWEEN ? AND ?
+                WHERE created_at >= ?::date AND created_at < (?::date + INTERVAL '1 day')
                 AND status = 'finalizado'
             ");
             $stmt->execute([$prevDateFrom, $prevDateTo]);
@@ -94,7 +94,7 @@ function handleGet($conn, $action) {
                     SUM(oi.subtotal) as total_revenue
                 FROM order_items oi
                 INNER JOIN orders o ON oi.order_id = o.id
-                WHERE o.created_at::date BETWEEN ? AND ?
+                WHERE o.created_at >= ?::date AND o.created_at < (?::date + INTERVAL '1 day')
                 GROUP BY oi.item_name
                 ORDER BY total_quantity DESC
                 LIMIT ?
@@ -117,7 +117,7 @@ function handleGet($conn, $action) {
                     COUNT(*) as order_count,
                     AVG(total) as avg_order_value
                 FROM orders
-                WHERE created_at::date BETWEEN ? AND ?
+                WHERE created_at >= ?::date AND created_at < (?::date + INTERVAL '1 day')
                 GROUP BY hour
                 ORDER BY hour
             ");
@@ -132,7 +132,7 @@ function handleGet($conn, $action) {
                     COUNT(*) as order_count,
                     SUM(total) as revenue
                 FROM orders
-                WHERE created_at::date BETWEEN ? AND ?
+                WHERE created_at >= ?::date AND created_at < (?::date + INTERVAL '1 day')
                 GROUP BY day_name, day_num
                 ORDER BY day_num
             ");
