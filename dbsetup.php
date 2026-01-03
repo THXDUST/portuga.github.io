@@ -8,7 +8,7 @@
  */
 
 // Include database configuration
-require_once __DIR__ . '/config/database. php';
+require_once __DIR__ . '/config/database.php';
 
 // Set execution time limit for large SQL files
 set_time_limit(300);
