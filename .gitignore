@@ -7,3 +7,8 @@ applications.html
 xampp
 .htaccess
 .env
+
+# Backup files
+*.backup
+*.bak
+*.mysql.backup
