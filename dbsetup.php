@@ -72,7 +72,7 @@ try {
                 // Starting a dollar quote
                 $inDollarQuote = true;
                 $dollarTag = '$$';
-                $current . = '$';
+                $current .= '$';
                 $i++; // Skip next $
             } else {
                 // Ending a dollar quote
