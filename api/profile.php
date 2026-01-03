@@ -324,13 +324,14 @@ switch ($path) {
             try {
                 // Save to database
                 $stmt = $pdo->prepare("
-                    INSERT INTO user_profile_photos (user_id, photo_path)
-                    VALUES (?, ?)
-                    ON DUPLICATE KEY UPDATE photo_path = ?, updated_at = NOW()
+                    INSERT INTO user_profile_photos (user_id, photo_path, updated_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT (user_id) 
+                    DO UPDATE SET photo_path = EXCLUDED.photo_path, updated_at = CURRENT_TIMESTAMP
                 ");
                 
                 $photoPath = 'uploads/profiles/' . $filename;
-                $stmt->execute([$userId, $photoPath, $photoPath]);
+                $stmt->execute([$userId, $photoPath]);
                 
                 echo json_encode([
                     'success' => true,
@@ -372,12 +373,13 @@ switch ($path) {
         
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO user_favorite_dishes (user_id, menu_item_id)
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE menu_item_id = ?, set_at = NOW()
+                INSERT INTO user_favorite_dishes (user_id, menu_item_id, set_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT (user_id)
+                DO UPDATE SET menu_item_id = EXCLUDED.menu_item_id, set_at = CURRENT_TIMESTAMP
             ");
             
-            $stmt->execute([$userId, $data['menu_item_id'], $data['menu_item_id']]);
+            $stmt->execute([$userId, $data['menu_item_id']]);
             
             echo json_encode([
                 'success' => true,

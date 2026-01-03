@@ -217,7 +217,7 @@ function handlePut($conn, $action) {
             
             $stmt = $conn->prepare("
                 UPDATE ouvidoria 
-                SET status = 'resolvido', response = ?, responded_by = ?, updated_at = NOW()
+                SET status = 'resolvido', response = ?, responded_by = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ");
             

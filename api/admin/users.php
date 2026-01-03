@@ -89,7 +89,7 @@ function handleGet($conn, $action) {
             $sql = "
                 SELECT u.id, u.full_name, u.email, u.is_active, 
                        u.created_at, u.last_login,
-                       GROUP_CONCAT(DISTINCT r.name SEPARATOR ', ') as roles
+                       STRING_AGG(DISTINCT r.name, ', ') as roles
                 FROM users u
                 LEFT JOIN user_roles ur ON u.id = ur.user_id
                 LEFT JOIN roles r ON ur.role_id = r.id
@@ -98,10 +98,10 @@ function handleGet($conn, $action) {
             
             // Add role filter (needs to be after GROUP BY for HAVING clause)
             if (!empty($roleFilter)) {
-                $sql .= " GROUP BY u.id HAVING FIND_IN_SET(?, roles) > 0";
+                $sql .= " GROUP BY u.id HAVING ? = ANY(STRING_TO_ARRAY(STRING_AGG(DISTINCT r.name, ', '), ', '))";
                 $params[] = $roleFilter;
             } else {
-                $sql .= " GROUP BY u.id";
+                $sql .= " GROUP BY u.id, u.full_name, u.email, u.is_active, u.created_at, u.last_login";
             }
             
             $sql .= " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";

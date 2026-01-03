@@ -36,24 +36,22 @@ try {
         throw new Exception("Não foi possível ler o arquivo setup.sql");
     }
     
-    // Get database connection (without specifying database initially)
-    $dsn = "mysql:host=" . DB_HOST . ";charset=" . DB_CHARSET;
+    // Get database connection (connect to PostgreSQL server)
+    $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME;
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-        PDO::ATTR_ERRMODE => PDO:: ERRMODE_EXCEPTION,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
     
-    $response['details'][] = "✓ Conexão com MySQL estabelecida";
+    $response['details'][] = "✓ Conexão com PostgreSQL estabelecida";
     
     // Split SQL into individual statements
     // Remove comments and split by semicolon
     $sql = preg_replace('/--.*$/m', '', $sql); // Remove single-line comments
     $sql = preg_replace('/\/\*.*?\*\//s', '', $sql); // Remove multi-line comments
     
-    // Handle DELIMITER changes for events
-    $sql = preg_replace('/DELIMITER\s+\$\$/i', '', $sql);
-    $sql = preg_replace('/DELIMITER\s+;/i', '', $sql);
-    $sql = str_replace('$$', ';', $sql);
+    // PostgreSQL handles statements differently - no DELIMITER needed
+    // Split by semicolon for individual statements
     
     $statements = array_filter(
         array_map('trim', explode(';', $sql)),
@@ -79,17 +77,25 @@ try {
             $executedCount++;
             
             // Log important operations
-            if (stripos($statement, 'CREATE DATABASE') !== false) {
-                $response['details'][] = "✓ Banco de dados criado";
-            } elseif (stripos($statement, 'CREATE TABLE') !== false) {
-                preg_match('/CREATE TABLE.*?`?(\w+)`?\s/i', $statement, $matches);
+            if (stripos($statement, 'CREATE TABLE') !== false) {
+                preg_match('/CREATE TABLE.*?(\w+)\s*\(/i', $statement, $matches);
                 if (isset($matches[1])) {
                     $response['details'][] = "✓ Tabela criada: " . $matches[1];
                 }
+            } elseif (stripos($statement, 'CREATE INDEX') !== false) {
+                // Silently create indexes
+            } elseif (stripos($statement, 'CREATE TRIGGER') !== false) {
+                preg_match('/CREATE TRIGGER\s+(\w+)/i', $statement, $matches);
+                if (isset($matches[1])) {
+                    $response['details'][] = "✓ Trigger criado: " . $matches[1];
+                }
+            } elseif (stripos($statement, 'CREATE FUNCTION') !== false || stripos($statement, 'CREATE OR REPLACE FUNCTION') !== false) {
+                preg_match('/FUNCTION\s+(\w+)/i', $statement, $matches);
+                if (isset($matches[1])) {
+                    $response['details'][] = "✓ Função criada: " . $matches[1];
+                }
             } elseif (stripos($statement, 'INSERT') !== false) {
                 $response['details'][] = "✓ Dados iniciais inseridos";
-            } elseif (stripos($statement, 'CREATE EVENT') !== false) {
-                $response['details'][] = "✓ Evento de limpeza criado";
             }
             
         } catch (PDOException $e) {
@@ -122,8 +128,7 @@ try {
     }
     
     // Verify tables were created
-    $pdo->exec("USE " . DB_NAME);
-    $stmt = $pdo->query("SHOW TABLES");
+    $stmt = $pdo->query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename");
     $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
     $response['details'][] = "\n=== TABELAS CRIADAS (" . count($tables) . ") ===";
