@@ -53,7 +53,8 @@ function handleGet($conn, $action) {
                 LEFT JOIN menu_groups p ON g.parent_id = p.id
                 LEFT JOIN menu_items i ON g.id = i.group_id
                 LEFT JOIN menu_groups sg ON g.id = sg.parent_id
-                GROUP BY g.id
+                GROUP BY g.id, g.name, g.description, g.parent_id, 
+                         g.display_order, g.is_active, g.created_at, p.name
                 ORDER BY g.parent_id, g.display_order, g.name
             ");
             $groups = $result->fetchAll(PDO::FETCH_ASSOC);
@@ -99,7 +100,7 @@ function handleGet($conn, $action) {
                 WHERE i.id = ?
             ");
             $stmt->execute([$id]);
-            $item = $result->fetch(PDO::FETCH_ASSOC);
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$item) {
                 sendError('Item not found', 404);

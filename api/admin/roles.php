@@ -52,7 +52,7 @@ function handleGet($conn, $action) {
                        COUNT(ur.id) as user_count
                 FROM roles r
                 LEFT JOIN user_roles ur ON r.id = ur.role_id
-                GROUP BY r.id
+                GROUP BY r.id, r.name, r.description, r.created_at, r.updated_at
                 ORDER BY r.name
             ");
             $roles = $result->fetchAll(PDO::FETCH_ASSOC);
