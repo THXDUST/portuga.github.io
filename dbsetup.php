@@ -8,7 +8,7 @@
  */
 
 // Include database configuration
-require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/database. php';
 
 // Set execution time limit for large SQL files
 set_time_limit(300);
@@ -22,11 +22,11 @@ $response = [
 ];
 
 try {
-    // Check if setup.sql exists
+    // Check if setup. sql exists
     $sqlFile = __DIR__ . '/database/setup.sql';
     
     if (! file_exists($sqlFile)) {
-        throw new Exception("Arquivo setup.sql não encontrado em:  " . $sqlFile);
+        throw new Exception("Arquivo setup.sql não encontrado em: " . $sqlFile);
     }
     
     // Read SQL file
@@ -37,28 +37,74 @@ try {
     }
     
     // Get database connection (connect to PostgreSQL server)
-    $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME;
+    $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" .  DB_NAME;
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO:: ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
     
     $response['details'][] = "✓ Conexão com PostgreSQL estabelecida";
     
     // Split SQL into individual statements
-    // Remove comments and split by semicolon
-    $sql = preg_replace('/--.*$/m', '', $sql); // Remove single-line comments
+    // Remove comments first
+    $sql = preg_replace('/--[^\n]*$/m', '', $sql); // Remove single-line comments
     $sql = preg_replace('/\/\*.*?\*\//s', '', $sql); // Remove multi-line comments
     
-    // PostgreSQL handles statements differently - no DELIMITER needed
-    // Split by semicolon for individual statements
+    // ==========================================
+    // IMPROVED SQL SPLITTER FOR POSTGRESQL
+    // Handles $$ delimiters in functions/triggers
+    // ==========================================
     
-    $statements = array_filter(
-        array_map('trim', explode(';', $sql)),
-        function($stmt) {
-            return ! empty($stmt);
+    $statements = [];
+    $current = '';
+    $inDollarQuote = false;
+    $dollarTag = '';
+    $length = strlen($sql);
+    
+    for ($i = 0; $i < $length; $i++) {
+        $char = $sql[$i];
+        $current .= $char;
+        
+        // Check for dollar-quoted strings ($$... $$)
+        if ($char === '$' && $i + 1 < $length && $sql[$i + 1] === '$') {
+            // Found $$
+            if (!$inDollarQuote) {
+                // Starting a dollar quote
+                $inDollarQuote = true;
+                $dollarTag = '$$';
+                $current . = '$';
+                $i++; // Skip next $
+            } else {
+                // Ending a dollar quote
+                $current .= '$';
+                $i++; // Skip next $
+                $inDollarQuote = false;
+                $dollarTag = '';
+            }
+            continue;
         }
-    );
+        
+        // Check for statement terminator (;)
+        if ($char === ';' && !$inDollarQuote) {
+            // End of statement
+            $stmt = trim($current);
+            if (! empty($stmt)) {
+                $statements[] = $stmt;
+            }
+            $current = '';
+        }
+    }
+    
+    // Add any remaining statement
+    $stmt = trim($current);
+    if (!empty($stmt)) {
+        $statements[] = $stmt;
+    }
+    
+    // Filter empty statements
+    $statements = array_filter($statements, function($stmt) {
+        return !empty(trim($stmt));
+    });
     
     $response['details'][] = "✓ Arquivo SQL carregado:  " . count($statements) . " comandos encontrados";
     
@@ -80,7 +126,7 @@ try {
             if (stripos($statement, 'CREATE TABLE') !== false) {
                 preg_match('/CREATE TABLE.*?(\w+)\s*\(/i', $statement, $matches);
                 if (isset($matches[1])) {
-                    $response['details'][] = "✓ Tabela criada: " . $matches[1];
+                    $response['details'][] = "✓ Tabela criada:  " . $matches[1];
                 }
             } elseif (stripos($statement, 'CREATE INDEX') !== false) {
                 // Silently create indexes
@@ -117,7 +163,7 @@ try {
     $response['details'][] = "\n=== RESUMO ===";
     $response['details'][] = "Comandos executados: " . $executedCount;
     $response['details'][] = "Comandos ignorados (já existem): " . $skippedCount;
-    $response['details'][] = "Erros: " . $errorCount;
+    $response['details'][] = "Erros:  " . $errorCount;
     
     if ($errorCount === 0) {
         $response['success'] = true;
@@ -143,7 +189,7 @@ try {
 }
 
 ?>
-<!DOCTYPE html>
+<! DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -169,7 +215,7 @@ try {
         .container {
             background: white;
             border-radius: 12px;
-            box-shadow:  0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             max-width: 800px;
             width: 100%;
             padding: 40px;
@@ -198,7 +244,7 @@ try {
             border-left: 4px solid;
         }
         
-        .alert-success {
+        . alert-success {
             background:  #d4edda;
             border-color: #28a745;
             color: #155724;
@@ -213,7 +259,7 @@ try {
         .alert-warning {
             background: #fff3cd;
             border-color: #ffc107;
-            color: #856404;
+            color:  #856404;
         }
         
         .alert h2 {
@@ -223,16 +269,16 @@ try {
         
         .details {
             background: #f8f9fa;
-            border:  1px solid #dee2e6;
-            border-radius:  6px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
             padding: 20px;
-            margin-top: 20px;
+            margin-top:  20px;
             max-height: 400px;
-            overflow-y:  auto;
+            overflow-y: auto;
         }
         
         .details h3 {
-            color: #333;
+            color:  #333;
             font-size: 16px;
             margin-bottom:  15px;
         }
@@ -259,12 +305,12 @@ try {
         
         . errors h3 {
             color: #c53030;
-            font-size: 16px;
+            font-size:  16px;
             margin-bottom: 15px;
         }
         
         .errors ul {
-            list-style:  disc;
+            list-style: disc;
             margin-left: 20px;
         }
         
@@ -277,7 +323,7 @@ try {
         .warning-box {
             background: #fff3cd;
             border: 2px solid #ffc107;
-            border-radius:  8px;
+            border-radius: 8px;
             padding: 20px;
             margin-top:  30px;
             text-align: center;
@@ -290,7 +336,7 @@ try {
             margin-bottom: 10px;
         }
         
-        .warning-box p {
+        . warning-box p {
             color: #856404;
             font-size:  14px;
         }
@@ -316,7 +362,7 @@ try {
                 padding: 20px;
             }
             
-            .header h1 {
+            . header h1 {
                 font-size: 24px;
             }
         }
@@ -333,7 +379,7 @@ try {
             <div class="alert alert-success">
                 <h2><?php echo $response['message']; ?></h2>
             </div>
-        <?php elseif (!empty($response['errors'])): ?>
+        <?php elseif (! empty($response['errors'])): ?>
             <div class="alert alert-error">
                 <h2><?php echo $response['message']; ?></h2>
             </div>
@@ -367,8 +413,8 @@ try {
         
         <div class="warning-box">
             <strong>⚠️ AVISO DE SEGURANÇA</strong>
-            <p>Este arquivo deve ser DELETADO após a configuração inicial do banco de dados! </p>
-            <p>Manter este arquivo acessível é um risco de segurança. </p>
+            <p>Este arquivo deve ser DELETADO após a configuração inicial do banco de dados!</p>
+            <p>Manter este arquivo acessível é um risco de segurança.</p>
         </div>
         
         <div style="text-align: center;">
