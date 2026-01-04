@@ -353,8 +353,8 @@ $RESET_PASSWORD = 'portuga2026'; // Change this to a secure password!
                     ← Cancelar e Voltar
                 </a>
             </form>
-            <? php
-        }
+            <?php
+            }
         ?>
     </div>
 </body>
