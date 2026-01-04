@@ -38,8 +38,7 @@ try {
     // Get email first to check if it's a hardcoded user
     $email = $input['email'] ?? '';
     
-    // Validate CSRF token ONLY for non-hardcoded users
-    // For hardcoded users, check first if it's a hardcoded user
+    // Validate CSRF token only for non-hardcoded users
     $isHardcodedEmail = isHardcodedUser($email);
     
     if (!$isHardcodedEmail) {
@@ -48,7 +47,7 @@ try {
         }
     }
     
-    // Do not sanitize emails from hardcoded users (@test domain)
+    // Do not sanitize emails from hardcoded users
     if (!$isHardcodedEmail) {
         $email = sanitizeInput($email);
     }

@@ -21,20 +21,6 @@ echo "========================================\n\n";
 
 echo "Testing: admin@test with password: admintest\n\n";
 
-// Capture output
-ob_start();
-
-// Simulate JSON input
-$GLOBALS['mockInput'] = json_encode($testData);
-
-// Mock file_get_contents for php://input
-function mockFileGetContents($filename) {
-    if ($filename === 'php://input') {
-        return $GLOBALS['mockInput'];
-    }
-    return file_get_contents($filename);
-}
-
 // Test each user
 $users = [
     ['email' => 'admin@test', 'password' => 'admintest'],
