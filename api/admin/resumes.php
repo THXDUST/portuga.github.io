@@ -151,21 +151,35 @@ function handlePut($conn, $action) {
                 sendError('Invalid status');
             }
             
-            session_start();
-            
-            $stmt = $conn->prepare("
-                UPDATE resumes 
-                SET status = ?, notes = ?, reviewed_by = ?
-                WHERE id = ?
-            ");
+            // Ensure session is started
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
             
             $reviewedBy = $_SESSION['user_id'] ?? null;
             $notes = $data['notes'] ?? null;
             
+            // If reviewed_by is provided, validate the user exists
+            if ($reviewedBy) {
+                $checkUser = $conn->prepare("SELECT id FROM users WHERE id = ?");
+                $checkUser->execute([$reviewedBy]);
+                if (!$checkUser->fetch()) {
+                    // User doesn't exist, set reviewed_by to NULL instead
+                    $reviewedBy = null;
+                }
+            }
+            
+            $stmt = $conn->prepare("
+                UPDATE resumes 
+                SET status = ?, notes = ?, reviewed_by = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ");
+            
             if ($stmt->execute([$data['status'], $notes, $reviewedBy, $data['id']])) {
                 sendSuccess(null, 'Status updated successfully');
             } else {
-                sendError('Failed to update status');
+                $errorInfo = $stmt->errorInfo();
+                sendError('Failed to update status: ' . ($errorInfo[2] ?? 'Unknown error'));
             }
             break;
             

@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function handleSubmit(e) {
     e.preventDefault();
     
+    // Check if user is logged in before allowing submission
+    if (typeof isUserLoggedIn !== 'function' || !isUserLoggedIn()) {
+        alert('Você precisa estar logado para enviar uma mensagem. Por favor, faça login primeiro.');
+        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return;
+    }
+    
     const formData = {
         full_name: document.getElementById('full-name').value,
         email: document.getElementById('email').value,

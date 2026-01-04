@@ -140,7 +140,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 Portuga - Restaurante & Pizzaria</p>
+            <p>&copy; <span id="current-year"></span> Portuga - Restaurante & Pizzaria</p>
             <p>📍 Endereço do Restaurante | 📞 (13) 99759-7759</p>
         </div>
     </footer>
@@ -149,5 +149,14 @@
     <script src="auth.js"></script>
     <script src="scripts/auth-check.js"></script>
     <script src="ouvidoria.js"></script>
+    <script>
+        // Set current year in footer
+        document.addEventListener('DOMContentLoaded', () => {
+            const yearSpan = document.getElementById('current-year');
+            if (yearSpan) {
+                yearSpan.textContent = new Date().getFullYear();
+            }
+        });
+    </script>
 </body>
 </html>
