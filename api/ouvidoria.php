@@ -180,11 +180,24 @@ function handlePost($conn, $action) {
     
     switch ($action) {
         case 'submit':
-            // Submit new message (from public form)
+            // Submit new message (requires login)
             validateRequired($data, ['full_name', 'email', 'subject', 'message']);
             
-            // Get user_id if logged in (optional field)
-            $userId = $_SESSION['user_id'] ?? null;
+            // Check if user is authenticated - login is now mandatory
+            if (!isset($_SESSION['user_id']) || $_SESSION['user_id'] === null) {
+                sendError('Authentication required. Please log in to submit a message.', 401);
+                return;
+            }
+            
+            $userId = $_SESSION['user_id'];
+            
+            // Verify that the user exists in the database
+            $checkUser = $conn->prepare("SELECT id FROM users WHERE id = ?");
+            $checkUser->execute([$userId]);
+            if (!$checkUser->fetch()) {
+                sendError('Invalid user session. User does not exist in the database.', 403);
+                return;
+            }
             
             // Generate protocol number
             $protocolNumber = 'OUV-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);

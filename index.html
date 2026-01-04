@@ -86,7 +86,8 @@
                 <strong>Endereço:</strong>Av. Beira Mar, 13050 - Balneário Britânia, Ilha Comprida - SP, 11925-000<br>
                 <strong>Telefone:</strong> (13) 3842-1013<br>
                 <strong>WhatsApp:</strong> (13) 98137-5008<br>
-                <strong>Horários de funcionamento:</strong> <br /> Cozinha: Todos os dias - 11h às 22h <br /> Pizzaria: Todos os dias - 18h às 24h <br /> Entregas: Todos os dias - 11h às 24h
+                <strong>Horários de funcionamento:</strong><br>
+                <span id="operating-hours">Carregando horários...</span>
             </p>
         </section>
     </main>
@@ -103,7 +104,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 Portuga - Restaurante & Pizzaria</p>
+            <p>&copy; <span id="current-year"></span> Portuga - Restaurante & Pizzaria</p>
             <p>Sabor português com tradição brasileira</p>
         </div>
     </footer>
@@ -142,10 +143,86 @@
             }
         }
 
+        // Load operating hours from settings
+        async function loadOperatingHours() {
+            try {
+                const response = await fetch('/api/admin/settings.php?action=all');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const settings = data.data;
+                    const hoursContainer = document.getElementById('operating-hours');
+                    
+                    if (!hoursContainer) return;
+                    
+                    let hoursHtml = '';
+                    
+                    // Kitchen hours
+                    if (settings.kitchen_hours && settings.kitchen_hours.value) {
+                        const kitchenHours = settings.kitchen_hours.value;
+                        hoursHtml += 'Cozinha: Todos os dias - ';
+                        if (Array.isArray(kitchenHours) && kitchenHours.length > 0) {
+                            hoursHtml += kitchenHours.map(h => `${h.start} às ${h.end}`).join(', ');
+                        } else {
+                            hoursHtml += '11h às 22h'; // Default
+                        }
+                        hoursHtml += '<br>';
+                    }
+                    
+                    // Pizza hours
+                    if (settings.pizza_hours && settings.pizza_hours.value) {
+                        const pizzaHours = settings.pizza_hours.value;
+                        hoursHtml += 'Pizzaria: Todos os dias - ';
+                        if (Array.isArray(pizzaHours) && pizzaHours.length > 0) {
+                            hoursHtml += pizzaHours.map(h => `${h.start} às ${h.end}`).join(', ');
+                        } else {
+                            hoursHtml += '18h às 23h'; // Default
+                        }
+                        hoursHtml += '<br>';
+                    }
+                    
+                    // Delivery hours
+                    if (settings.delivery_hours && settings.delivery_hours.value) {
+                        const deliveryHours = settings.delivery_hours.value;
+                        hoursHtml += 'Entregas: Todos os dias - ';
+                        if (Array.isArray(deliveryHours) && deliveryHours.length > 0) {
+                            hoursHtml += deliveryHours.map(h => `${h.start} às ${h.end}`).join(', ');
+                        } else {
+                            hoursHtml += '11h às 23h'; // Default
+                        }
+                    }
+                    
+                    if (hoursHtml) {
+                        hoursContainer.innerHTML = hoursHtml;
+                    } else {
+                        // Fallback to default hours
+                        hoursContainer.innerHTML = 'Cozinha: Todos os dias - 11h às 22h<br>Pizzaria: Todos os dias - 18h às 23h<br>Entregas: Todos os dias - 11h às 23h';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading operating hours:', error);
+                // Fallback to default hours on error
+                const hoursContainer = document.getElementById('operating-hours');
+                if (hoursContainer) {
+                    hoursContainer.innerHTML = 'Cozinha: Todos os dias - 11h às 22h<br>Pizzaria: Todos os dias - 18h às 23h<br>Entregas: Todos os dias - 11h às 23h';
+                }
+            }
+        }
+
+        // Set current year in footer
+        function setCurrentYear() {
+            const yearSpan = document.getElementById('current-year');
+            if (yearSpan) {
+                yearSpan.textContent = new Date().getFullYear();
+            }
+        }
+
         // Update navigation UI on page load
         document.addEventListener('DOMContentLoaded', async () => {
+            setCurrentYear();
             await updateNavigationUI();
             await loadActiveNotes();
+            await loadOperatingHours();
         });
     </script>
     <style>

@@ -1743,6 +1743,320 @@ async function toggleUserStatus(userId, makeActive) {
     }
 }
 
+/**
+ * Edit user information
+ */
+async function editUser(userId) {
+    try {
+        // Fetch user data
+        const response = await fetch(`/api/admin/users.php?action=get&id=${userId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar usuário');
+        }
+        
+        const user = data.data;
+        
+        // Show edit dialog using prompt (simple implementation)
+        const newName = prompt('Nome completo do usuário:', user.full_name);
+        
+        if (newName === null) return; // User cancelled
+        
+        if (!newName.trim()) {
+            alert('Nome não pode ser vazio!');
+            return;
+        }
+        
+        // Update user
+        const updateResponse = await fetch('/api/admin/users.php?action=update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: userId,
+                full_name: newName.trim()
+            })
+        });
+        
+        const updateData = await updateResponse.json();
+        
+        if (updateData.success) {
+            alert('✅ Usuário atualizado com sucesso!');
+            loadUsers();
+        } else {
+            alert('❌ Erro ao atualizar usuário: ' + (updateData.error || updateData.message));
+        }
+        
+    } catch (error) {
+        console.error('Error editing user:', error);
+        alert('❌ Erro ao editar usuário: ' + error.message);
+    }
+}
+
+/**
+ * Manage user roles
+ */
+async function manageUserRoles(userId) {
+    try {
+        // Fetch user data and available roles
+        const [userResponse, rolesResponse, userRolesResponse] = await Promise.all([
+            fetch(`/api/admin/users.php?action=get&id=${userId}`),
+            fetch('/api/admin/roles.php?action=list'),
+            fetch(`/api/admin/roles.php?action=user-roles&user_id=${userId}`)
+        ]);
+        
+        const userData = await userResponse.json();
+        const rolesData = await rolesResponse.json();
+        const userRolesData = await userRolesResponse.json();
+        
+        if (!userData.success || !rolesData.success || !userRolesData.success) {
+            throw new Error('Erro ao carregar dados');
+        }
+        
+        const user = userData.data;
+        const allRoles = rolesData.data;
+        const userRoles = userRolesData.data;
+        const userRoleIds = userRoles.map(r => r.id);
+        
+        // Build role selection dialog
+        let message = `Gerenciar cargos para ${user.full_name}\n\n`;
+        message += 'Cargos atuais: ' + (userRoles.length > 0 ? userRoles.map(r => r.name).join(', ') : 'Nenhum') + '\n\n';
+        message += 'Cargos disponíveis:\n';
+        allRoles.forEach((role, index) => {
+            const hasRole = userRoleIds.includes(role.id);
+            message += `${index + 1}. [${hasRole ? 'X' : ' '}] ${role.name} - ${role.description || 'Sem descrição'}\n`;
+        });
+        message += '\nDigite o número do cargo para adicionar/remover (ou deixe em branco para cancelar):';
+        
+        const selection = prompt(message);
+        
+        if (selection === null || selection.trim() === '') return; // User cancelled
+        
+        const selectedIndex = parseInt(selection) - 1;
+        
+        if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= allRoles.length) {
+            alert('Seleção inválida!');
+            return;
+        }
+        
+        const selectedRole = allRoles[selectedIndex];
+        const hasRole = userRoleIds.includes(selectedRole.id);
+        
+        // Add or remove role
+        if (hasRole) {
+            // Remove role
+            const response = await fetch(`/api/admin/roles.php?action=unassign-user&user_id=${userId}&role_id=${selectedRole.id}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(`✅ Cargo "${selectedRole.name}" removido com sucesso!`);
+                loadUsers();
+            } else {
+                alert('❌ Erro ao remover cargo: ' + (data.error || data.message));
+            }
+        } else {
+            // Add role
+            const response = await fetch('/api/admin/roles.php?action=assign-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    role_id: selectedRole.id
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(`✅ Cargo "${selectedRole.name}" atribuído com sucesso!`);
+                loadUsers();
+            } else {
+                alert('❌ Erro ao atribuir cargo: ' + (data.error || data.message));
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error managing user roles:', error);
+        alert('❌ Erro ao gerenciar cargos: ' + error.message);
+    }
+}
+
+// ==========================================
+// ROLES MANAGEMENT FUNCTIONS
+// ==========================================
+
+/**
+ * Load roles list
+ */
+async function loadRoles() {
+    const container = document.getElementById('roles-list');
+    if (!container) return;
+    
+    try {
+        container.innerHTML = '<p style="color: #666;">Carregando cargos...</p>';
+        
+        const response = await fetch('/api/admin/roles.php?action=list');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar cargos');
+        }
+        
+        const roles = data.data;
+        
+        if (!roles || roles.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nenhum cargo cadastrado ainda.</p>';
+            return;
+        }
+        
+        let html = '<div style="display: grid; gap: 15px;">';
+        
+        roles.forEach(role => {
+            html += `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h3 style="color: #333; margin: 0 0 10px 0;">🔐 ${role.name}</h3>
+                            <p style="color: #666; margin: 0 0 5px 0;">${role.description || 'Sem descrição'}</p>
+                            <p style="color: #999; margin: 0; font-size: 0.9rem;">${role.user_count} usuário(s) com este cargo</p>
+                            <small style="color: #999;">Criado em: ${new Date(role.created_at).toLocaleString('pt-BR')}</small>
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-direction: column;">
+                            <button class="btn" onclick="viewRolePermissions(${role.id})" style="padding: 8px 16px;">👁️ Ver Permissões</button>
+                            <button class="btn btn-secondary" onclick="editRole(${role.id})" style="padding: 8px 16px;">✏️ Editar</button>
+                            ${role.user_count === 0 ? `
+                                <button class="btn btn-danger" onclick="deleteRole(${role.id})" style="padding: 8px 16px;">🗑️ Excluir</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading roles:', error);
+        container.innerHTML = `<p style="color: #dc3545;">Erro ao carregar cargos: ${error.message}</p>`;
+    }
+}
+
+/**
+ * View role permissions
+ */
+async function viewRolePermissions(roleId) {
+    try {
+        const response = await fetch(`/api/admin/roles.php?action=get&id=${roleId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar cargo');
+        }
+        
+        const role = data.data;
+        const permissions = role.permissions || [];
+        
+        let message = `Cargo: ${role.name}\n\n`;
+        message += `Descrição: ${role.description || 'Sem descrição'}\n\n`;
+        message += 'Permissões:\n';
+        
+        if (permissions.length === 0) {
+            message += '  Nenhuma permissão atribuída\n';
+        } else {
+            permissions.forEach(perm => {
+                message += `  • ${perm.name} - ${perm.description || 'Sem descrição'}\n`;
+            });
+        }
+        
+        alert(message);
+        
+    } catch (error) {
+        console.error('Error viewing role permissions:', error);
+        alert('❌ Erro ao carregar permissões: ' + error.message);
+    }
+}
+
+/**
+ * Edit role
+ */
+async function editRole(roleId) {
+    try {
+        const response = await fetch(`/api/admin/roles.php?action=get&id=${roleId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar cargo');
+        }
+        
+        const role = data.data;
+        
+        const newName = prompt('Nome do cargo:', role.name);
+        if (newName === null) return; // User cancelled
+        
+        if (!newName.trim()) {
+            alert('Nome não pode ser vazio!');
+            return;
+        }
+        
+        const newDescription = prompt('Descrição do cargo:', role.description || '');
+        
+        // Update role
+        const updateResponse = await fetch('/api/admin/roles.php?action=update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: roleId,
+                name: newName.trim(),
+                description: newDescription
+            })
+        });
+        
+        const updateData = await updateResponse.json();
+        
+        if (updateData.success) {
+            alert('✅ Cargo atualizado com sucesso!');
+            loadRoles();
+        } else {
+            alert('❌ Erro ao atualizar cargo: ' + (updateData.error || updateData.message));
+        }
+        
+    } catch (error) {
+        console.error('Error editing role:', error);
+        alert('❌ Erro ao editar cargo: ' + error.message);
+    }
+}
+
+/**
+ * Delete role
+ */
+async function deleteRole(roleId) {
+    if (!confirm('Tem certeza que deseja excluir este cargo?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/roles.php?action=delete&id=${roleId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Cargo excluído com sucesso!');
+            loadRoles();
+        } else {
+            alert('❌ Erro ao excluir cargo: ' + (data.error || data.message));
+        }
+    } catch (error) {
+        console.error('Error deleting role:', error);
+        alert('❌ Erro ao excluir cargo: ' + error.message);
+    }
+}
+
 // ==========================================
 // OUVIDORIA FUNCTIONS
 // ==========================================
