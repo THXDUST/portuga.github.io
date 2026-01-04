@@ -109,16 +109,22 @@ try {
             case UPLOAD_ERR_INI_SIZE:
             case UPLOAD_ERR_FORM_SIZE:
                 sendError('File size exceeds limit');
+                break;
             case UPLOAD_ERR_PARTIAL:
                 sendError('File was only partially uploaded');
+                break;
             case UPLOAD_ERR_NO_FILE:
                 sendError('No file was uploaded');
+                break;
             case UPLOAD_ERR_NO_TMP_DIR:
                 sendError('Missing temporary folder');
+                break;
             case UPLOAD_ERR_CANT_WRITE:
                 sendError('Failed to write file to disk');
+                break;
             default:
                 sendError('File upload failed');
+                break;
         }
     }
 

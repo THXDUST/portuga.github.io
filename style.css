@@ -413,7 +413,7 @@ nav ul li a:hover {
 }
 
 /* Responsive admin container */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .admin-container {
         padding: 15px;
     }
@@ -474,7 +474,7 @@ nav ul li a:hover {
 }
 
 /* Responsive stat cards */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .stat-card {
         padding: 20px;
     }
@@ -494,7 +494,7 @@ nav ul li a:hover {
 }
 
 /* Responsive stat values */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .stat-value {
         font-size: 2rem;
     }
@@ -921,7 +921,7 @@ nav ul li a:hover {
 }
 
 /* Responsive admin navigation */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     #admin-nav .nav-tab {
         padding: 8px 10px;
         font-size: 0.9rem;
