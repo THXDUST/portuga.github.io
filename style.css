@@ -473,12 +473,12 @@ nav ul li a:hover {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
-    
-    /* For very narrow screens, use single column */
-    @media (max-width: 380px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
+}
+
+/* For very narrow screens, use single column */
+@media (max-width: 380px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 }
 
