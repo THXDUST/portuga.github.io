@@ -35,13 +35,23 @@ try {
         throw new Exception('Invalid JSON input');
     }
     
-    // Validate CSRF token
-    if (!isset($input['csrf_token']) || !validateCSRFToken($input['csrf_token'])) {
-        throw new Exception('Invalid CSRF token');
+    // Get email first to check if it's a hardcoded user
+    $email = $input['email'] ?? '';
+    
+    // Validate CSRF token only for non-hardcoded users
+    $isHardcodedEmail = isHardcodedUser($email);
+    
+    if (!$isHardcodedEmail) {
+        if (!isset($input['csrf_token']) || !validateCSRFToken($input['csrf_token'])) {
+            throw new Exception('Invalid CSRF token');
+        }
     }
     
-    // Sanitize inputs
-    $email = sanitizeInput($input['email'] ?? '');
+    // Do not sanitize emails from hardcoded users
+    if (!$isHardcodedEmail) {
+        $email = sanitizeInput($email);
+    }
+    
     $password = $input['password'] ?? '';
     $rememberMe = isset($input['remember_me']) && $input['remember_me'] === true;
     
@@ -55,9 +65,16 @@ try {
     }
     
     // Check for hardcoded users first (before email validation)
+    // Debug: check if hardcoded users are being found
+    if (getenv('DEBUG_MODE') === 'true') {
+        error_log("Attempting hardcoded auth for: " . $email);
+    }
     $hardcodedUser = authenticateHardcodedUser($email, $password);
     
     if ($hardcodedUser) {
+        if (getenv('DEBUG_MODE') === 'true') {
+            error_log("Hardcoded user authenticated successfully: " . $email);
+        }
         // Hardcoded user authentication successful
         // Skip rate limiting and database checks for hardcoded users
         
@@ -132,6 +149,10 @@ try {
             'redirect_url' => getRedirectUrlForUserType($hardcodedUser['user_type'])
         ]);
         exit();
+    } else {
+        if (getenv('DEBUG_MODE') === 'true') {
+            error_log("Hardcoded auth failed for: " . $email);
+        }
     }
     
     // Not a hardcoded user, proceed with database authentication
