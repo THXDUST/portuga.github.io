@@ -412,11 +412,51 @@ nav ul li a:hover {
     padding: 20px;
 }
 
+/* Responsive admin container */
+@media (max-width: 768px) {
+    .admin-container {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-container {
+        padding: 10px;
+    }
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
+}
+
+/* Responsive stats grid */
+@media (min-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
 }
 
 .stat-card {
@@ -425,6 +465,25 @@ nav ul li a:hover {
     padding: 25px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive stat cards */
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card {
+        padding: 15px 10px;
+    }
 }
 
 .stat-value {
@@ -434,9 +493,29 @@ nav ul li a:hover {
     margin-bottom: 10px;
 }
 
+/* Responsive stat values */
+@media (max-width: 768px) {
+    .stat-value {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-value {
+        font-size: 1.8rem;
+    }
+}
+
 .stat-label {
     color: #666;
     font-size: 1rem;
+}
+
+/* Responsive stat labels */
+@media (max-width: 480px) {
+    .stat-label {
+        font-size: 0.9rem;
+    }
 }
 
 .order-list {
@@ -715,10 +794,6 @@ nav ul li a:hover {
         padding: 40px 15px;
     }
     
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
     .hero {
         padding: 30px 20px;
     }
@@ -843,6 +918,23 @@ nav ul li a:hover {
     background: white;
     color: #e8c13f;
     font-weight: bold;
+}
+
+/* Responsive admin navigation */
+@media (max-width: 768px) {
+    #admin-nav .nav-tab {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+        margin: 0 1px;
+    }
+}
+
+@media (max-width: 480px) {
+    #admin-nav .nav-tab {
+        padding: 8px 6px;
+        font-size: 0.85rem;
+        margin: 5px 2px;
+    }
 }
 
 .admin-tab {

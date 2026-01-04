@@ -36,7 +36,7 @@
                 Preencha o formulário abaixo e envie seu currículo.
             </p>
             
-            <form id="resume-form" style="max-width: 600px; margin: 0 auto;">
+            <form id="resume-form" style="max-width: 600px; margin: 0 auto;" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="full-name">Nome Completo *</label>
                     <input type="text" id="full-name" required>
@@ -152,30 +152,74 @@
     <script src="auth.js"></script>
     <script src="scripts/auth-check.js"></script>
     <script>
-        document.getElementById('resume-form').addEventListener('submit', function(e) {
+        document.getElementById('resume-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = {
-                full_name: document.getElementById('full-name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                desired_position: document.getElementById('desired-position').value,
-                resume_file: document.getElementById('resume-file').files[0],
-                cover_letter: document.getElementById('cover-letter').value,
-                agreed_terms: document.getElementById('agree-terms').checked
-            };
-            
-            if (!formData.agreed_terms) {
+            // Validate terms agreement
+            if (!document.getElementById('agree-terms').checked) {
                 alert('Por favor, aceite os termos para continuar.');
                 return;
             }
+
+            // Validate file
+            const fileInput = document.getElementById('resume-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Por favor, selecione um arquivo de currículo.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const maxSize = 5 * 1024 * 1024; // 5MB
             
-            // In production, this would send to API
-            console.log('Resume submitted:', formData);
+            if (file.size > maxSize) {
+                alert('O arquivo é muito grande. O tamanho máximo é 5MB.');
+                return;
+            }
+
+            const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Tipo de arquivo inválido. Por favor, envie um arquivo PDF, DOC ou DOCX.');
+                return;
+            }
             
-            alert('Currículo enviado com sucesso!\n\nObrigado por seu interesse em trabalhar conosco.\nEntraremos em contato em breve.');
+            // Create FormData object for multipart/form-data submission
+            const formData = new FormData();
+            formData.append('full_name', document.getElementById('full-name').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('desired_position', document.getElementById('desired-position').value);
+            formData.append('resume_file', file);
+            formData.append('cover_letter', document.getElementById('cover-letter').value);
+            formData.append('agreed_terms', document.getElementById('agree-terms').checked);
+
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = '⏳ Enviando...';
             
-            this.reset();
+            try {
+                const response = await fetch('api/resumes.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Currículo enviado com sucesso!\n\nObrigado por seu interesse em trabalhar conosco.\nEntraremos em contato em breve.');
+                    this.reset();
+                } else {
+                    alert('❌ Erro ao enviar currículo: ' + (result.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Error submitting resume:', error);
+                alert('❌ Erro ao enviar currículo. Por favor, tente novamente mais tarde.');
+            } finally {
+                // Restore button state
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
         });
     </script>
 </body>
