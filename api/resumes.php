@@ -15,6 +15,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
+// Define helper functions first
+function sendError($message, $code = 400) {
+    http_response_code($code);
+    echo json_encode(['success' => false, 'error' => $message]);
+    exit;
+}
+
+function sendSuccess($data, $message = 'Success') {
+    http_response_code(200);
+    echo json_encode(['success' => true, 'message' => $message, 'data' => $data]);
+    exit;
+}
+
 // Wrap in try-catch to ensure JSON responses
 try {
     require_once __DIR__ . '/../config/database.php';
@@ -30,18 +43,6 @@ try {
     // Verify directory is writable
     if (!is_writable($uploadDir)) {
         sendError('Upload directory is not writable', 500);
-    }
-    
-    function sendError($message, $code = 400) {
-        http_response_code($code);
-        echo json_encode(['success' => false, 'error' => $message]);
-        exit;
-    }
-    
-    function sendSuccess($data, $message = 'Success') {
-        http_response_code(200);
-        echo json_encode(['success' => true, 'message' => $message, 'data' => $data]);
-        exit;
     }
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
