@@ -179,6 +179,7 @@ CREATE TABLE IF NOT EXISTS menu_items (
     image_url VARCHAR(512),
     ingredients TEXT,
     is_available BOOLEAN DEFAULT TRUE,
+    delivery_enabled BOOLEAN DEFAULT TRUE,
     display_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
