@@ -4,35 +4,49 @@
  * Handles public resume/CV submissions with file uploads
  */
 
+// Don't set Content-Type header too early, as it might interfere with multipart/form-data parsing
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header('Content-Type: application/json');
+    http_response_code(200);
     exit(0);
 }
 
-require_once __DIR__ . '/../config/database.php';
-
-// Create uploads directory if it doesn't exist
-$uploadDir = __DIR__ . '/../uploads/resumes/';
-if (!file_exists($uploadDir)) {
-    mkdir($uploadDir, 0755, true);
-}
-
+// Define helper functions first
 function sendError($message, $code = 400) {
+    header('Content-Type: application/json');
     http_response_code($code);
     echo json_encode(['success' => false, 'error' => $message]);
     exit;
 }
 
 function sendSuccess($data, $message = 'Success') {
+    header('Content-Type: application/json');
+    http_response_code(200);
     echo json_encode(['success' => true, 'message' => $message, 'data' => $data]);
     exit;
 }
 
+// Wrap in try-catch to ensure JSON responses
 try {
+    require_once __DIR__ . '/../config/database.php';
+    
+    // Create uploads directory if it doesn't exist
+    $uploadDir = __DIR__ . '/../uploads/resumes/';
+    if (!file_exists($uploadDir)) {
+        if (!mkdir($uploadDir, 0755, true)) {
+            sendError('Failed to create upload directory', 500);
+        }
+    }
+    
+    // Verify directory is writable
+    if (!is_writable($uploadDir)) {
+        sendError('Upload directory is not writable', 500);
+    }
+
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         sendError('Method not allowed', 405);
     }
@@ -129,58 +143,63 @@ try {
     }
 
     // Save to database
-    try {
-        $conn = getDBConnection();
+    $conn = getDBConnection();
+    
+    $stmt = $conn->prepare("
+        INSERT INTO resumes 
+        (full_name, email, phone, desired_position, resume_file_path, cover_letter, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'em_analise')
+    ");
+    
+    $coverLetter = $_POST['cover_letter'] ?? null;
+    
+    if ($stmt->execute([
+        $_POST['full_name'],
+        $_POST['email'],
+        $_POST['phone'],
+        $_POST['desired_position'],
+        $resumeFilePath,
+        $coverLetter
+    ])) {
+        $resumeId = $conn->lastInsertId();
         
-        $stmt = $conn->prepare("
-            INSERT INTO resumes 
-            (full_name, email, phone, desired_position, resume_file_path, cover_letter, status)
-            VALUES (?, ?, ?, ?, ?, ?, 'em_analise')
-        ");
-        
-        $coverLetter = $_POST['cover_letter'] ?? null;
-        
-        if ($stmt->execute([
-            $_POST['full_name'],
-            $_POST['email'],
-            $_POST['phone'],
-            $_POST['desired_position'],
-            $resumeFilePath,
-            $coverLetter
-        ])) {
-            $resumeId = $conn->lastInsertId();
-            
-            sendSuccess([
-                'id' => $resumeId,
-                'full_name' => $_POST['full_name'],
-                'email' => $_POST['email'],
-                'phone' => $_POST['phone'],
-                'desired_position' => $_POST['desired_position'],
-                'resume_file' => [
-                    'name' => $resumeFileName,
-                    'size' => $resumeFileSize,
-                    'type' => $resumeFileType,
-                    'path' => $resumeFilePath
-                ],
-                'cover_letter' => $coverLetter
-            ], 'Resume submitted successfully');
-        } else {
-            // Delete uploaded file if database insert fails
-            if ($resumeFilePath && file_exists($targetPath)) {
-                unlink($targetPath);
-            }
-            sendError('Failed to submit resume to database');
-        }
-    } catch (PDOException $e) {
-        // Delete uploaded file if database error occurs
-        if (isset($targetPath) && file_exists($targetPath)) {
+        sendSuccess([
+            'id' => $resumeId,
+            'full_name' => $_POST['full_name'],
+            'email' => $_POST['email'],
+            'phone' => $_POST['phone'],
+            'desired_position' => $_POST['desired_position'],
+            'resume_file' => [
+                'name' => $resumeFileName,
+                'size' => $resumeFileSize,
+                'type' => $resumeFileType,
+                'path' => $resumeFilePath
+            ],
+            'cover_letter' => $coverLetter
+        ], 'Resume submitted successfully');
+    } else {
+        // Delete uploaded file if database insert fails
+        if ($resumeFilePath && file_exists($targetPath)) {
             unlink($targetPath);
         }
-        error_log('Database error: ' . $e->getMessage());
-        sendError('Database error occurred');
+        sendError('Failed to submit resume to database');
     }
-
+    
+} catch (PDOException $e) {
+    // Delete uploaded file if database error occurs
+    if (isset($targetPath) && file_exists($targetPath)) {
+        unlink($targetPath);
+    }
+    error_log('Database error in resumes.php: ' . $e->getMessage());
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Database error occurred']);
+    exit;
 } catch (Exception $e) {
-    error_log('Error: ' . $e->getMessage());
-    sendError('An unexpected error occurred');
+    error_log('Error in resumes.php: ' . $e->getMessage());
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'An unexpected error occurred']);
+    exit;
 }
+

@@ -4,24 +4,31 @@
  * Handles customer messages and responses
  */
 
-require_once __DIR__ . '/admin/base.php';
-
-// Start session at the beginning to ensure user authentication is available
-session_start();
-
+// Set JSON header immediately to prevent HTML errors from appearing in response
+header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
     exit(0);
 }
 
-$conn = getDBConnection();
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
-
+// Wrap everything in try-catch to ensure JSON response on all errors
 try {
+    require_once __DIR__ . '/admin/base.php';
+    
+    // Start session at the beginning to ensure user authentication is available
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    $conn = getDBConnection();
+    $method = $_SERVER['REQUEST_METHOD'];
+    $action = $_GET['action'] ?? '';
+    
     switch ($method) {
         case 'GET':
             handleGet($conn, $action);
@@ -36,7 +43,16 @@ try {
             sendError('Method not allowed', 405);
     }
 } catch (Exception $e) {
-    sendError($e->getMessage(), 500);
+    // Log the error for debugging
+    error_log('Ouvidoria API Error: ' . $e->getMessage());
+    
+    // Always return JSON, even on fatal errors
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Internal server error'
+    ]);
+    exit;
 }
 
 function handleGet($conn, $action) {
@@ -67,11 +83,24 @@ function handleGet($conn, $action) {
             
         case 'my-chats':
             // List user's own chats
-            session_start();
             $userId = $_SESSION['user_id'] ?? null;
             
             if (!$userId) {
                 sendError('Authentication required', 401);
+            }
+            
+            // Check if user_id column exists in the table
+            $checkColumn = $conn->query("
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='ouvidoria' AND column_name='user_id'
+            ");
+            $hasUserIdColumn = $checkColumn && $checkColumn->rowCount() > 0;
+            
+            if (!$hasUserIdColumn) {
+                // Table doesn't have user_id column, return empty array
+                sendSuccess([]);
+                return;
             }
             
             $stmt = $conn->prepare("
@@ -94,7 +123,6 @@ function handleGet($conn, $action) {
                 sendError('Message ID required');
             }
             
-            session_start();
             $userId = $_SESSION['user_id'] ?? null;
             
             $stmt = $conn->prepare("
@@ -110,8 +138,8 @@ function handleGet($conn, $action) {
                 sendError('Message not found', 404);
             }
             
-            // Check if user is authorized to view this message
-            if ($message['user_id'] && $message['user_id'] != $userId) {
+            // Check if user_id column exists and if user is authorized
+            if (isset($message['user_id']) && $message['user_id'] && $message['user_id'] != $userId) {
                 // User can only view their own messages (unless admin)
                 // TODO: Add admin check here
                 sendError('Unauthorized', 403);
@@ -155,28 +183,56 @@ function handlePost($conn, $action) {
             // Submit new message (from public form)
             validateRequired($data, ['full_name', 'email', 'subject', 'message']);
             
-            // Get user_id if logged in
-            session_start();
+            // Get user_id if logged in (optional field)
             $userId = $_SESSION['user_id'] ?? null;
             
             // Generate protocol number
             $protocolNumber = 'OUV-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             
-            $stmt = $conn->prepare("
-                INSERT INTO ouvidoria (user_id, protocol_number, full_name, email, phone, subject, message, image_path)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            // Check if user_id column exists in the table
+            $checkColumn = $conn->query("
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='ouvidoria' AND column_name='user_id'
             ");
+            $hasUserIdColumn = $checkColumn && $checkColumn->rowCount() > 0;
             
-            if ($stmt->execute([
-                $userId,
-                $protocolNumber, 
-                $data['full_name'], 
-                $data['email'], 
-                $data['phone'] ?? null, 
-                $data['subject'], 
-                $data['message'], 
-                $data['image_path'] ?? null
-            ])) {
+            if ($hasUserIdColumn) {
+                // Table has user_id column
+                $stmt = $conn->prepare("
+                    INSERT INTO ouvidoria (user_id, protocol_number, full_name, email, phone, subject, message, image_path)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $result = $stmt->execute([
+                    $userId,
+                    $protocolNumber, 
+                    $data['full_name'], 
+                    $data['email'], 
+                    $data['phone'] ?? null, 
+                    $data['subject'], 
+                    $data['message'], 
+                    $data['image_path'] ?? null
+                ]);
+            } else {
+                // Table doesn't have user_id column (legacy schema)
+                $stmt = $conn->prepare("
+                    INSERT INTO ouvidoria (protocol_number, full_name, email, phone, subject, message, image_path)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $result = $stmt->execute([
+                    $protocolNumber, 
+                    $data['full_name'], 
+                    $data['email'], 
+                    $data['phone'] ?? null, 
+                    $data['subject'], 
+                    $data['message'], 
+                    $data['image_path'] ?? null
+                ]);
+            }
+            
+            if ($result) {
                 sendSuccess([
                     'id' => $conn->lastInsertId(),
                     'protocol_number' => $protocolNumber

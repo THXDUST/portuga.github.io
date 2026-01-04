@@ -427,25 +427,40 @@ nav ul li a:hover {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
 
-/* Responsive stats grid */
-@media (min-width: 1200px) {
+/* Responsive stats grid - ensure all items are always visible */
+@media (min-width: 1400px) {
+    .stats-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
     .stats-grid {
         grid-template-columns: repeat(4, 1fr);
     }
 }
 
-@media (min-width: 768px) and (max-width: 1199px) {
+@media (min-width: 900px) and (max-width: 1199px) {
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
-@media (max-width: 767px) {
+@media (min-width: 768px) and (max-width: 899px) {
+    /* Mobile landscape */
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+    /* Mobile landscape or tablet portrait */
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
@@ -453,9 +468,17 @@ nav ul li a:hover {
 }
 
 @media (max-width: 480px) {
+    /* Mobile portrait - always show 1-2 columns with vertical scroll */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+/* For very narrow screens, use single column */
+@media (max-width: 380px) {
     .stats-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
     }
 }
 
