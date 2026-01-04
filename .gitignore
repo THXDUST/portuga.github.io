@@ -12,3 +12,7 @@ xampp
 *.backup
 *.bak
 *.mysql.backup
+
+# Uploads directory (user-uploaded files)
+uploads/resumes/*
+!uploads/resumes/.gitkeep
