@@ -37,6 +37,36 @@ Acesso:   Painel administrativo (/admin.html)
 - 🚀 Autenticação é instantânea (não usa banco de dados)
 - 🔄 Compatível com autenticação normal de usuários
 
+## Troubleshooting
+
+### Login não funciona?
+
+1. **Verifique os hashes:**
+   ```bash
+   php test-hardcoded-login.php
+   ```
+
+2. **Teste a API diretamente:**
+   ```bash
+   php test-hardcoded-api.php
+   ```
+
+3. **Desabilite CSRF temporariamente** (apenas para testes):
+   - Os usuários hardcoded agora fazem bypass do CSRF automaticamente
+
+4. **Verifique os logs do servidor:**
+   ```bash
+   tail -f /var/log/php_errors.log
+   ```
+
+### Senhas Corretas
+
+- **Admin:** admintest
+- **Waiter:** waitertest  
+- **Customer:** customertest
+
+**IMPORTANTE:** Senhas são case-sensitive!
+
 ## Documentação Completa
 
 - **HARDCODED-USERS-README.md** - Documentação técnica detalhada
