@@ -38,8 +38,8 @@ try {
     // Get email first to check if it's a hardcoded user
     $email = $input['email'] ?? '';
     
-    // Validate CSRF token APENAS para usuários não-hardcoded
-    // Para hardcoded users, verificar primeiro se é um usuário hardcoded
+    // Validate CSRF token ONLY for non-hardcoded users
+    // For hardcoded users, check first if it's a hardcoded user
     $isHardcodedEmail = isHardcodedUser($email);
     
     if (!$isHardcodedEmail) {
@@ -48,8 +48,8 @@ try {
         }
     }
     
-    // Não sanitizar emails de usuários hardcoded (domínio @test)
-    if (!str_ends_with($email, '@test')) {
+    // Do not sanitize emails from hardcoded users (@test domain)
+    if (!$isHardcodedEmail) {
         $email = sanitizeInput($email);
     }
     
@@ -66,12 +66,16 @@ try {
     }
     
     // Check for hardcoded users first (before email validation)
-    // Debug: verificar se está encontrando usuários hardcoded
-    error_log("Attempting hardcoded auth for: " . $email);
+    // Debug: check if hardcoded users are being found
+    if (getenv('DEBUG_MODE') === 'true') {
+        error_log("Attempting hardcoded auth for: " . $email);
+    }
     $hardcodedUser = authenticateHardcodedUser($email, $password);
     
     if ($hardcodedUser) {
-        error_log("Hardcoded user authenticated successfully: " . $email);
+        if (getenv('DEBUG_MODE') === 'true') {
+            error_log("Hardcoded user authenticated successfully: " . $email);
+        }
         // Hardcoded user authentication successful
         // Skip rate limiting and database checks for hardcoded users
         
@@ -147,7 +151,9 @@ try {
         ]);
         exit();
     } else {
-        error_log("Hardcoded auth failed for: " . $email);
+        if (getenv('DEBUG_MODE') === 'true') {
+            error_log("Hardcoded auth failed for: " . $email);
+        }
     }
     
     // Not a hardcoded user, proceed with database authentication
