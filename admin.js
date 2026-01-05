@@ -3357,8 +3357,8 @@ async function loadSchedules() {
                                 <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.lunch_end || '-'}</td>
                                 <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.shift_end}</td>
                                 <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">
-                                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" onclick="editSchedule(${schedule.id})"></button>
-                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="deleteSchedule(${schedule.id})"></button>
+                                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" onclick="editSchedule(${schedule.id})">Editar</button>
+                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="deleteSchedule(${schedule.id})">Excluir</button>
                                 </td>
                             </tr>
                         `).join('')}

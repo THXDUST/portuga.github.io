@@ -270,6 +270,7 @@ function handlePost($conn, $action) {
             $imageData = null;
             $imageMimeType = null;
             $isUpdate = ($action === 'update-item');
+            $data = null; // Initialize to prevent undefined variable warnings
             
             // Check if this is a multipart form upload (with file)
             if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -290,6 +291,9 @@ function handlePost($conn, $action) {
                 $price = $_POST['price'] ?? null;
                 $isAvailable = isset($_POST['is_available']) && $_POST['is_available'] === '1';
                 $deliveryEnabled = isset($_POST['delivery_enabled']) && $_POST['delivery_enabled'] === '1';
+                $imageUrl = null; // No legacy image_url when uploading file
+                $ingredients = null;
+                $displayOrder = 0;
             } else {
                 // JSON request without file
                 $data = getRequestBody();
@@ -300,6 +304,9 @@ function handlePost($conn, $action) {
                 $price = $data['price'] ?? null;
                 $isAvailable = $data['is_available'] ?? true;
                 $deliveryEnabled = $data['delivery_enabled'] ?? true;
+                $imageUrl = $data['image_url'] ?? null;
+                $ingredients = $data['ingredients'] ?? null;
+                $displayOrder = $data['display_order'] ?? 0;
             }
             
             if (!$groupId || !$name || !$price) {
@@ -362,11 +369,11 @@ function handlePost($conn, $action) {
                     $name,
                     $description ?: null,
                     $price,
-                    $data['image_url'] ?? null, // Keep legacy image_url support
-                    $data['ingredients'] ?? null,
+                    $imageUrl,
+                    $ingredients,
                     $isAvailable,
                     $deliveryEnabled,
-                    $data['display_order'] ?? 0,
+                    $displayOrder,
                     $imageData,
                     $imageMimeType
                 ])) {
