@@ -47,7 +47,7 @@
                 // Sanitize user_type to alphanumeric only for extra safety
                 const sanitized = (user.user_type || '').replace(/[^a-zA-Z0-9]/g, '');
                 const userType = sanitized || 'unknown';
-                badge.textContent = `🧪 Test User: ${userType}`;
+                badge.textContent = `Test User: ${userType}`;
                 
                 // Check if badge doesn't already exist
                 if (!document.getElementById('hardcoded-user-badge')) {

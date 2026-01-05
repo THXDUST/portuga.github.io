@@ -688,7 +688,7 @@ function updateNavMenuForUser(userInfo) {
             if (!existingAdminLink) {
                 const adminLi = document.createElement('li');
                 adminLi.className = 'admin-menu-item';
-                adminLi.innerHTML = '<a href="admin.html">🛠️ Admin</a>';
+                adminLi.innerHTML = '<a href="admin.html">Admin</a>';
                 // Insert before user profile item
                 navMenu.insertBefore(adminLi, userLi);
             }

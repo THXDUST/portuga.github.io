@@ -30,7 +30,7 @@ async function loadOrderTracking() {
 
 async function getOrdersFromAPI() {
     try {
-        console.log('📥 Fetching orders from API...');
+        console.log('Fetching orders from API...');
         const response = await fetch('/api/orders.php?action=list');
         const data = await response.json();
         

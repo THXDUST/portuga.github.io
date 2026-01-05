@@ -371,7 +371,7 @@ try {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🗄️ Setup do Banco de Dados</h1>
+            <h1>Setup do Banco de Dados</h1>
             <p>Portuga - Restaurante & Pizzaria</p>
         </div>
         
@@ -391,7 +391,7 @@ try {
         
         <?php if (!empty($response['details'])): ?>
             <div class="details">
-                <h3>📋 Detalhes da Execução</h3>
+                <h3>Detalhes da Execução</h3>
                 <ul>
                     <?php foreach ($response['details'] as $detail): ?>
                         <li><?php echo htmlspecialchars($detail); ?></li>
