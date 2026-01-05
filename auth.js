@@ -44,6 +44,12 @@ function generateTempToken() {
  * Initialize authentication forms
  */
 function initializeAuthForms() {
+    // IGNORAR se estiver na página admin
+    if (window.location.pathname.includes('admin.html')) {
+        console.log('⚠️ [AUTH] Skipping auth forms on admin page');
+        return;
+    }
+    
     // Registration form
     const registerForm = document.getElementById('register-form');
     if (registerForm) {
