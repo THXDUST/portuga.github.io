@@ -670,7 +670,7 @@ function updateNavMenuForUser(userInfo) {
         const userLi = document.createElement('li');
         userLi.className = 'user-menu-item';
         userLi.innerHTML = `
-            <span style="color: #e8c13f; margin-right: 10px;">${userInfo.full_name}</span>
+            <span style="color: #e8c13f; margin-right: 10px;">👤 ${userInfo.full_name}</span>
             <button onclick="logout()" style="background: transparent; border: 1px solid #e8c13f; color: #e8c13f; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Sair</button>
         `;
         navMenu.appendChild(userLi);

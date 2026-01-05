@@ -47,9 +47,14 @@ async function getOrdersFromAPI() {
         // Get current user if available
         if (window.getCurrentUser) {
             const currentUser = getCurrentUser();
-            if (currentUser && currentUser.role !== 'admin') {
-                // Filter to show only user's own orders
-                orders = orders.filter(order => order.user_id === currentUser.id);
+            if (currentUser && currentUser.id) {
+                // Check if user has admin access
+                const hasAdmin = currentUser.hasAdminAccess || currentUser.role === 'admin' || currentUser.user_type === 'admin';
+                
+                // Filter to show only user's own orders if not admin
+                if (!hasAdmin) {
+                    orders = orders.filter(order => order.user_id === currentUser.id);
+                }
             }
         }
         

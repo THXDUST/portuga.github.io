@@ -223,6 +223,15 @@
                         label.title = 'Entrega não disponível para pedidos de mesa';
                     }
                 }
+            } else {
+                // Show table number field if user is logged in and not in delivery mode
+                const tableNumberField = document.getElementById('table-number-field');
+                const deliveryCheckbox = document.getElementById('for-delivery');
+                if (tableNumberField && window.isUserLoggedIn && (!deliveryCheckbox || !deliveryCheckbox.checked)) {
+                    if (isUserLoggedIn()) {
+                        tableNumberField.style.display = 'block';
+                    }
+                }
             }
             
             renderCart();
