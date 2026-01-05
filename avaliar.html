@@ -226,7 +226,6 @@
     </style>
 </head>
 <body>
-    <!-- Restaurant Closed Banner -->
     <div id="restaurant-closed-banner" style="display: none; background: #dc3545; color: white; text-align: center; padding: 12px; position: fixed; top: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
         <strong>🚫 Restaurante Fechado</strong> - Não estamos aceitando pedidos no momento
     </div>
@@ -248,8 +247,8 @@
             <li><a href="index.html">Início</a></li>
             <li><a href="menu.html">Cardápio</a></li>
             <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
-            <li><a href="ouvidoria.html">📞 Fale Conosco</a></li>
-            <li><a href="enviar-curriculo.html">💼 Trabalhe Conosco</a></li>
+            <li><a href="ouvidoria.html">Fale Conosco</a></li>
+            <li><a href="enviar-curriculo.html">Trabalhe Conosco</a></li>
             <li><a href="login.html">Login</a></li>
             <li><a href="admin.html">Admin</a></li>
         </ul>
@@ -258,13 +257,12 @@
     <main class="container">
         <div class="review-container">
             <div class="review-header">
-                <h2>⭐ Avalie Sua Experiência</h2>
+                <h2>Avalie Sua Experiência</h2>
                 <p>Sua opinião é muito importante para nós!</p>
             </div>
 
-            <!-- Login Required Section (shown if not logged in) -->
             <div id="login-required" class="login-required" style="display: none;">
-                <h3>🔒 Login Necessário</h3>
+                <h3>Login Necessário</h3>
                 <p>Para garantir a autenticidade das avaliações, é necessário fazer login com Instagram ou Facebook.</p>
                 
                 <div class="social-login-buttons">
@@ -284,15 +282,12 @@
                 </div>
             </div>
 
-            <!-- Rate Limit Warning -->
             <div id="rate-limit-warning" class="rate-limit-warning">
                 ⏰ Você já enviou uma avaliação recentemente. Por favor, aguarde 1 hora antes de enviar outra.
             </div>
 
-            <!-- Error Message -->
             <div id="error-message" class="error-message"></div>
 
-            <!-- Review Form (shown if logged in) -->
             <form id="review-form" style="display: none;">
                 <div class="star-rating">
                     <label>Classifique sua experiência:</label>
@@ -316,19 +311,17 @@
                     ></textarea>
                     <small style="color: #666;">0/1000 caracteres</small>
                 </div>
-
                 <button type="submit" class="btn-submit" id="submit-btn">
                     Enviar Avaliação
                 </button>
             </form>
-
-            <!-- Success Message -->
+            
             <div id="success-message" class="success-message">
-                <h3>✅ Avaliação Enviada!</h3>
-                <p>Sua avaliação está em análise. Se aprovada, será publicada no Instagram do restaurante!</p>
+                <h3>Avaliação Enviada!</h3>
                 <button class="btn" onclick="window.location.href='index.html'" style="margin-top: 15px;">
                     Voltar ao Início
                 </button>
+            </div>
             </div>
         </div>
     </main>
@@ -342,10 +335,7 @@
         let selectedRating = 0;
         let canSubmitReview = true;
 
-        // Check authentication status
         function checkAuthStatus() {
-            // TODO: Implement proper authentication check
-            // For now, check if user is logged in via session/localStorage
             const isLoggedIn = localStorage.getItem('user_token') || sessionStorage.getItem('user_id');
             
             if (isLoggedIn) {
@@ -358,7 +348,6 @@
             }
         }
 
-        // Check if user can submit review (rate limiting)
         async function checkCanReview() {
             try {
                 const response = await fetch('/api/reviews.php?action=can-review');
@@ -374,7 +363,6 @@
             }
         }
 
-        // Star rating functionality
         const stars = document.querySelectorAll('.star');
         const ratingLabel = document.getElementById('rating-label');
         
@@ -414,7 +402,6 @@
             });
         }
 
-        // Comment character counter
         const commentTextarea = document.getElementById('comment');
         const charCounter = commentTextarea.nextElementSibling;
 
@@ -423,7 +410,6 @@
             charCounter.textContent = `${length}/1000 caracteres`;
         });
 
-        // Form submission
         document.getElementById('review-form').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -482,7 +468,6 @@
             }, 5000);
         }
 
-        // OAuth login functions
         function loginWithInstagram() {
             // TODO: Implement Instagram OAuth
             window.location.href = '/api/auth/oauth-callback.php?provider=instagram';
@@ -493,13 +478,11 @@
             window.location.href = '/api/auth/oauth-callback.php?provider=facebook';
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             checkAuthStatus();
             updateCartBadge();
         });
 
-        // Hamburger menu
         document.getElementById('hamburger-btn').addEventListener('click', function() {
             document.getElementById('nav-menu').classList.toggle('active');
         });
