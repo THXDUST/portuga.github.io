@@ -109,6 +109,33 @@ function handleGet($conn, $action) {
             sendSuccess($roles);
             break;
             
+        case 'list-with-permissions':
+            // List all roles with their permissions
+            $result = $conn->query("
+                SELECT r.id, r.name, r.description, r.created_at, r.updated_at,
+                       COUNT(DISTINCT ur.id) as user_count
+                FROM roles r
+                LEFT JOIN user_roles ur ON r.id = ur.role_id
+                GROUP BY r.id, r.name, r.description, r.created_at, r.updated_at
+                ORDER BY r.name
+            ");
+            $roles = $result->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get permissions for each role
+            foreach ($roles as &$role) {
+                $stmt = $conn->prepare("
+                    SELECT p.id, p.name, p.description, p.resource, p.action
+                    FROM permissions p
+                    INNER JOIN role_permissions rp ON p.id = rp.permission_id
+                    WHERE rp.role_id = ?
+                ");
+                $stmt->execute([$role['id']]);
+                $role['permissions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            
+            sendSuccess($roles);
+            break;
+            
         default:
             sendError('Invalid action');
     }
@@ -163,6 +190,74 @@ function handlePost($conn, $action) {
                 sendSuccess(null, 'Role assigned to user');
             } else {
                 sendError('Failed to assign role');
+            }
+            break;
+            
+        case 'assign-roles':
+            // Assign multiple roles to a user
+            validateRequired($data, ['user_id', 'role_ids']);
+            
+            if (!is_array($data['role_ids'])) {
+                sendError('role_ids must be an array');
+            }
+            
+            $conn->beginTransaction();
+            try {
+                $assignedBy = $_SESSION['user_id'] ?? null;
+                
+                // First, remove all existing roles for this user
+                $stmt = $conn->prepare("DELETE FROM user_roles WHERE user_id = ?");
+                $stmt->execute([$data['user_id']]);
+                
+                // Then insert the new roles
+                $stmt = $conn->prepare("
+                    INSERT INTO user_roles (user_id, role_id, assigned_by)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT (user_id, role_id) DO NOTHING
+                ");
+                
+                foreach ($data['role_ids'] as $roleId) {
+                    $stmt->execute([$data['user_id'], $roleId, $assignedBy]);
+                }
+                
+                $conn->commit();
+                sendSuccess(null, 'Roles assigned to user successfully');
+            } catch (Exception $e) {
+                $conn->rollBack();
+                sendError('Failed to assign roles: ' . $e->getMessage());
+            }
+            break;
+            
+        case 'update-permissions':
+            // Update permissions for a role
+            validateRequired($data, ['role_id', 'permission_ids']);
+            
+            if (!is_array($data['permission_ids'])) {
+                sendError('permission_ids must be an array');
+            }
+            
+            $conn->beginTransaction();
+            try {
+                // Remove all existing permissions for this role
+                $stmt = $conn->prepare("DELETE FROM role_permissions WHERE role_id = ?");
+                $stmt->execute([$data['role_id']]);
+                
+                // Insert new permissions
+                $stmt = $conn->prepare("
+                    INSERT INTO role_permissions (role_id, permission_id)
+                    VALUES (?, ?)
+                    ON CONFLICT (role_id, permission_id) DO NOTHING
+                ");
+                
+                foreach ($data['permission_ids'] as $permId) {
+                    $stmt->execute([$data['role_id'], $permId]);
+                }
+                
+                $conn->commit();
+                sendSuccess(null, 'Permissions updated successfully');
+            } catch (Exception $e) {
+                $conn->rollBack();
+                sendError('Failed to update permissions: ' . $e->getMessage());
             }
             break;
             
