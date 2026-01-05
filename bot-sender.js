@@ -19,9 +19,9 @@ class WhatsAppBot {
     initialize() {
         // Evento disparado quando o QR Code é gerado para autenticação
         this.client.on('qr', (qr) => {
-            console.log('📱 Escaneie o QR Code no seu WhatsApp:');
+            console.log('Escaneie o QR Code no seu WhatsApp:');
             qrcode.generate(qr, { small: true });
-            console.log('💡 Vá em: Configurações → Aparelhos conectados → Conectar um aparelho');
+            console.log('Vá em: Configurações → Aparelhos conectados → Conectar um aparelho');
         });
 
         // Evento disparado quando o bot está pronto para enviar mensagens
@@ -32,33 +32,33 @@ class WhatsAppBot {
                 clearTimeout(this.readyTimeout);
                 this.readyTimeout = null;
             }
-            console.log('✅ Bot pronto para enviar mensagens!');
-            console.log('⏰ Timestamp:', new Date().toISOString());
+            console.log('Bot pronto para enviar mensagens!');
+            console.log('Timestamp:', new Date().toISOString());
         });
 
         // Evento disparado após autenticação bem-sucedida
         this.client.on('authenticated', () => {
-            console.log('🔐 Autenticado com sucesso!');
+            console.log('Autenticado com sucesso!');
         });
 
         // Evento para capturar erros de autenticação
         this.client.on('auth_failure', (msg) => {
-            console.error('❌ Falha na autenticação:', msg);
+            console.error('Falha na autenticação:', msg);
         });
 
         // Evento para capturar desconexões
         this.client.on('disconnected', (reason) => {
-            console.log('🔌 Bot desconectado:', reason);
+            console.log('Bot desconectado:', reason);
             this.isReady = false;
         });
 
-        console.log('🚀 Inicializando bot do WhatsApp...');
+        console.log('Inicializando bot do WhatsApp...');
         this.client.initialize();
 
         // Timeout de segurança: Se o bot não ficar pronto em 2 minutos, avisa
         this.readyTimeout = setTimeout(() => {
             if (!this.isReady) {
-                console.warn('⚠️  Bot ainda não está pronto após 2 minutos.');
+                console.warn('Bot ainda não está pronto após 2 minutos.');
                 console.warn('   Verifique se você escaneou o QR Code corretamente.');
             }
         }, 120000); // 2 minutos
@@ -80,7 +80,7 @@ class WhatsAppBot {
         const landlineFormat = /^55\d{2}[2-5]\d{7}$/; // Fixo: 12 dígitos, inicia com [2-5]
         
         if (!mobileFormat.test(cleanNumber) && !landlineFormat.test(cleanNumber)) {
-            console.error('❌ Formato de número inválido:', phoneNumber);
+            console.error('Formato de número inválido:', phoneNumber);
             console.error('   Formato esperado para móvel: 55 + DDD (2 dígitos) + 9[6-9]XXX-XXXX (9 dígitos)');
             console.error('   Formato esperado para fixo: 55 + DDD (2 dígitos) + [2-5]XXX-XXXX (8 dígitos)');
             console.error('   Exemplo móvel: 5511991234567 (11 é o DDD de São Paulo)');
@@ -114,13 +114,13 @@ class WhatsAppBot {
                 ? phoneNumber 
                 : `${phoneNumber}@c.us`;
             
-            console.log(`📤 Enviando mensagem para ${phoneNumber}...`);
+            console.log(`Enviando mensagem para ${phoneNumber}...`);
             await this.client.sendMessage(chatId, message);
-            console.log(`✅ Mensagem enviada com sucesso para ${phoneNumber}`);
-            console.log(`⏰ Timestamp: ${new Date().toISOString()}`);
+            console.log(`Mensagem enviada com sucesso para ${phoneNumber}`);
+            console.log(`Timestamp: ${new Date().toISOString()}`);
             return true;
         } catch (error) {
-            console.error('❌ Erro ao enviar mensagem:', error.message);
+            console.error('Erro ao enviar mensagem:', error.message);
             console.error('   Verifique se o número está correto e tem WhatsApp ativo.');
             return false;
         }
@@ -154,7 +154,7 @@ class WhatsAppBot {
                 if (this.isReady) {
                     resolve(true);
                 } else {
-                    console.warn('⚠️  Timeout: Bot não ficou pronto no tempo esperado.');
+                    console.warn('Timeout: Bot não ficou pronto no tempo esperado.');
                     resolve(false);
                 }
             }, timeout);
