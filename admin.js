@@ -105,6 +105,83 @@ function loadTabContent(tabName) {
     }
 }
 
+// ==========================================
+// ADMIN PANEL DISPLAY FUNCTION (GLOBAL)
+// ==========================================
+
+/**
+ * Show admin panel and hide login screen
+ * Must be in global scope to be callable from everywhere
+ */
+function showAdminPanel() {
+    console.log('🔵 [ADMIN] ===== showAdminPanel() CALLED =====');
+    console.log('🔵 [ADMIN] Timestamp:', new Date().toISOString());
+    console.log('🔵 [ADMIN] Call stack:', new Error().stack);
+    
+    const loginSection = document.getElementById('login-section');
+    const adminPanel = document.getElementById('admin-panel');
+    
+    console.log('🔍 [ADMIN] Panel elements check:', {
+        loginSection: loginSection ? '✅ Found' : '❌ NULL',
+        adminPanel: adminPanel ? '✅ Found' : '❌ NULL',
+        loginSection_currentDisplay: loginSection?.style.display || '(empty)',
+        adminPanel_currentDisplay: adminPanel?.style.display || '(empty)'
+    });
+    
+    if (!loginSection || !adminPanel) {
+        console.error('❌ [ADMIN] CRITICAL: Panel elements not found!');
+        alert('ERRO: Elementos do painel não encontrados. Recarregue a página.');
+        return;
+    }
+    
+    // Hide login section
+    console.log('🔵 [ADMIN] Hiding login section...');
+    loginSection.style.display = 'none';
+    console.log('✅ [ADMIN] Login section display set to:', loginSection.style.display);
+    
+    // Show admin panel
+    console.log('🔵 [ADMIN] Showing admin panel...');
+    adminPanel.style.display = 'block';
+    console.log('✅ [ADMIN] Admin panel display set to:', adminPanel.style.display);
+    
+    // Initialize admin panel components
+    console.log('🔵 [ADMIN] Initializing tab navigation...');
+    initTabNavigation();
+    
+    console.log('🔵 [ADMIN] Filtering menu by permissions...');
+    if (typeof filterAdminMenuByPermissions === 'function') {
+        try {
+            filterAdminMenuByPermissions();
+            console.log('✅ [ADMIN] Permissions filtered');
+        } catch (error) {
+            console.error('❌ [ADMIN] Error filtering permissions:', error);
+        }
+    } else {
+        console.warn('⚠️ [ADMIN] filterAdminMenuByPermissions not available');
+    }
+    
+    console.log('🔵 [ADMIN] Loading dashboard...');
+    try {
+        loadDashboard();
+        console.log('✅ [ADMIN] Dashboard loaded');
+    } catch (error) {
+        console.error('❌ [ADMIN] Error loading dashboard:', error);
+    }
+    
+    // Final verification
+    console.log('🔍 [ADMIN] ===== FINAL STATE =====');
+    console.log({
+        loginSection_display: document.getElementById('login-section')?.style.display,
+        adminPanel_display: document.getElementById('admin-panel')?.style.display,
+        sessionStorage_adminLoggedIn: sessionStorage.getItem('adminLoggedIn'),
+        timestamp: new Date().toISOString()
+    });
+    console.log('✅ [ADMIN] ===== showAdminPanel() COMPLETED =====');
+}
+
+// Expose function globally for debugging
+window.showAdminPanel = showAdminPanel;
+
 // Login function - FIXED VERSION
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔵 [ADMIN] DOMContentLoaded fired at:', new Date().toISOString());
@@ -126,8 +203,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Check if already logged in
     if (checkAuth()) {
-        console.log('✅ [ADMIN] User already logged in, showing panel');
-        showAdminPanel();
+        console.log('✅ [ADMIN] User already logged in (checkAuth returned true)');
+        console.log('🔵 [ADMIN] Will show panel after short delay...');
+        
+        // Use setTimeout to ensure DOM is fully loaded
+        setTimeout(() => {
+            console.log('🔵 [ADMIN] Executing showAdminPanel from checkAuth...');
+            showAdminPanel();
+        }, 100);
         return;
     }
     
@@ -192,10 +275,36 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
                 console.log('✅ [ADMIN] Credentials match! Login successful!');
+                console.log('🔵 [ADMIN] Setting sessionStorage adminLoggedIn = true');
+                
                 sessionStorage.setItem('adminLoggedIn', 'true');
-                showAdminPanel();
+                
+                console.log('✅ [ADMIN] sessionStorage set. Verifying:', {
+                    value: sessionStorage.getItem('adminLoggedIn'),
+                    type: typeof sessionStorage.getItem('adminLoggedIn')
+                });
+                
+                console.log('🔵 [ADMIN] Preparing to call showAdminPanel...');
+                console.log('🔍 [ADMIN] Function check:', {
+                    showAdminPanel_type: typeof showAdminPanel,
+                    showAdminPanel_exists: typeof showAdminPanel !== 'undefined',
+                    window_showAdminPanel: typeof window.showAdminPanel
+                });
+                
+                // Small delay to ensure DOM is ready
+                console.log('🔵 [ADMIN] Calling showAdminPanel in 100ms...');
+                setTimeout(() => {
+                    console.log('🔵 [ADMIN] ===== EXECUTING showAdminPanel NOW =====');
+                    showAdminPanel();
+                }, 100);
             } else {
                 console.error('❌ [ADMIN] Login failed - incorrect credentials');
+                console.error('🔍 [ADMIN] Debug info:', {
+                    providedUsername: username,
+                    providedPasswordLength: password.length,
+                    expectedUsername: ADMIN_CREDENTIALS.username,
+                    expectedPasswordLength: ADMIN_CREDENTIALS.password.length
+                });
                 alert('Usuário ou senha incorretos!');
             }
             
@@ -205,37 +314,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ [ADMIN] Login form listener attached successfully (capture phase)');
     } else {
         console.error('❌ [ADMIN] Login form NOT FOUND - cannot attach listener');
-    }
-    
-    function showAdminPanel() {
-        console.log('🔵 [ADMIN] showAdminPanel() called');
-        
-        if (loginSection) {
-            loginSection.style.display = 'none';
-            console.log('✅ [ADMIN] Login section hidden');
-        } else {
-            console.warn('⚠️ [ADMIN] Login section element not found');
-        }
-        
-        if (adminPanel) {
-            adminPanel.style.display = 'block';
-            console.log('✅ [ADMIN] Admin panel shown');
-        } else {
-            console.warn('⚠️ [ADMIN] Admin panel element not found');
-        }
-        
-        console.log('🔵 [ADMIN] Initializing tab navigation...');
-        initTabNavigation();
-        
-        console.log('🔵 [ADMIN] Filtering menu by permissions...');
-        if (typeof filterAdminMenuByPermissions === 'function') {
-            filterAdminMenuByPermissions();
-        }
-        
-        console.log('🔵 [ADMIN] Loading dashboard...');
-        loadDashboard();
-        
-        console.log('✅ [ADMIN] Admin panel fully initialized');
     }
 });
 
