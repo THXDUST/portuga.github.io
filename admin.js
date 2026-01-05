@@ -1766,7 +1766,7 @@ async function updateResumeStatus(resumeId, newStatus) {
 // USERS MANAGEMENT FUNCTIONS
 // ==========================================
 
-let userSearchTimeout;
+let adminUserSearchTimeout;
 
 /**
  * Debounce user search to avoid too many API calls
