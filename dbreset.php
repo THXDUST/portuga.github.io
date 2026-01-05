@@ -264,7 +264,7 @@ $RESET_PASSWORD = 'portuga2026'; // Change this to a secure password!
                     }
                     
                     // Read and execute setup. sql
-                    echo '<div class="log-item log-info">📦 Recriando estrutura do banco de dados...</div>';
+                    echo '<div class="log-item log-info">Recriando estrutura do banco de dados...</div>';
                     $setupSQL = file_get_contents(__DIR__ . '/database/setup.sql');
                     
                     if ($setupSQL === false) {

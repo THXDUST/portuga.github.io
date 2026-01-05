@@ -11,6 +11,11 @@
  * - GET /statistics - Get user statistics
  */
 
+// Ensure we always return JSON, even on PHP errors
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
+// Set JSON header first to prevent HTML output
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -20,6 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
+
+// Set custom error handler to return JSON
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Internal server error', 'error' => $errstr]);
+    exit();
+});
 
 // Database configuration
 require_once __DIR__ . '/../config/database.php';

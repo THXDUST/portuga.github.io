@@ -570,7 +570,7 @@ async function finalizeOrder() {
     }
     
     // Build WhatsApp message
-    let message = '*🍽️🍕 Novo Pedido - Restaurante Portuga*\n\n';
+    let message = '*Novo Pedido - Restaurante Portuga*\n\n';
     
     // Add table number if applicable
     if (tableNumber) {

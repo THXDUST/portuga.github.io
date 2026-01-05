@@ -102,7 +102,7 @@ function displayOrderDetails(order) {
         'finalizado': 'Finalizado'
     };
     
-    const orderTypeLabel = order.order_type === 'viagem' ? '🚗 Para Viagem' : '🍽️ No Local';
+    const orderTypeLabel = order.order_type === 'viagem' ? 'Para Viagem' : 'No Local';
     const tableInfo = order.table_number ? `Mesa ${order.table_number}` : '';
     
     let html = `
@@ -172,7 +172,7 @@ async function loadOrderHistory() {
         };
         
         const statusInfo = statusMap[order.status] || { label: order.status, color: '#6c757d' };
-        const orderTypeLabel = order.order_type === 'viagem' ? '🚗 Viagem' : '🍽️ Local';
+        const orderTypeLabel = order.order_type === 'viagem' ? 'Viagem' : 'Local';
         const tableInfo = order.table_number ? ` - Mesa ${order.table_number}` : '';
         const itemCount = order.item_count || (order.items ? order.items.length : 0);
         

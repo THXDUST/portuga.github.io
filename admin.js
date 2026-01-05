@@ -122,14 +122,14 @@ function showAdminPanel() {
     const adminPanel = document.getElementById('admin-panel');
     
     console.log('🔍 [ADMIN] Panel elements check:', {
-        loginSection: loginSection ? '✅ Found' : '❌ NULL',
-        adminPanel: adminPanel ? '✅ Found' : '❌ NULL',
+        loginSection: loginSection ? 'Found' : 'NULL',
+        adminPanel: adminPanel ? 'Found' : 'NULL',
         loginSection_currentDisplay: loginSection?.style.display || '(empty)',
         adminPanel_currentDisplay: adminPanel?.style.display || '(empty)'
     });
     
     if (!loginSection || !adminPanel) {
-        console.error('❌ [ADMIN] CRITICAL: Panel elements not found!');
+        console.error('[ADMIN] CRITICAL: Panel elements not found!');
         alert('ERRO: Elementos do painel não encontrados. Recarregue a página.');
         return;
     }
@@ -137,12 +137,12 @@ function showAdminPanel() {
     // Hide login section
     console.log('🔵 [ADMIN] Hiding login section...');
     loginSection.style.display = 'none';
-    console.log('✅ [ADMIN] Login section display set to:', loginSection.style.display);
+    console.log('[ADMIN] Login section display set to:', loginSection.style.display);
     
     // Show admin panel
     console.log('🔵 [ADMIN] Showing admin panel...');
     adminPanel.style.display = 'block';
-    console.log('✅ [ADMIN] Admin panel display set to:', adminPanel.style.display);
+    console.log('[ADMIN] Admin panel display set to:', adminPanel.style.display);
     
     // Initialize admin panel components
     console.log('🔵 [ADMIN] Initializing tab navigation...');
@@ -152,9 +152,9 @@ function showAdminPanel() {
     if (typeof filterAdminMenuByPermissions === 'function') {
         try {
             filterAdminMenuByPermissions();
-            console.log('✅ [ADMIN] Permissions filtered');
+            console.log('[ADMIN] Permissions filtered');
         } catch (error) {
-            console.error('❌ [ADMIN] Error filtering permissions:', error);
+            console.error('[ADMIN] Error filtering permissions:', error);
         }
     } else {
         console.warn('⚠️ [ADMIN] filterAdminMenuByPermissions not available');
@@ -163,9 +163,9 @@ function showAdminPanel() {
     console.log('🔵 [ADMIN] Loading dashboard...');
     try {
         loadDashboard();
-        console.log('✅ [ADMIN] Dashboard loaded');
+        console.log('[ADMIN] Dashboard loaded');
     } catch (error) {
-        console.error('❌ [ADMIN] Error loading dashboard:', error);
+        console.error('[ADMIN] Error loading dashboard:', error);
     }
     
     // Final verification
@@ -176,7 +176,7 @@ function showAdminPanel() {
         sessionStorage_adminLoggedIn: sessionStorage.getItem('adminLoggedIn'),
         timestamp: new Date().toISOString()
     });
-    console.log('✅ [ADMIN] ===== showAdminPanel() COMPLETED =====');
+    console.log('[ADMIN] ===== showAdminPanel() COMPLETED =====');
 }
 
 // Expose function globally for debugging
@@ -193,17 +193,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const adminPanel = document.getElementById('admin-panel');
     
     console.log('🔍 [ADMIN] Elements check:', {
-        loginForm: loginForm ? '✅ Found' : '❌ NULL',
+        loginForm: loginForm ? 'Found' : 'NULL',
         loginFormId: loginForm?.id,
-        loginSection: loginSection ? '✅ Found' : '❌ NULL',
-        adminPanel: adminPanel ? '✅ Found' : '❌ NULL',
+        loginSection: loginSection ? 'Found' : 'NULL',
+        adminPanel: adminPanel ? 'Found' : 'NULL',
         allForms: document.querySelectorAll('form').length,
         allInputs: document.querySelectorAll('input').length
     });
     
     // Check if already logged in
     if (checkAuth()) {
-        console.log('✅ [ADMIN] User already logged in (checkAuth returned true)');
+        console.log('[ADMIN] User already logged in (checkAuth returned true)');
         console.log('🔵 [ADMIN] Will show panel after short delay...');
         
         // Use setTimeout to ensure DOM is fully loaded
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle login - USE CAPTURE PHASE TO OVERRIDE OTHER LISTENERS
     if (loginForm) {
-        console.log('✅ [ADMIN] Login form found, attaching listener');
+        console.log('[ADMIN] Login form found, attaching listener');
         
         // Clone form to remove ALL existing event listeners
         const newForm = loginForm.cloneNode(true);
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             e.stopImmediatePropagation();
             
-            console.log('✅ [ADMIN] Event blocked successfully');
+            console.log('[ADMIN] Event blocked successfully');
             
             // Log all form inputs at submit time
             console.log('📋 [ADMIN] All form inputs:', {
@@ -250,14 +250,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const passwordEl = document.getElementById('password');
             
             console.log('🔍 [ADMIN] Login field elements:', {
-                usernameEl: usernameEl ? `✅ Found (type: ${usernameEl.type})` : '❌ NULL',
+                usernameEl: usernameEl ? `Found (type: ${usernameEl.type})` : 'NULL',
                 usernameValue: usernameEl?.value || 'EMPTY',
-                passwordEl: passwordEl ? `✅ Found (type: ${passwordEl.type})` : '❌ NULL',
+                passwordEl: passwordEl ? `Found (type: ${passwordEl.type})` : 'NULL',
                 passwordLength: passwordEl?.value?.length || 0
             });
             
             if (!usernameEl || !passwordEl) {
-                console.error('❌ [ADMIN] Login form elements not found!');
+                console.error('[ADMIN] Login form elements not found!');
                 alert('ERRO: Campos de login não encontrados. Verifique o console (F12).');
                 return false;
             }
@@ -274,12 +274,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                console.log('✅ [ADMIN] Credentials match! Login successful!');
+                console.log('[ADMIN] Credentials match! Login successful!');
                 console.log('🔵 [ADMIN] Setting sessionStorage adminLoggedIn = true');
                 
                 sessionStorage.setItem('adminLoggedIn', 'true');
                 
-                console.log('✅ [ADMIN] sessionStorage set. Verifying:', {
+                console.log('[ADMIN] sessionStorage set. Verifying:', {
                     value: sessionStorage.getItem('adminLoggedIn'),
                     type: typeof sessionStorage.getItem('adminLoggedIn')
                 });
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     showAdminPanel();
                 }, 100);
             } else {
-                console.error('❌ [ADMIN] Login failed - incorrect credentials');
+                console.error('[ADMIN] Login failed - incorrect credentials');
                 console.error('🔍 [ADMIN] Debug info:', {
                     providedUsername: username,
                     providedPasswordLength: password.length,
@@ -311,9 +311,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return false; // Extra safety
         }, true); // USE CAPTURE PHASE (true) - executes before bubble phase
         
-        console.log('✅ [ADMIN] Login form listener attached successfully (capture phase)');
+        console.log('[ADMIN] Login form listener attached successfully (capture phase)');
     } else {
-        console.error('❌ [ADMIN] Login form NOT FOUND - cannot attach listener');
+        console.error('[ADMIN] Login form NOT FOUND - cannot attach listener');
     }
 });
 
@@ -468,7 +468,7 @@ async function renderOrders() {
                     ` : ''}
                     ${order.status === 'preparo' ? `
                         <button class="btn btn-success" onclick="changeOrderStatus(${order.id}, 'concluido')">
-                            ✅ Marcar como Concluído
+                            Marcar como Concluído
                         </button>
                     ` : ''}
                     ${order.status === 'concluido' ? `
@@ -477,7 +477,7 @@ async function renderOrders() {
                         </button>
                     ` : ''}
                     <button class="btn btn-danger" onclick="deleteOrder(${order.id})">
-                        🗑️ Remover
+                        Remover
                     </button>
                 </div>
             </div>
@@ -572,7 +572,7 @@ async function loadKanbanBoard() {
         }
         
         let orders = data.data || [];
-        console.log('📦 Orders from API:', orders);
+        console.log('Orders from API:', orders);
         
         // If no orders found, show empty state
         if (!orders || orders.length === 0) {
@@ -661,7 +661,7 @@ async function loadKanbanBoard() {
         }
     });
     
-    console.log('📊 Kanban data:', kanbanData);
+    console.log('Kanban data:', kanbanData);
     
     // Render cards in each column
     Object.keys(kanbanData).forEach(status => {
@@ -680,7 +680,7 @@ async function loadKanbanBoard() {
             if (column) {
                 column.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: #dc3545;">
-                        <p>❌ Erro ao carregar pedidos</p>
+                        <p>Erro ao carregar pedidos</p>
                         <small>${error.message}</small>
                     </div>
                 `;
@@ -764,7 +764,7 @@ async function createTestOrder() {
             return;
         }
         
-        console.log('✅ Test order created:', data);
+        console.log('Test order created:', data);
         alert('Pedido de teste criado! Recarregando Kanban...');
         await loadKanbanBoard();
     } catch (error) {
@@ -809,20 +809,20 @@ function createKanbanCard(order) {
             orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.delivery.tableNumber}</span>`;
             orderTypeClass = ' kanban-card-table';
         } else {
-            orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">📦 Retirada</span>';
+            orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">Retirada</span>';
             orderTypeClass = ' kanban-card-pickup';
         }
     } else {
-        orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">📦 Retirada</span>';
+        orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">Retirada</span>';
         orderTypeClass = ' kanban-card-pickup';
     }
     
     // Add user info if available
     let userInfo = '';
     if (order.customer_name) {
-        userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">👤 ${order.customer_name}</div>`;
+        userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">${order.customer_name}</div>`;
     } else if (order.delivery && order.delivery.userId) {
-        userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">👤 Usuário ID: ${order.delivery.userId}</div>`;
+        userInfo = `<div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Usuário ID: ${order.delivery.userId}</div>`;
     }
     
     // Handle both old format (id) and new format (order_number)
@@ -937,7 +937,7 @@ async function updateOrderStatus(orderId, newStatus) {
             throw new Error(data.error || 'Erro ao atualizar status do pedido');
         }
         
-        console.log(`✅ Order ${orderId} status updated to ${newStatus}`);
+        console.log(`Order ${orderId} status updated to ${newStatus}`);
         return true;
         
     } catch (error) {
@@ -998,8 +998,8 @@ async function loadMenuManagement() {
                             ${group.description ? `<p style="color: #666; font-size: 0.9rem;">${group.description}</p>` : ''}
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn" onclick="editGroup(${group.id})" style="padding: 8px 16px;">✏️ Editar</button>
-                            <button class="btn btn-danger" onclick="deleteGroup(${group.id})" style="padding: 8px 16px;">🗑️ Excluir</button>
+                            <button class="btn" onclick="editGroup(${group.id})" style="padding: 8px 16px;"> Editar</button>
+                            <button class="btn btn-danger" onclick="deleteGroup(${group.id})" style="padding: 8px 16px;">Excluir</button>
                         </div>
                     </div>
                     
@@ -1021,8 +1021,8 @@ async function loadMenuManagement() {
                                                 ${subgroup.description ? `<p style="color: #666; font-size: 0.9rem;">${subgroup.description}</p>` : ''}
                                             </div>
                                             <div style="display: flex; gap: 10px;">
-                                                <button class="btn" onclick="editGroup(${subgroup.id})" style="padding: 6px 12px; font-size: 0.9rem;">✏️ Editar</button>
-                                                <button class="btn btn-danger" onclick="deleteGroup(${subgroup.id})" style="padding: 6px 12px; font-size: 0.9rem;">🗑️ Excluir</button>
+                                                <button class="btn" onclick="editGroup(${subgroup.id})" style="padding: 6px 12px; font-size: 0.9rem;"> Editar</button>
+                                                <button class="btn btn-danger" onclick="deleteGroup(${subgroup.id})" style="padding: 6px 12px; font-size: 0.9rem;">Excluir</button>
                                             </div>
                                         </div>
                                         ${subgroupItems.length > 0 ? `
@@ -1057,12 +1057,12 @@ function renderMenuItem(item) {
                 <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">${item.description || ''}</p>
                 <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${Number(item.price || 0).toFixed(2)}</p>
                 <div style="display: flex; gap: 10px; margin-top: 5px;">
-                    ${item.is_available ? '<span style="color: #28a745; font-size: 0.85rem;">✅ Disponível</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">❌ Indisponível</span>'}
+                    ${item.is_available ? '<span style="color: #28a745; font-size: 0.85rem;">Disponível</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">Indisponível</span>'}
                 </div>
             </div>
             <div class="menu-item-actions">
-                <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;">✏️</button>
-                <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;">🗑️</button>
+                <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;"></button>
+                <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;"></button>
             </div>
         </div>
     `;
@@ -1701,7 +1701,7 @@ async function loadResumes() {
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <h3 style="color: #333; margin: 0 0 10px 0;">
-                                👤 ${resume.full_name}
+                                ${resume.full_name}
                                 <span style="background: ${status.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; margin-left: 10px;">${status.label}</span>
                             </h3>
                             <p style="color: #666; margin: 0 0 5px 0;">📧 ${resume.email}</p>
@@ -1714,8 +1714,8 @@ async function loadResumes() {
                         <div style="display: flex; gap: 5px; flex-direction: column;">
                             ${resume.resume_file_path ? `<a href="${resume.resume_file_path}" target="_blank" class="btn">📄 Ver Currículo</a>` : ''}
                             <button class="btn btn-secondary" onclick="updateResumeStatus(${resume.id}, 'em_analise')">🔄 Em Análise</button>
-                            <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateResumeStatus(${resume.id}, 'aprovado')">✅ Aprovar</button>
-                            <button class="btn btn-danger" onclick="updateResumeStatus(${resume.id}, 'rejeitado')">❌ Rejeitar</button>
+                            <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateResumeStatus(${resume.id}, 'aprovado')">Aprovar</button>
+                            <button class="btn btn-danger" onclick="updateResumeStatus(${resume.id}, 'rejeitado')">Rejeitar</button>
                         </div>
                     </div>
                 </div>
@@ -1751,14 +1751,14 @@ async function updateResumeStatus(resumeId, newStatus) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Status atualizado com sucesso!');
+            alert('Status atualizado com sucesso!');
             loadResumes();
         } else {
-            alert('❌ Erro ao atualizar status: ' + data.message);
+            alert('Erro ao atualizar status: ' + data.message);
         }
     } catch (error) {
         console.error('Error updating resume status:', error);
-        alert('❌ Erro ao atualizar status');
+        alert('Erro ao atualizar status');
     }
 }
 
@@ -1844,7 +1844,7 @@ async function loadUsers() {
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <h3 style="color: #333; margin: 0 0 10px 0;">
-                                👤 ${user.full_name || 'Sem nome'}
+                                ${user.full_name || 'Sem nome'}
                                 ${statusBadge}
                             </h3>
                             <p style="color: #666; margin: 0 0 5px 0;"><strong>Email:</strong> ${user.email}</p>
@@ -1853,11 +1853,11 @@ async function loadUsers() {
                             <small style="color: #999;">Cadastrado em: ${new Date(user.created_at).toLocaleString('pt-BR')}</small>
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
-                            <button class="btn" onclick="editUser(${user.id})" style="padding: 8px 16px;">✏️ Editar</button>
+                            <button class="btn" onclick="editUser(${user.id})" style="padding: 8px 16px;"> Editar</button>
                             <button class="btn btn-secondary" onclick="manageUserRoles(${user.id})" style="padding: 8px 16px;">🔐 Cargos</button>
                             ${user.is_active 
                                 ? `<button class="btn btn-danger" onclick="toggleUserStatus(${user.id}, false)" style="padding: 8px 16px;">🚫 Desativar</button>`
-                                : `<button class="btn" onclick="toggleUserStatus(${user.id}, true)" style="padding: 8px 16px; background: #28a745; border-color: #28a745;">✅ Ativar</button>`
+                                : `<button class="btn" onclick="toggleUserStatus(${user.id}, true)" style="padding: 8px 16px; background: #28a745; border-color: #28a745;">Ativar</button>`
                             }
                         </div>
                     </div>
@@ -1907,14 +1907,14 @@ async function toggleUserStatus(userId, makeActive) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Status do usuário atualizado com sucesso!');
+            alert('Status do usuário atualizado com sucesso!');
             loadUsers();
         } else {
-            alert('❌ Erro ao atualizar status: ' + (data.error || data.message));
+            alert('Erro ao atualizar status: ' + (data.error || data.message));
         }
     } catch (error) {
         console.error('Error toggling user status:', error);
-        alert('❌ Erro ao atualizar status do usuário');
+        alert('Erro ao atualizar status do usuário');
     }
 }
 
@@ -1956,15 +1956,15 @@ async function editUser(userId) {
         const updateData = await updateResponse.json();
         
         if (updateData.success) {
-            alert('✅ Usuário atualizado com sucesso!');
+            alert('Usuário atualizado com sucesso!');
             loadUsers();
         } else {
-            alert('❌ Erro ao atualizar usuário: ' + (updateData.error || updateData.message));
+            alert('Erro ao atualizar usuário: ' + (updateData.error || updateData.message));
         }
         
     } catch (error) {
         console.error('Error editing user:', error);
-        alert('❌ Erro ao editar usuário: ' + error.message);
+        alert('Erro ao editar usuário: ' + error.message);
     }
 }
 
@@ -2027,10 +2027,10 @@ async function manageUserRoles(userId) {
             const data = await response.json();
             
             if (data.success) {
-                alert(`✅ Cargo "${selectedRole.name}" removido com sucesso!`);
+                alert(`Cargo "${selectedRole.name}" removido com sucesso!`);
                 loadUsers();
             } else {
-                alert('❌ Erro ao remover cargo: ' + (data.error || data.message));
+                alert('Erro ao remover cargo: ' + (data.error || data.message));
             }
         } else {
             // Add role
@@ -2046,16 +2046,16 @@ async function manageUserRoles(userId) {
             const data = await response.json();
             
             if (data.success) {
-                alert(`✅ Cargo "${selectedRole.name}" atribuído com sucesso!`);
+                alert(`Cargo "${selectedRole.name}" atribuído com sucesso!`);
                 loadUsers();
             } else {
-                alert('❌ Erro ao atribuir cargo: ' + (data.error || data.message));
+                alert('Erro ao atribuir cargo: ' + (data.error || data.message));
             }
         }
         
     } catch (error) {
         console.error('Error managing user roles:', error);
-        alert('❌ Erro ao gerenciar cargos: ' + error.message);
+        alert('Erro ao gerenciar cargos: ' + error.message);
     }
 }
 
@@ -2101,9 +2101,9 @@ async function loadRoles() {
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
                             <button class="btn" onclick="viewRolePermissions(${role.id})" style="padding: 8px 16px;">👁️ Ver Permissões</button>
-                            <button class="btn btn-secondary" onclick="editRole(${role.id})" style="padding: 8px 16px;">✏️ Editar</button>
+                            <button class="btn btn-secondary" onclick="editRole(${role.id})" style="padding: 8px 16px;"> Editar</button>
                             ${role.user_count === 0 ? `
-                                <button class="btn btn-danger" onclick="deleteRole(${role.id})" style="padding: 8px 16px;">🗑️ Excluir</button>
+                                <button class="btn btn-danger" onclick="deleteRole(${role.id})" style="padding: 8px 16px;">Excluir</button>
                             ` : ''}
                         </div>
                     </div>
@@ -2151,7 +2151,7 @@ async function viewRolePermissions(roleId) {
         
     } catch (error) {
         console.error('Error viewing role permissions:', error);
-        alert('❌ Erro ao carregar permissões: ' + error.message);
+        alert('Erro ao carregar permissões: ' + error.message);
     }
 }
 
@@ -2193,15 +2193,15 @@ async function editRole(roleId) {
         const updateData = await updateResponse.json();
         
         if (updateData.success) {
-            alert('✅ Cargo atualizado com sucesso!');
+            alert('Cargo atualizado com sucesso!');
             loadRoles();
         } else {
-            alert('❌ Erro ao atualizar cargo: ' + (updateData.error || updateData.message));
+            alert('Erro ao atualizar cargo: ' + (updateData.error || updateData.message));
         }
         
     } catch (error) {
         console.error('Error editing role:', error);
-        alert('❌ Erro ao editar cargo: ' + error.message);
+        alert('Erro ao editar cargo: ' + error.message);
     }
 }
 
@@ -2221,14 +2221,14 @@ async function deleteRole(roleId) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Cargo excluído com sucesso!');
+            alert('Cargo excluído com sucesso!');
             loadRoles();
         } else {
-            alert('❌ Erro ao excluir cargo: ' + (data.error || data.message));
+            alert('Erro ao excluir cargo: ' + (data.error || data.message));
         }
     } catch (error) {
         console.error('Error deleting role:', error);
-        alert('❌ Erro ao excluir cargo: ' + error.message);
+        alert('Erro ao excluir cargo: ' + error.message);
     }
 }
 
@@ -2280,7 +2280,7 @@ async function loadOuvidoriaMessages() {
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <h3 style="color: #333; margin: 0 0 10px 0;">
-                                📝 ${message.protocol_number}
+                                ${message.protocol_number}
                                 <span style="background: ${status.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; margin-left: 10px;">${status.label}</span>
                             </h3>
                             <p style="color: #666; margin: 0 0 5px 0;"><strong>Assunto:</strong> ${message.subject}</p>
@@ -2295,9 +2295,9 @@ async function loadOuvidoriaMessages() {
                             ${message.updated_at && message.updated_at !== message.created_at ? `<br><small style="color: #999;">Atualizado em: ${new Date(message.updated_at).toLocaleString('pt-BR')}</small>` : ''}
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
-                            <button class="btn" onclick="respondOuvidoria(${message.id})">💬 Responder</button>
+                            <button class="btn" onclick="respondOuvidoria(${message.id})">Responder</button>
                             <button class="btn btn-secondary" onclick="updateOuvidoriaStatus(${message.id}, 'em_atendimento')">🔄 Em Atendimento</button>
-                            <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateOuvidoriaStatus(${message.id}, 'resolvido')">✅ Resolver</button>
+                            <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateOuvidoriaStatus(${message.id}, 'resolvido')">Resolver</button>
                         </div>
                     </div>
                 </div>
@@ -2334,14 +2334,14 @@ async function respondOuvidoria(messageId) {
         const data = await result.json();
         
         if (data.success) {
-            alert('✅ Resposta enviada com sucesso!');
+            alert('Resposta enviada com sucesso!');
             loadOuvidoriaMessages();
         } else {
-            alert('❌ Erro ao enviar resposta: ' + (data.error || data.message || 'Erro desconhecido'));
+            alert('Erro ao enviar resposta: ' + (data.error || data.message || 'Erro desconhecido'));
         }
     } catch (error) {
         console.error('Error responding to ouvidoria:', error);
-        alert('❌ Erro ao enviar resposta: ' + error.message);
+        alert('Erro ao enviar resposta: ' + error.message);
     }
 }
 
@@ -2362,14 +2362,14 @@ async function updateOuvidoriaStatus(messageId, newStatus) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Status atualizado com sucesso!');
+            alert('Status atualizado com sucesso!');
             loadOuvidoriaMessages();
         } else {
-            alert('❌ Erro ao atualizar status: ' + (data.error || data.message || 'Erro desconhecido'));
+            alert('Erro ao atualizar status: ' + (data.error || data.message || 'Erro desconhecido'));
         }
     } catch (error) {
         console.error('Error updating ouvidoria status:', error);
-        alert('❌ Erro ao atualizar status: ' + error.message);
+        alert('Erro ao atualizar status: ' + error.message);
     }
 }
 
@@ -2434,7 +2434,7 @@ function addTimePeriod(serviceType, startTime = '', endTime = '') {
                 class="btn btn-danger" 
                 onclick="removeTimePeriod('${serviceType}', ${periodId})" 
                 style="padding: 6px 12px; font-size: 0.9rem;">
-            🗑️ Remover
+            Remover
         </button>
     `;
     
@@ -2621,15 +2621,15 @@ async function saveSettings() {
         
         // Validate that at least one period is set for each
         if (kitchenPeriods.length === 0) {
-            alert('❌ Por favor, configure pelo menos um período para a Cozinha.');
+            alert('Por favor, configure pelo menos um período para a Cozinha.');
             return;
         }
         if (pizzaPeriods.length === 0) {
-            alert('❌ Por favor, configure pelo menos um período para a Pizzaria.');
+            alert('Por favor, configure pelo menos um período para a Pizzaria.');
             return;
         }
         if (deliveryPeriods.length === 0) {
-            alert('❌ Por favor, configure pelo menos um período para as Entregas.');
+            alert('Por favor, configure pelo menos um período para as Entregas.');
             return;
         }
         
@@ -2688,16 +2688,16 @@ async function saveSettings() {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Configurações salvas com sucesso!');
+            alert('Configurações salvas com sucesso!');
             // Reload settings to ensure UI is in sync
             await loadSettings();
         } else {
-            alert('❌ Erro ao salvar configurações: ' + (data.error || data.message || 'Erro desconhecido'));
+            alert('Erro ao salvar configurações: ' + (data.error || data.message || 'Erro desconhecido'));
         }
         
     } catch (error) {
         console.error('Error saving settings:', error);
-        alert('❌ Erro ao salvar configurações: ' + error.message);
+        alert('Erro ao salvar configurações: ' + error.message);
     }
 }
 
@@ -2752,12 +2752,12 @@ function loadNotes() {
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn" onclick="editNote(${note.id})" style="flex: 1;">✏️ Editar</button>
+                    <button class="btn" onclick="editNote(${note.id})" style="flex: 1;"> Editar</button>
                     <button class="btn ${note.active ? 'btn-secondary' : ''}" 
                             onclick="toggleNoteStatus(${note.id})" style="flex: 1;">
-                        ${note.active ? '🔕 Desativar' : '🔔 Ativar'}
+                        ${note.active ? 'Desativar' : 'Ativar'}
                     </button>
-                    <button class="btn btn-danger" onclick="deleteNote(${note.id})" style="flex: 1;">🗑️ Excluir</button>
+                    <button class="btn btn-danger" onclick="deleteNote(${note.id})" style="flex: 1;">Excluir</button>
                 </div>
             </div>
         `;
@@ -3119,10 +3119,10 @@ async function loadReviewsList() {
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     ${review.status === 'pendente' ? `
                         <button class="btn btn-success" onclick="updateReviewStatus(${review.id}, 'aprovado')">
-                            ✅ Aprovar
+                            Aprovar
                         </button>
                         <button class="btn btn-danger" onclick="updateReviewStatus(${review.id}, 'rejeitado')">
-                            ❌ Rejeitar
+                            Rejeitar
                         </button>
                     ` : ''}
                     ${review.status !== 'arquivado' ? `
@@ -3131,7 +3131,7 @@ async function loadReviewsList() {
                         </button>
                     ` : ''}
                     <button class="btn btn-danger" onclick="deleteReview(${review.id})">
-                        🗑️ Deletar
+                        Deletar
                     </button>
                 </div>
             `;
@@ -3151,8 +3151,8 @@ async function loadReviewsList() {
 function getReviewStatusBadge(status) {
     const badges = {
         'pendente': '<span style="background: #ffc107; color: #856404; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">⏳ Pendente</span>',
-        'aprovado': '<span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">✅ Aprovado</span>',
-        'rejeitado': '<span style="background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">❌ Rejeitado</span>',
+        'aprovado': '<span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">Aprovado</span>',
+        'rejeitado': '<span style="background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">Rejeitado</span>',
         'arquivado': '<span style="background: #6c757d; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">📁 Arquivado</span>'
     };
     return badges[status] || '';
@@ -3172,14 +3172,14 @@ async function updateReviewStatus(reviewId, status) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Status atualizado com sucesso!');
+            alert('Status atualizado com sucesso!');
             loadReviews(); // Reload the list
         } else {
-            alert('❌ Erro ao atualizar status: ' + data.message);
+            alert('Erro ao atualizar status: ' + data.message);
         }
     } catch (error) {
         console.error('Error updating review status:', error);
-        alert('❌ Erro ao atualizar status');
+        alert('Erro ao atualizar status');
     }
 }
 
@@ -3199,14 +3199,14 @@ async function deleteReview(reviewId) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Avaliação deletada com sucesso!');
+            alert('Avaliação deletada com sucesso!');
             loadReviews();
         } else {
-            alert('❌ Erro ao deletar avaliação: ' + data.message);
+            alert('Erro ao deletar avaliação: ' + data.message);
         }
     } catch (error) {
         console.error('Error deleting review:', error);
-        alert('❌ Erro ao deletar avaliação');
+        alert('Erro ao deletar avaliação');
     }
 }
 
@@ -3252,7 +3252,7 @@ async function loadSchedules() {
             userSection.style.marginBottom = '30px';
             
             userSection.innerHTML = `
-                <h3 style="color: #333; margin-bottom: 15px;">👤 ${userData.user_name}</h3>
+                <h3 style="color: #333; margin-bottom: 15px;">${userData.user_name}</h3>
                 <table class="schedule-table" style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr>
@@ -3273,8 +3273,8 @@ async function loadSchedules() {
                                 <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.lunch_end || '-'}</td>
                                 <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">${schedule.shift_end}</td>
                                 <td style="padding: 10px; border-bottom: 1px solid #e9ecef;">
-                                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" onclick="editSchedule(${schedule.id})">✏️</button>
-                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="deleteSchedule(${schedule.id})">🗑️</button>
+                                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" onclick="editSchedule(${schedule.id})"></button>
+                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="deleteSchedule(${schedule.id})"></button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -3323,14 +3323,14 @@ async function deleteSchedule(scheduleId) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Horário deletado com sucesso!');
+            alert('Horário deletado com sucesso!');
             loadSchedules();
         } else {
-            alert('❌ Erro ao deletar horário: ' + data.message);
+            alert('Erro ao deletar horário: ' + data.message);
         }
     } catch (error) {
         console.error('Error deleting schedule:', error);
-        alert('❌ Erro ao deletar horário');
+        alert('Erro ao deletar horário');
     }
 }
 
@@ -3411,7 +3411,7 @@ async function openRolePermissionsModal(roleId) {
         
     } catch (error) {
         console.error('Error opening role permissions modal:', error);
-        alert('❌ Erro ao abrir modal: ' + error.message);
+        alert('Erro ao abrir modal: ' + error.message);
     }
 }
 
@@ -3447,15 +3447,15 @@ async function saveRolePermissions() {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Permissões atualizadas com sucesso!');
+            alert('Permissões atualizadas com sucesso!');
             closeRolePermissionsModal();
             loadRoles();
         } else {
-            alert('❌ Erro ao atualizar permissões: ' + (data.error || data.message));
+            alert('Erro ao atualizar permissões: ' + (data.error || data.message));
         }
     } catch (error) {
         console.error('Error saving permissions:', error);
-        alert('❌ Erro ao salvar permissões');
+        alert('Erro ao salvar permissões');
     }
 }
 
@@ -3531,7 +3531,7 @@ async function openUserRolesModal(userId) {
         
     } catch (error) {
         console.error('Error opening user roles modal:', error);
-        alert('❌ Erro ao abrir modal: ' + error.message);
+        alert('Erro ao abrir modal: ' + error.message);
     }
 }
 
@@ -3567,15 +3567,15 @@ async function saveUserRoles() {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Cargos atualizados com sucesso!');
+            alert('Cargos atualizados com sucesso!');
             closeUserRolesModal();
             loadUsers();
         } else {
-            alert('❌ Erro ao atualizar cargos: ' + (data.error || data.message));
+            alert('Erro ao atualizar cargos: ' + (data.error || data.message));
         }
     } catch (error) {
         console.error('Error saving roles:', error);
-        alert('❌ Erro ao salvar cargos');
+        alert('Erro ao salvar cargos');
     }
 }
 

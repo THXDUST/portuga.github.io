@@ -532,7 +532,7 @@ async function loadUsers() {
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <h3 style="color: #333; margin: 0 0 10px 0;">
-                                👤 ${user.full_name} 
+                                ${user.full_name} 
                                 ${statusBadge}
                                 ${hardcodedBadge}
                             </h3>
