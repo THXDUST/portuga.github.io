@@ -136,11 +136,11 @@
 
                 <!-- Pickup/Delivery Time -->
                 <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">Horário de Retirada/Entrega *</label>
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">⏰ Horário de Retirada/Entrega (opcional)</label>
                     <input type="time" id="pickup-time" 
                            style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
                     <small style="color: #666; display: block; margin-top: 5px;">
-                        Horário de funcionamento: 11:00 - 23:00
+                        Horário de funcionamento: 11:00 - 23:00. Se não informar, prepararemos o mais rápido possível.
                     </small>
                 </div>
 
@@ -221,6 +221,15 @@
                     if (label) {
                         label.style.opacity = '0.5';
                         label.title = 'Entrega não disponível para pedidos de mesa';
+                    }
+                }
+            } else {
+                // Show table number field if user is logged in and not in delivery mode
+                const tableNumberField = document.getElementById('table-number-field');
+                const deliveryCheckbox = document.getElementById('for-delivery');
+                if (tableNumberField && window.isUserLoggedIn && (!deliveryCheckbox || !deliveryCheckbox.checked)) {
+                    if (isUserLoggedIn()) {
+                        tableNumberField.style.display = 'block';
                     }
                 }
             }

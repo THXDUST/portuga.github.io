@@ -510,18 +510,16 @@ async function finalizeOrder() {
         }
     }
     
-    // Get pickup/delivery time
+    // Get pickup/delivery time (OPTIONAL)
     const pickupTime = document.getElementById('pickup-time')?.value || '';
-    if (!pickupTime) {
-        alert('Por favor, informe o horário de retirada/entrega.');
-        return;
-    }
     
-    // Validate pickup time (11:00 - 23:00)
-    const [hours, minutes] = pickupTime.split(':').map(Number);
-    if (hours < 11 || hours >= 23) {
-        alert('Horário fora do período de funcionamento (11:00 - 23:00).');
-        return;
+    // Validate pickup time IF provided (11:00 - 23:00)
+    if (pickupTime) {
+        const [hours, minutes] = pickupTime.split(':').map(Number);
+        if (hours < 11 || hours >= 23) {
+            alert('Horário fora do período de funcionamento (11:00 - 23:00).');
+            return;
+        }
     }
     
     // Validate delivery info if delivery is checked
@@ -602,19 +600,25 @@ async function finalizeOrder() {
     const total = subtotal + deliveryFee;
     message += `*Total: R$ ${total.toFixed(2)}*\n\n`;
     
-    // Add delivery address or pickup info
+    // Add delivery info or pickup info
     if (forDelivery) {
         message += '*📍 Endereço de Entrega:*\n';
         message += `${deliveryAddress}\n`;
         message += `Distância: ${calculatedDistance.toFixed(1)} km\n\n`;
     } else {
         message += '*📍 Tipo:*\n';
-        message += 'Retirada no local\n\n';
+        if (tableNumber) {
+            message += `Retirada no local - Mesa ${tableNumber}\n\n`;
+        } else {
+            message += 'Retirada no local\n\n';
+        }
     }
     
-    // Add pickup time
-    message += '*⏰ Horário de Retirada/Entrega:*\n';
-    message += `${pickupTime}\n\n`;
+    // Add pickup time (only if provided)
+    if (pickupTime) {
+        message += '*⏰ Horário de Retirada/Entrega:*\n';
+        message += `${pickupTime}\n\n`;
+    }
     
     // Add payment method (only for delivery)
     if (forDelivery) {
@@ -661,6 +665,7 @@ async function saveOrder(cart, total, deliveryInfo = {}) {
     try {
         // Prepare order data for API
         const orderData = {
+            user_id: deliveryInfo.userId || null,
             order_number: 'WEB' + Date.now(),
             order_type: deliveryInfo.forDelivery ? 'viagem' : 'local',
             table_number: deliveryInfo.tableNumber || null,
@@ -671,18 +676,20 @@ async function saveOrder(cart, total, deliveryInfo = {}) {
             delivery_address: deliveryInfo.deliveryAddress || null,
             delivery_distance: deliveryInfo.deliveryDistance || null,
             delivery_fee: deliveryInfo.deliveryFee || 0,
-            pickup_time: deliveryInfo.pickupTime ? new Date(deliveryInfo.pickupTime).toISOString() : null,
+            pickup_time: deliveryInfo.pickupTime || null,
             subtotal: total - (deliveryInfo.deliveryFee || 0),
             total: total,
             items: cart.map(item => ({
                 menu_item_id: null,
-                item_name: item.name,
-                item_price: item.price,
+                name: item.name,
+                price: item.price,
                 quantity: item.quantity,
                 subtotal: item.price * item.quantity
             })),
             notes: 'Pedido via website/WhatsApp'
         };
+        
+        console.log('📤 Sending order to API:', orderData);
         
         const response = await fetch('/api/orders.php?action=create', {
             method: 'POST',
@@ -695,13 +702,13 @@ async function saveOrder(cart, total, deliveryInfo = {}) {
         const data = await response.json();
         
         if (!data.success) {
-            console.error('Error saving order:', data.error);
+            console.error('❌ Error saving order:', data.error);
             // Even if API fails, still allow WhatsApp order (fallback)
         } else {
-            console.log('✅ Order saved to database:', data);
+            console.log('✅ Order saved to database successfully:', data);
         }
     } catch (error) {
-        console.error('Error saving order:', error);
+        console.error('❌ Error saving order:', error);
         // Even if API fails, still allow WhatsApp order (fallback)
     }
 }
