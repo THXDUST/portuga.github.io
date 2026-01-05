@@ -121,8 +121,16 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const usernameEl = document.getElementById('username');
+            const passwordEl = document.getElementById('password');
+            
+            if (!usernameEl || !passwordEl) {
+                console.error('Login form elements not found');
+                return;
+            }
+            
+            const username = usernameEl.value;
+            const password = passwordEl.value;
             
             if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
                 sessionStorage.setItem('adminLoggedIn', 'true');
