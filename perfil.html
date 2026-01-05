@@ -458,21 +458,23 @@
                 // Get profile info
                 const profileResponse = await fetch('/api/profile.php?action=info');
                 
+                // Read the response body once as text
+                const responseText = await profileResponse.text();
+                
                 // Check if response is OK
                 if (!profileResponse.ok) {
-                    // Try to get error message from response
+                    // Try to parse error message
                     let errorMessage = 'Failed to load profile';
                     try {
-                        const errorData = await profileResponse.json();
+                        const errorData = JSON.parse(responseText);
                         errorMessage = errorData.message || errorMessage;
                     } catch (e) {
-                        // If JSON parsing fails, try to get text
-                        const errorText = await profileResponse.text();
-                        console.error('Non-JSON response:', errorText);
-                        if (errorText.includes('<') && errorText.includes('>')) {
+                        // If JSON parsing fails, use the text response
+                        console.error('Non-JSON response:', responseText);
+                        if (responseText.includes('<') && responseText.includes('>')) {
                             errorMessage = 'Server returned HTML instead of JSON. Please check server configuration.';
                         } else {
-                            errorMessage = errorText || errorMessage;
+                            errorMessage = responseText || errorMessage;
                         }
                     }
                     throw new Error(errorMessage);
@@ -481,10 +483,8 @@
                 // Parse JSON response
                 let profileData;
                 try {
-                    profileData = await profileResponse.json();
+                    profileData = JSON.parse(responseText);
                 } catch (jsonError) {
-                    // If JSON parsing fails, get the text to see what was returned
-                    const responseText = await profileResponse.text();
                     console.error('Failed to parse JSON. Response text:', responseText);
                     throw new Error('Server returned invalid JSON. Response: ' + responseText.substring(0, 100));
                 }

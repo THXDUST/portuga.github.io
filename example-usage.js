@@ -5,7 +5,7 @@ const bot = new WhatsAppBot();
 // Escuta o evento 'ready' para enviar mensagem quando o bot estiver pronto
 bot.client.on('ready', async () => {
     // Criar mensagem de pedido de teste no formato usado pelo site
-    const testMessage = '*🍕 Novo Pedido - Restaurante Portuga*\n\n' +
+    const testMessage = '*Novo Pedido - Restaurante Portuga*\n\n' +
         '*Itens do Pedido:*\n' +
         '1. Bacalhau à Brás\n' +
         '   Quantidade: 1x\n' +
