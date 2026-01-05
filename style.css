@@ -771,7 +771,8 @@ nav ul li a:hover {
     
     nav ul.active,
     nav ul.show {
-        /* Allow scrolling with max viewport height minus header space */
+        /* Allow scrolling with max viewport height minus header space 
+           200px accounts for: header (~130px) + nav button (~50px) + padding/margins (~20px) */
         max-height: calc(100vh - 200px);
         overflow-y: auto;
         overflow-x: hidden;
