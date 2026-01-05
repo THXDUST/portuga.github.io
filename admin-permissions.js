@@ -247,7 +247,7 @@ async function loadRoles() {
                             <small style="color: #999;">Usuários com este cargo: ${role.user_count || 0}</small>
                         </div>
                         <div style="display: flex; gap: 5px;">
-                            <button class="btn btn-secondary" onclick="editRole(${role.id})">✏️ Editar</button>
+                            <button class="btn btn-secondary" onclick="editRole(${role.id})"> Editar</button>
                             <button class="btn" onclick="manageRolePermissions(${role.id})">🔐 Permissões</button>
                             <button class="btn btn-danger" onclick="deleteRole(${role.id})">🗑️</button>
                         </div>
@@ -542,10 +542,10 @@ async function loadUsers() {
                         </div>
                         <div style="display: flex; gap: 5px;">
                             ${!isHardcoded ? `
-                                <button class="btn btn-secondary" onclick="editUser(${user.id})">✏️ Editar</button>
+                                <button class="btn btn-secondary" onclick="editUser(${user.id})"> Editar</button>
                                 <button class="btn" onclick="manageUserRoles(${user.id})">Cargos</button>
                                 <button class="btn ${isActive ? 'btn-danger' : ''}" onclick="toggleUserStatus(${user.id}, ${isActive})">
-                                    ${isActive ? '🚫 Desativar' : '✅ Ativar'}
+                                    ${isActive ? ' Desativar' : ' Ativar'}
                                 </button>
                             ` : '<em style="color: #999;">Usuário do sistema</em>'}
                         </div>

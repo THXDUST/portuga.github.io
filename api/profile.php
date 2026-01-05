@@ -28,8 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Set custom error handler to return JSON
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    // Log error server-side
+    error_log("Profile API Error: $errstr in $errfile on line $errline");
+    
+    // Return generic error to client (don't expose internal details)
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Internal server error', 'error' => $errstr]);
+    echo json_encode(['success' => false, 'message' => 'Internal server error']);
     exit();
 });
 

@@ -304,12 +304,12 @@ if (!is_dir($databaseDir)) {
         
         <?php if (!empty($results['checks'])): ?>
         <div class="section">
-            <h2>✓ Verificações</h2>
+            <h2> Verificações</h2>
             <?php foreach ($results['checks'] as $check): ?>
                 <div class="result-item <?php echo $check['status']; ?>">
                     <span class="icon">
                         <?php 
-                        echo $check['status'] === 'success' ? '✓' : 
+                        echo $check['status'] === 'success' ? '' : 
                              ($check['status'] === 'error' ? '✗' : 
                              ($check['status'] === 'warning' ? '⚠' : 'ℹ'));
                         ?>
@@ -325,7 +325,7 @@ if (!is_dir($databaseDir)) {
             <h2>Correções Aplicadas</h2>
             <?php foreach ($results['fixes'] as $fix): ?>
                 <div class="result-item <?php echo $fix['status']; ?>">
-                    <span class="icon">✓</span>
+                    <span class="icon"></span>
                     <span><?php echo htmlspecialchars($fix['message']); ?></span>
                 </div>
             <?php endforeach; ?>
