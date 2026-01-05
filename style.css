@@ -755,31 +755,57 @@ nav ul li a:hover {
     }
     
     nav ul {
-        flex-direction: column;
-        align-items: center;
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.3s ease;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
         padding: 0;
         width: 100%;
         order: 1;
+        opacity: 0;
+        /* Grid layout for better space utilization on mobile */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px 12px;
+        align-items: start;
     }
     
     nav ul.active,
     nav ul.show {
-        max-height: 500px;
-        padding: 15px 0;
+        /* Allow scrolling with max viewport height minus header space 
+           200px accounts for: header (~130px) + nav button (~50px) + padding/margins (~20px) */
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 15px;
+        opacity: 1;
+        /* Smooth scrolling on mobile devices */
+        -webkit-overflow-scrolling: touch;
+        /* Ensure proper positioning */
+        position: relative;
+        background: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     nav ul li {
-        margin: 10px 0;
+        margin: 0;
         width: 100%;
         text-align: center;
+        list-style: none;
     }
     
     nav ul li a {
         display: block;
-        padding: 10px 20px;
+        padding: 12px 8px;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        transition: all 0.2s ease;
+    }
+    
+    nav ul li a:hover {
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .cart-item {
@@ -946,17 +972,32 @@ nav ul li a:hover {
 /* Responsive admin navigation */
 @media (max-width: 767px) {
     #admin-nav .nav-tab {
-        padding: 8px 10px;
-        font-size: 0.9rem;
-        margin: 0 1px;
+        padding: 10px 8px;
+        font-size: 0.85rem;
+        margin: 0;
+        border-radius: 6px;
+        /* Better visual for grid layout */
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    }
+    
+    #admin-nav .nav-tab:hover {
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    #admin-nav .nav-tab.active {
+        background: linear-gradient(135deg, #e8c13f 0%, #d4a734 100%);
+        color: white;
+        font-weight: bold;
     }
 }
 
 @media (max-width: 480px) {
     #admin-nav .nav-tab {
-        padding: 8px 6px;
-        font-size: 0.85rem;
-        margin: 5px 2px;
+        padding: 10px 6px;
+        font-size: 0.8rem;
+        margin: 0;
     }
 }
 
