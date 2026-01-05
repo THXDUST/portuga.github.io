@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Login Form -->
     <div id="login-section" class="login-container">
         <div class="login-box">
             <h2>Painel Administrativo</h2>
@@ -29,7 +28,6 @@
         </div>
     </div>
 
-    <!-- Admin Panel (hidden by default) -->
     <div id="admin-panel" style="display: none;">
         <header>
             <div class="container">
@@ -51,24 +49,22 @@
             </button>
             <ul id="admin-nav">
                 <li><a href="index.html">Voltar ao Site</a></li>
-                <li><a href="#" class="nav-tab active" data-tab="dashboard">📊 Dashboard</a></li>
-                <li><a href="#" class="nav-tab" data-tab="orders">📦 Pedidos (Kanban)</a></li>
-                <li><a href="#" class="nav-tab" data-tab="menu">🍕 Cardápio</a></li>
-                <li><a href="#" class="nav-tab" data-tab="reviews">⭐ Avaliações</a></li>
-                <li><a href="#" class="nav-tab" data-tab="notes">📝 Notas</a></li>
-                <li><a href="#" class="nav-tab" data-tab="reports">📈 Relatórios</a></li>
-                <li><a href="#" class="nav-tab" data-tab="resumes">👔 Currículos</a></li>
-                <li><a href="#" class="nav-tab" data-tab="ouvidoria">💬 Ouvidoria</a></li>
-                <li><a href="#" class="nav-tab" data-tab="roles">👥 Cargos</a></li>
-                <li><a href="#" class="nav-tab" data-tab="users">👤 Usuários</a></li>
-                <li><a href="#" class="nav-tab" data-tab="settings">⚙️ Configurações</a></li>
+                <li><a href="#" class="nav-tab active" data-tab="dashboard">Dashboard</a></li>
+                <li><a href="#" class="nav-tab" data-tab="orders">Pedidos</a></li>
+                <li><a href="#" class="nav-tab" data-tab="menu">Cardápio</a></li>
+                <li><a href="#" class="nav-tab" data-tab="reviews">Avaliações</a></li>
+                <li><a href="#" class="nav-tab" data-tab="notes">Notas</a></li>
+                <li><a href="#" class="nav-tab" data-tab="reports">Relatórios</a></li>
+                <li><a href="#" class="nav-tab" data-tab="resumes">Currículos</a></li>
+                <li><a href="#" class="nav-tab" data-tab="ouvidoria">Ouvidoria</a></li>
+                <li><a href="#" class="nav-tab" data-tab="roles">Cargos</a></li>
+                <li><a href="#" class="nav-tab" data-tab="users">Usuários</a></li>
+                <li><a href="#" class="nav-tab" data-tab="settings">Configurações</a></li>
             </ul>
         </nav>
 
         <main class="admin-container">
-            <!-- Dashboard Tab -->
             <div id="tab-dashboard" class="admin-tab active">
-            <!-- Statistics -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="stat-total">0</div>
@@ -88,7 +84,6 @@
                 </div>
             </div>
 
-            <!-- Revenue Stats -->
             <div class="menu-section">
                 <h2>Estatísticas Financeiras</h2>
                 <div class="stats-grid">
@@ -103,7 +98,6 @@
                 </div>
             </div>
 
-            <!-- Most Ordered Items -->
             <div class="menu-section">
                 <h2>Pratos Mais Pedidos</h2>
                 <div id="popular-items" style="color: #666;">
@@ -111,7 +105,6 @@
                 </div>
             </div>
 
-            <!-- Orders List -->
             <div class="order-list">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Lista de Pedidos</h2>
                 
@@ -126,7 +119,6 @@
                 </div>
 
                 <div id="orders-container">
-                    <!-- Orders will be dynamically inserted here -->
                 </div>
 
                 <div id="no-orders" class="empty-state" style="display: none;">
@@ -136,7 +128,6 @@
                 </div>
             </div>
 
-            <!-- Clear Data Section -->
             <div class="menu-section" style="margin-top: 30px;">
                 <h2 style="color: #dc3545;">Zona de Perigo</h2>
                 <p style="color: #666; margin-bottom: 15px;">
@@ -145,13 +136,10 @@
                 <button class="btn btn-danger" onclick="clearAllOrders()">Limpar Todos os Pedidos</button>
             </div>
             </div>
-            <!-- End Dashboard Tab -->
-
-            <!-- Orders Kanban Tab -->
+            
             <div id="tab-orders" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Pedidos - Kanban</h2>
                 
-                <!-- Filters -->
                 <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
                     <label style="color: #666;">Filtros:</label>
                     <select id="kanban-type-filter" class="form-group" onchange="loadKanbanBoard()">
@@ -166,49 +154,44 @@
                            onchange="loadKanbanBoard()">
                     
                     <button class="btn btn-secondary" onclick="clearKanbanFilters()" style="padding: 8px 15px;">
-                        🔄 Limpar Filtros
+                        Limpar Filtros
                     </button>
                     
                     <button class="btn" onclick="createTestOrder()" style="padding: 8px 15px; background: #17a2b8; border-color: #17a2b8;">
-                        🧪 Criar Pedido de Teste
+                        Criar Pedido de Teste
                     </button>
                 </div>
                 
                 <div class="kanban-board">
                     <div class="kanban-column" data-status="recebido">
                         <div class="kanban-header">
-                            <h3>📥 Recebido</h3>
+                            <h3>Recebido</h3>
                             <span class="kanban-count" id="count-recebido">0</span>
                         </div>
                         <div class="kanban-cards" id="kanban-recebido">
-                            <!-- Cards will be inserted here -->
                         </div>
                     </div>
                     
                     <div class="kanban-column" data-status="em_andamento">
                         <div class="kanban-header">
-                            <h3>👨‍🍳 Em Andamento</h3>
+                            <h3>Em Andamento</h3>
                             <span class="kanban-count" id="count-em_andamento">0</span>
                         </div>
-                        <div class="kanban-cards" id="kanban-em_andamento">
-                            <!-- Cards will be inserted here -->
+                            <div class="kanban-cards" id="kanban-em_andamento">
                         </div>
                     </div>
                     
                     <div class="kanban-column" data-status="finalizado">
                         <div class="kanban-header">
-                            <h3>✅ Finalizado</h3>
+                            <h3>Finalizado</h3>
                             <span class="kanban-count" id="count-finalizado">0</span>
                         </div>
                         <div class="kanban-cards" id="kanban-finalizado">
-                            <!-- Cards will be inserted here -->
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- End Orders Kanban Tab -->
-
-            <!-- Menu Management Tab -->
+            
             <div id="tab-menu" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Cardápio</h2>
                 
@@ -221,9 +204,6 @@
                     <p style="color: #666;">Carregando cardápio...</p>
                 </div>
             </div>
-            <!-- End Menu Tab -->
-
-            <!-- Notes Tab -->
             <div id="tab-notes" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Notas/Comunicados</h2>
                 
@@ -235,41 +215,35 @@
                     <p style="color: #666;">Carregando notas...</p>
                 </div>
             </div>
-            <!-- End Notes Tab -->
-
-            <!-- Reviews Tab -->
+            
             <div id="tab-reviews" class="admin-tab" style="display: none;">
-                <h2 style="color: #e8c13f; margin-bottom: 25px;">⭐ Gestão de Avaliações</h2>
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Avaliações</h2>
                 
-                <!-- Statistics Cards -->
                 <div class="stats-grid" style="margin-bottom: 30px;">
                     <div class="stat-card">
                         <div class="stat-value" id="review-average">0.0</div>
-                        <div class="stat-label">⭐ Média Geral</div>
+                        <div class="stat-label">Média Geral</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="review-total">0</div>
-                        <div class="stat-label">📊 Total de Avaliações</div>
+                        <div class="stat-label">Total de Avaliações</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="review-pending">0</div>
-                        <div class="stat-label">⏳ Pendentes</div>
+                        <div class="stat-label">Pendentes</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="review-approved">0</div>
-                        <div class="stat-label">✅ Aprovadas</div>
+                        <div class="stat-label">Aprovadas</div>
                     </div>
                 </div>
 
-                <!-- Rating Distribution Chart -->
                 <div class="menu-section" style="margin-bottom: 30px;">
                     <h3 style="color: #333; margin-bottom: 15px;">Distribuição por Estrelas</h3>
                     <div id="rating-distribution" style="display: flex; flex-direction: column; gap: 10px;">
-                        <!-- Will be populated by JS -->
                     </div>
                 </div>
 
-                <!-- Filters -->
                 <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">
                     <label style="color: #666;">Filtrar por status:</label>
                     <select id="review-status-filter" class="form-group" style="display: inline-block; width: auto;" onchange="loadReviews()">
@@ -281,14 +255,11 @@
                     </select>
                 </div>
 
-                <!-- Reviews List -->
                 <div id="reviews-list">
                     <p style="color: #666;">Carregando avaliações...</p>
                 </div>
             </div>
-            <!-- End Reviews Tab -->
-
-            <!-- Schedule Tab -->
+            
             <div id="tab-schedule" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">📅 Gestão de Horários</h2>
                 
@@ -296,14 +267,11 @@
                     <button class="btn" onclick="showAddScheduleModal()">➕ Adicionar Horário</button>
                 </div>
 
-                <!-- Schedule List -->
                 <div id="schedule-list">
                     <p style="color: #666;">Carregando horários...</p>
                 </div>
             </div>
-            <!-- End Schedule Tab -->
-
-            <!-- Reports Tab -->
+            
             <div id="tab-reports" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Relatórios</h2>
                 
@@ -326,7 +294,7 @@
                             <input type="date" id="report-date-to" class="form-group">
                         </div>
                         <div style="display: flex; align-items: flex-end;">
-                            <button class="btn" onclick="generateReport()">🔍 Gerar Relatório</button>
+                            <button class="btn" onclick="generateReport()">Gerar Relatório</button>
                         </div>
                     </div>
                 </div>
@@ -337,9 +305,7 @@
                     </p>
                 </div>
             </div>
-            <!-- End Reports Tab -->
-
-            <!-- Resumes Tab -->
+            
             <div id="tab-resumes" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Currículos Recebidos</h2>
                 
@@ -357,9 +323,7 @@
                     <p style="color: #666;">Carregando currículos...</p>
                 </div>
             </div>
-            <!-- End Resumes Tab -->
-
-            <!-- Ouvidoria Tab -->
+            
             <div id="tab-ouvidoria" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Mensagens da Ouvidoria</h2>
                 
@@ -377,9 +341,7 @@
                     <p style="color: #666;">Carregando mensagens...</p>
                 </div>
             </div>
-            <!-- End Ouvidoria Tab -->
-
-            <!-- Roles Tab -->
+            
             <div id="tab-roles" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Cargos/Roles</h2>
                 
@@ -391,9 +353,7 @@
                     <p style="color: #666;">Carregando cargos...</p>
                 </div>
             </div>
-            <!-- End Roles Tab -->
-
-            <!-- Users Tab -->
+            
             <div id="tab-users" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Usuários</h2>
                 
@@ -416,8 +376,7 @@
                 <div style="margin-bottom: 20px; padding: 15px; background: #d1ecf1; border-radius: 8px; border-left: 4px solid #0c5460;">
                     <p style="color: #0c5460; margin: 0;">
                         ℹ️ <strong>Como usar:</strong> Use a pesquisa acima para encontrar usuários. 
-                        Clique em "Editar" ou "Cargos" para modificar as permissões de um usuário existente. 
-                        Novos usuários são criados quando fazem registro no site.
+                        Clique em "Editar" ou "Cargos" para modificar as permissões de um usuário.
                     </p>
                 </div>
                 
@@ -425,9 +384,7 @@
                     <p style="color: #666;">Carregando usuários...</p>
                 </div>
             </div>
-            <!-- End Users Tab -->
-
-            <!-- Settings Tab -->
+            
             <div id="tab-settings" class="admin-tab" style="display: none;">
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Configurações do Restaurante</h2>
                 
@@ -446,36 +403,30 @@
                     <h3>Horários de Funcionamento</h3>
                     <p style="color: #666; margin-bottom: 20px;">Configure os períodos de funcionamento. Você pode adicionar múltiplos períodos para cada serviço.</p>
                     
-                    <!-- Kitchen Hours -->
                     <div style="margin-bottom: 30px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <label style="font-weight: 600; color: #333;">🍳 Cozinha:</label>
+                            <label style="font-weight: 600; color: #333;">Cozinha:</label>
                             <button type="button" class="btn" onclick="addTimePeriod('kitchen')" style="padding: 6px 12px; font-size: 0.9rem;">➕ Adicionar Período</button>
                         </div>
                         <div id="kitchen-periods" class="time-periods-container">
-                            <!-- Time periods will be added here -->
                         </div>
                     </div>
                     
-                    <!-- Pizza Hours -->
                     <div style="margin-bottom: 30px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <label style="font-weight: 600; color: #333;">🍕 Pizzaria:</label>
+                            <label style="font-weight: 600; color: #333;">Pizzaria:</label>
                             <button type="button" class="btn" onclick="addTimePeriod('pizza')" style="padding: 6px 12px; font-size: 0.9rem;">➕ Adicionar Período</button>
                         </div>
                         <div id="pizza-periods" class="time-periods-container">
-                            <!-- Time periods will be added here -->
                         </div>
                     </div>
                     
-                    <!-- Delivery Hours -->
                     <div style="margin-bottom: 30px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <label style="font-weight: 600; color: #333;">🚚 Entregas:</label>
+                            <label style="font-weight: 600; color: #333;">Entregas:</label>
                             <button type="button" class="btn" onclick="addTimePeriod('delivery')" style="padding: 6px 12px; font-size: 0.9rem;">➕ Adicionar Período</button>
                         </div>
                         <div id="delivery-periods" class="time-periods-container">
-                            <!-- Time periods will be added here -->
                         </div>
                     </div>
                 </div>
@@ -491,7 +442,7 @@
                             </small>
                         </div>
                         <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #0066cc;">
-                            <strong style="color: #0066cc;">ℹ️ Taxas de Entrega (Fixas):</strong>
+                            <strong style="color: #0066cc;">ℹ️ Taxas de Entrega:</strong>
                             <ul style="margin: 10px 0 0 20px; color: #555;">
                                 <li>Até 5 km: R$ 5,00</li>
                                 <li>Até 7 km: R$ 7,00</li>
@@ -514,12 +465,12 @@
                     </div>
                     
                     <div id="maintenance-options" style="display: none; margin-top: 20px; padding: 20px; background: #fff3cd; border-radius: 8px;">
-                        <h4 style="color: #856404; margin-bottom: 15px;">⚠️ Configurar Páginas em Manutenção</h4>
+                        <h4 style="color: #856404; margin-bottom: 15px;">Configurar Páginas em Manutenção</h4>
                         
                         <div style="margin-bottom: 15px;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                                 <input type="checkbox" id="restrict-all" onchange="toggleRestrictAll()">
-                                <strong>Restringir TODAS as páginas (Modo Global)</strong>
+                                <strong>Restringir TODAS as páginas</strong>
                             </label>
                         </div>
                         
@@ -528,35 +479,35 @@
                             <div style="display: grid; gap: 8px;">
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="index.html">
-                                    <span>🏠 index.html - Página Inicial</span>
+                                    <span>Página Inicial</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="menu.html">
-                                    <span>🍕 menu.html - Cardápio</span>
+                                    <span>Cardápio</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="carrinho.html">
-                                    <span>🛒 carrinho.html - Carrinho de Compras</span>
+                                    <span>Carrinho de Compras</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="pedidos.html">
-                                    <span>📦 pedidos.html - Acompanhar Pedidos</span>
+                                    <span>Acompanhar Pedidos</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="avaliar.html">
-                                    <span>⭐ avaliar.html - Avaliar Restaurante</span>
+                                    <span>Avaliar Restaurante</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="ouvidoria.html">
-                                    <span>💬 ouvidoria.html - Ouvidoria</span>
+                                    <span>Ouvidoria</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="enviar-curriculo.html">
-                                    <span>👔 enviar-curriculo.html - Trabalhe Conosco</span>
+                                    <span>Trabalhe Conosco</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" class="maintenance-page" value="perfil.html">
-                                    <span>👤 perfil.html - Perfil do Usuário</span>
+                                    <span>Perfil do Usuário</span>
                                 </label>
                             </div>
                         </div>
@@ -576,10 +527,9 @@
                 </div>
                 
                 <div style="margin-top: 30px;">
-                    <button class="btn" onclick="saveSettings()">💾 Salvar Configurações</button>
+                    <button class="btn" onclick="saveSettings()">Salvar Configurações</button>
                 </div>
             </div>
-            <!-- End Settings Tab -->
         </main>
 
         <footer>
@@ -590,7 +540,6 @@
         </footer>
     </div>
 
-    <!-- Note Modal -->
     <div id="note-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeNoteModal()">&times;</span>
@@ -617,14 +566,13 @@
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="submit" class="btn" style="flex: 1;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="closeNoteModal()" style="flex: 1;">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Menu Group Modal -->
     <div id="group-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeGroupModal()">&times;</span>
@@ -651,14 +599,13 @@
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="submit" class="btn" style="flex: 1;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="closeGroupModal()" style="flex: 1;">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Menu Item Modal -->
     <div id="item-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeItemModal()">&times;</span>
@@ -697,26 +644,25 @@
                 <div class="form-group">
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="checkbox" id="item-available" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                        <span>✅ Disponível para Venda</span>
+                        <span>Disponível para Venda</span>
                     </label>
                 </div>
                 
                 <div class="form-group">
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="checkbox" id="item-delivery-enabled" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                        <span>🚚 Disponível para Entrega</span>
+                        <span>Disponível para Entrega</span>
                     </label>
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="submit" class="btn" style="flex: 1;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="closeItemModal()" style="flex: 1;">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Permission Modal -->
     <div id="permission-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closePermissionModal()">&times;</span>
@@ -746,14 +692,13 @@
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="submit" class="btn" style="flex: 1;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="closePermissionModal()" style="flex: 1;">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Role Modal -->
     <div id="role-modal" class="modal">
         <div class="modal-content" style="max-width: 700px;">
             <span class="modal-close" onclick="closeRoleModal()">&times;</span>
@@ -780,14 +725,13 @@
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="submit" class="btn" style="flex: 1;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="closeRoleModal()" style="flex: 1;">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- User Modal -->
     <div id="user-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeUserModal()">&times;</span>
@@ -822,12 +766,12 @@
                 <div class="form-group">
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="checkbox" id="user-active" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                        <span>✅ Usuário Ativo</span>
+                        <span>Usuário Ativo</span>
                     </label>
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn" style="flex: 1;">💾 Salvar</button>
+                    <button type="submit" class="btn" style="flex: 1;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="closeUserModal()" style="flex: 1;">Cancelar</button>
                 </div>
             </form>
