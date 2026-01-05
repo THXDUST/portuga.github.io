@@ -1505,3 +1505,131 @@ nav ul li a:hover {
 .time-period-row button {
     margin-left: auto;
 }
+
+/* Permissions Grid Styles (Discord-like) */
+.permissions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.permission-category {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.permission-category h3 {
+    color: #495057;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: background 0.2s;
+}
+
+.permission-item:hover {
+    background: #e9ecef;
+}
+
+.permission-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    cursor: pointer;
+    accent-color: #e8c13f;
+}
+
+.permission-item label {
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.permission-name {
+    font-weight: 500;
+    color: #212529;
+}
+
+.permission-description {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Roles List Styles */
+.roles-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.role-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.role-checkbox-item:hover {
+    background: #e9ecef;
+}
+
+.role-checkbox-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    cursor: pointer;
+    accent-color: #e8c13f;
+}
+
+.role-checkbox-item label {
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.role-checkbox-name {
+    font-weight: 500;
+    color: #212529;
+}
+
+.role-checkbox-description {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Close button styling */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 20px;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
