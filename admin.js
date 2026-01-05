@@ -105,9 +105,11 @@ function loadTabContent(tabName) {
     }
 }
 
-// Login function
+// Login function - FIXED VERSION
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔵 [ADMIN] DOMContentLoaded fired');
+    console.log('🔵 [ADMIN] DOMContentLoaded fired at:', new Date().toISOString());
+    console.log('🔵 [ADMIN] Current URL:', window.location.href);
+    console.log('🔵 [ADMIN] Document readyState:', document.readyState);
     
     const loginForm = document.getElementById('login-form');
     const loginSection = document.getElementById('login-section');
@@ -115,45 +117,66 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('🔍 [ADMIN] Elements check:', {
         loginForm: loginForm ? '✅ Found' : '❌ NULL',
+        loginFormId: loginForm?.id,
         loginSection: loginSection ? '✅ Found' : '❌ NULL',
-        adminPanel: adminPanel ? '✅ Found' : '❌ NULL'
+        adminPanel: adminPanel ? '✅ Found' : '❌ NULL',
+        allForms: document.querySelectorAll('form').length,
+        allInputs: document.querySelectorAll('input').length
     });
     
     // Check if already logged in
     if (checkAuth()) {
         console.log('✅ [ADMIN] User already logged in, showing panel');
         showAdminPanel();
-        return; // IMPORTANTE: adicionar return aqui
+        return;
     }
     
-    // Handle login
+    // Handle login - USE CAPTURE PHASE TO OVERRIDE OTHER LISTENERS
     if (loginForm) {
-        console.log('✅ [ADMIN] Adding submit listener to login form');
+        console.log('✅ [ADMIN] Login form found, attaching listener');
         
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            console.log('🔵 [ADMIN] Login form submitted');
+        // Clone form to remove ALL existing event listeners
+        const newForm = loginForm.cloneNode(true);
+        loginForm.parentNode.replaceChild(newForm, loginForm);
+        
+        // Attach listener to cloned form using CAPTURE phase (priority execution)
+        newForm.addEventListener('submit', function(e) {
+            console.log('🔵 [ADMIN] ===== SUBMIT EVENT FIRED =====');
+            console.log('🔵 [ADMIN] Event type:', e.type);
+            console.log('🔵 [ADMIN] Event target:', e.target);
+            console.log('🔵 [ADMIN] Default prevented:', e.defaultPrevented);
             
-            // Log de TODOS os elementos no documento no momento do submit
-            console.log('📋 [ADMIN] All form inputs at submit time:', {
+            // STOP EVERYTHING - prevent page reload
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            console.log('✅ [ADMIN] Event blocked successfully');
+            
+            // Log all form inputs at submit time
+            console.log('📋 [ADMIN] All form inputs:', {
                 allInputs: document.querySelectorAll('input').length,
-                inputsWithId: Array.from(document.querySelectorAll('input[id]')).map(el => el.id)
+                inputsWithId: Array.from(document.querySelectorAll('input[id]')).map(el => ({
+                    id: el.id,
+                    type: el.type,
+                    value: el.value ? '***' : 'empty'
+                }))
             });
             
             const usernameEl = document.getElementById('username');
             const passwordEl = document.getElementById('password');
             
             console.log('🔍 [ADMIN] Login field elements:', {
-                usernameEl: usernameEl ? 'Found with value: ' + usernameEl.value : '❌ NULL',
-                passwordEl: passwordEl ? 'Found with length: ' + passwordEl.value.length : '❌ NULL',
-                usernameElType: usernameEl ? usernameEl.type : 'N/A',
-                passwordElType: passwordEl ? passwordEl.type : 'N/A'
+                usernameEl: usernameEl ? `✅ Found (type: ${usernameEl.type})` : '❌ NULL',
+                usernameValue: usernameEl?.value || 'EMPTY',
+                passwordEl: passwordEl ? `✅ Found (type: ${passwordEl.type})` : '❌ NULL',
+                passwordLength: passwordEl?.value?.length || 0
             });
             
             if (!usernameEl || !passwordEl) {
                 console.error('❌ [ADMIN] Login form elements not found!');
                 alert('ERRO: Campos de login não encontrados. Verifique o console (F12).');
-                return;
+                return false;
             }
             
             const username = usernameEl.value;
@@ -163,20 +186,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 username: username,
                 passwordLength: password.length,
                 expectedUsername: ADMIN_CREDENTIALS.username,
-                expectedPasswordLength: ADMIN_CREDENTIALS.password.length
+                expectedPasswordLength: ADMIN_CREDENTIALS.password.length,
+                match: username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password
             });
             
             if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                console.log('✅ [ADMIN] Login successful!');
+                console.log('✅ [ADMIN] Credentials match! Login successful!');
                 sessionStorage.setItem('adminLoggedIn', 'true');
                 showAdminPanel();
             } else {
                 console.error('❌ [ADMIN] Login failed - incorrect credentials');
                 alert('Usuário ou senha incorretos!');
             }
-        });
+            
+            return false; // Extra safety
+        }, true); // USE CAPTURE PHASE (true) - executes before bubble phase
         
-        console.log('✅ [ADMIN] Login form listener attached successfully');
+        console.log('✅ [ADMIN] Login form listener attached successfully (capture phase)');
     } else {
         console.error('❌ [ADMIN] Login form NOT FOUND - cannot attach listener');
     }
