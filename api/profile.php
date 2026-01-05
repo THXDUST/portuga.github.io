@@ -444,7 +444,7 @@ switch ($path) {
             $stmt = $pdo->prepare("
                 INSERT INTO user_privacy_settings (user_id) 
                 VALUES (?)
-                ON DUPLICATE KEY UPDATE user_id = user_id
+                ON CONFLICT (user_id) DO NOTHING
             ");
             $stmt->execute([$userId]);
             

@@ -138,8 +138,9 @@ function handlePost($conn, $action) {
             validateRequired($data, ['role_id', 'permission_id']);
             
             $stmt = $conn->prepare("
-                INSERT IGNORE INTO role_permissions (role_id, permission_id)
+                INSERT INTO role_permissions (role_id, permission_id)
                 VALUES (?, ?)
+                ON CONFLICT (role_id, permission_id) DO NOTHING
             ");
             
             if ($stmt->execute([$data['role_id'], $data['permission_id']])) {

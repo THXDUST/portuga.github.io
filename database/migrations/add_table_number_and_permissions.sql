@@ -3,11 +3,11 @@
 
 -- Add table_number column to orders table
 ALTER TABLE orders 
-ADD COLUMN table_number INT NULL COMMENT 'Table number for in-restaurant orders' AFTER order_number,
-ADD INDEX idx_table (table_number);
+ADD COLUMN IF NOT EXISTS table_number INT NULL,
+ADD INDEX IF NOT EXISTS idx_table (table_number);
 
--- Add missing permissions (run with IGNORE to skip if they already exist)
-INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
+-- Add missing permissions (use ON CONFLICT for PostgreSQL)
+INSERT INTO permissions (name, description, resource, action) VALUES
 ('admin_panel_access', 'Acesso ao painel administrativo', 'admin', 'access'),
 ('permissions_management', 'Gerenciar permissões', 'permissions', 'manage'),
 ('roles_management', 'Gerenciar cargos/roles', 'roles', 'manage'),
@@ -17,14 +17,16 @@ INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
 ('resumes_access', 'Acesso aos currículos', 'resumes', 'access'),
 ('ouvidoria_access', 'Acesso à ouvidoria', 'ouvidoria', 'access'),
 ('orders_status', 'Mudança de estado dos pedidos', 'orders', 'status'),
-('reports_access', 'Acesso aos relatórios', 'reports', 'access');
+('reports_access', 'Acesso aos relatórios', 'reports', 'access')
+ON CONFLICT (name) DO NOTHING;
 
 -- Assign all permissions to Admin role (role_id = 1)
-INSERT IGNORE INTO role_permissions (role_id, permission_id)
-SELECT 1, id FROM permissions;
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 1, id FROM permissions
+ON CONFLICT (role_id, permission_id) DO NOTHING;
 
 -- Assign appropriate permissions to Atendente role (role_id = 3)
-INSERT IGNORE INTO role_permissions (role_id, permission_id)
+INSERT INTO role_permissions (role_id, permission_id)
 SELECT 3, id FROM permissions 
 WHERE name IN (
     'admin_panel_access',
@@ -33,4 +35,5 @@ WHERE name IN (
     'order_update',
     'orders_status',
     'menu_view'
-);
+)
+ON CONFLICT (role_id, permission_id) DO NOTHING;

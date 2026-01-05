@@ -145,10 +145,11 @@ function handleUpdate($conn, $action) {
             $stmt = $conn->prepare("
                 INSERT INTO restaurant_settings (setting_key, setting_value, setting_type, description, updated_by)
                 VALUES (?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                    setting_value = VALUES(setting_value),
-                    setting_type = VALUES(setting_type),
-                    updated_by = VALUES(updated_by)
+                ON CONFLICT (setting_key) 
+                DO UPDATE SET 
+                    setting_value = EXCLUDED.setting_value,
+                    setting_type = EXCLUDED.setting_type,
+                    updated_by = EXCLUDED.updated_by
             ");
             $updatedBy = $_SESSION['user_id'] ?? null;
             
@@ -174,9 +175,10 @@ function handleUpdate($conn, $action) {
                 $stmt = $conn->prepare("
                     INSERT INTO restaurant_settings (setting_key, setting_value, setting_type, updated_by)
                     VALUES (?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE 
-                        setting_value = VALUES(setting_value),
-                        updated_by = VALUES(updated_by)
+                    ON CONFLICT (setting_key) 
+                    DO UPDATE SET 
+                        setting_value = EXCLUDED.setting_value,
+                        updated_by = EXCLUDED.updated_by
                 ");
                 $updatedBy = $_SESSION['user_id'] ?? null;
                 

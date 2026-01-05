@@ -131,33 +131,37 @@ ALTER TABLE maintenance_mode
 -- ============================================
 
 -- Insert new permissions for reviews system
-INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
+INSERT INTO permissions (name, description, resource, action) VALUES
 ('reviews_view', 'Visualizar avaliações', 'reviews', 'read'),
 ('reviews_manage', 'Gerenciar avaliações (aprovar/rejeitar)', 'reviews', 'update'),
 ('reviews_access', 'Acesso ao sistema de avaliações', 'reviews', 'access'),
-('reviews_delete', 'Deletar avaliações', 'reviews', 'delete');
+('reviews_delete', 'Deletar avaliações', 'reviews', 'delete')
+ON CONFLICT (name) DO NOTHING;
 
 -- Insert new permissions for schedule system
-INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
+INSERT INTO permissions (name, description, resource, action) VALUES
 ('schedule_view', 'Visualizar horários', 'schedule', 'read'),
 ('schedule_manage', 'Gerenciar horários de funcionários', 'schedule', 'update'),
 ('schedule_access', 'Acesso ao sistema de horários', 'schedule', 'access'),
 ('schedule_view_own', 'Visualizar próprio horário', 'schedule', 'read_own'),
-('schedule_view_all', 'Visualizar horários de todos', 'schedule', 'read_all');
+('schedule_view_all', 'Visualizar horários de todos', 'schedule', 'read_all')
+ON CONFLICT (name) DO NOTHING;
 
 -- Insert new permissions for profile system
-INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
+INSERT INTO permissions (name, description, resource, action) VALUES
 ('profile_view_all', 'Ver perfis de todos os usuários', 'profile', 'read'),
 ('profile_edit_own', 'Editar próprio perfil', 'profile', 'update_own'),
-('profile_edit_all', 'Editar perfis de todos', 'profile', 'update_all');
+('profile_edit_all', 'Editar perfis de todos', 'profile', 'update_all')
+ON CONFLICT (name) DO NOTHING;
 
 -- Insert new permissions for notes system
-INSERT IGNORE INTO permissions (name, description, resource, action) VALUES
+INSERT INTO permissions (name, description, resource, action) VALUES
 ('notes_view', 'Visualizar notas/avisos', 'notes', 'read'),
 ('notes_create', 'Criar notas/avisos', 'notes', 'create'),
 ('notes_update', 'Atualizar notas/avisos', 'notes', 'update'),
 ('notes_delete', 'Deletar notas/avisos', 'notes', 'delete'),
-('notes_access', 'Acesso ao gerenciamento de notas', 'notes', 'access');
+('notes_access', 'Acesso ao gerenciamento de notas', 'notes', 'access')
+ON CONFLICT (name) DO NOTHING;
 
 -- ============================================
 -- DISPLAY RESULTS

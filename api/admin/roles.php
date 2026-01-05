@@ -153,8 +153,9 @@ function handlePost($conn, $action) {
             validateRequired($data, ['user_id', 'role_id']);
             
             $stmt = $conn->prepare("
-                INSERT IGNORE INTO user_roles (user_id, role_id, assigned_by)
+                INSERT INTO user_roles (user_id, role_id, assigned_by)
                 VALUES (?, ?, ?)
+                ON CONFLICT (user_id, role_id) DO NOTHING
             ");
             $assignedBy = $_SESSION['user_id'] ?? null;
             
