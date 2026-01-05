@@ -66,7 +66,7 @@ function handleGet($conn, $action) {
             $groupId = $_GET['group_id'] ?? null;
             
             $sql = "
-                SELECT i.id, i.name, i.description, i.price, i.image_url,
+                SELECT i.id, i.group_id, i.name, i.description, i.price, i.image_url,
                        i.ingredients, i.is_available, i.display_order, i.created_at,
                        g.name as group_name
                 FROM menu_items i
