@@ -117,9 +117,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Handle login
+    console.log(loginForm)
     if (loginForm) {
+        console.log("ading listener");
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log("clicked");
             
             const usernameEl = document.getElementById('username');
             const passwordEl = document.getElementById('password');
