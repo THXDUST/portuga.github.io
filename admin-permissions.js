@@ -466,8 +466,6 @@ async function deleteRole(roleId) {
 // USERS MANAGEMENT
 // ============================================
 
-let userSearchTimeout;
-
 /**
  * Load users list
  */

@@ -64,6 +64,46 @@ function checkPermission($conn, $userId, $resource, $action) {
 }
 
 /**
+ * Check if user has a specific permission by name
+ */
+function hasPermission($conn, $userId, $permissionName) {
+    // Check if user has ADMINISTRATOR permission (grants all access)
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as count
+        FROM user_roles ur
+        INNER JOIN role_permissions rp ON ur.role_id = rp.role_id
+        INNER JOIN permissions p ON rp.permission_id = p.id
+        WHERE ur.user_id = ? AND p.name = 'ADMINISTRATOR'
+    ");
+    $stmt->execute([$userId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($result['count'] > 0) {
+        return true;
+    }
+    
+    // Check for specific permission
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as count
+        FROM user_roles ur
+        INNER JOIN role_permissions rp ON ur.role_id = rp.role_id
+        INNER JOIN permissions p ON rp.permission_id = p.id
+        WHERE ur.user_id = ? AND p.name = ?
+    ");
+    $stmt->execute([$userId, $permissionName]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['count'] > 0;
+}
+
+/**
+ * Require permission - sends error if user doesn't have it
+ */
+function requirePermission($conn, $userId, $permissionName) {
+    if (!hasPermission($conn, $userId, $permissionName)) {
+        sendError('Permission denied: ' . $permissionName, 403);
+    }
+}
+
+/**
  * Log admin action
  */
 function logAdminAction($conn, $userId, $action, $resourceType, $resourceId = null, $details = null) {

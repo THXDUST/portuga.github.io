@@ -778,6 +778,40 @@
         </div>
     </div>
 
+    <!-- Role Permissions Modal -->
+    <div id="rolePermissionsModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeRolePermissionsModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;">Gerenciar Permissões - <span id="rolePermissionsName"></span></h2>
+            
+            <div id="permissionsGrid" class="permissions-grid">
+                <!-- Permissions will be loaded here -->
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeRolePermissionsModal()">Cancelar</button>
+                <button class="btn" id="saveRolePermissions">Salvar Permissões</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Roles Modal -->
+    <div id="userRolesModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close" onclick="closeUserRolesModal()">&times;</span>
+            <h2 style="color: #e8c13f; margin-bottom: 20px;">Gerenciar Cargos - <span id="userRolesName"></span></h2>
+            
+            <div id="rolesCheckboxes" class="roles-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Roles checkboxes will be loaded here -->
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeUserRolesModal()">Cancelar</button>
+                <button class="btn" id="saveUserRoles">Salvar Cargos</button>
+            </div>
+        </div>
+    </div>
+
     <script src="scripts.js"></script>
     <script src="auth.js"></script>
     <script src="scripts/auth-check.js"></script>

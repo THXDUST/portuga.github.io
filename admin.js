@@ -171,7 +171,7 @@ async function updateStatistics() {
     const preparingOrders = orders.filter(o => o.status === 'em_andamento' || o.status === 'preparo').length;
     const completedOrders = orders.filter(o => o.status === 'finalizado' || o.status === 'concluido').length;
     
-    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     
     // Update DOM
@@ -179,8 +179,8 @@ async function updateStatistics() {
     document.getElementById('stat-pending').textContent = pendingOrders;
     document.getElementById('stat-preparing').textContent = preparingOrders;
     document.getElementById('stat-completed').textContent = completedOrders;
-    document.getElementById('stat-revenue').textContent = `R$ ${totalRevenue.toFixed(2)}`;
-    document.getElementById('stat-avg-order').textContent = `R$ ${avgOrderValue.toFixed(2)}`;
+    document.getElementById('stat-revenue').textContent = `R$ ${Number(totalRevenue).toFixed(2)}`;
+    document.getElementById('stat-avg-order').textContent = `R$ ${Number(avgOrderValue).toFixed(2)}`;
 }
 
 // Calculate most popular items
@@ -276,11 +276,11 @@ async function renderOrders() {
                 
                 <div class="order-details">
                     <p><strong>Data:</strong> ${formattedDate}</p>
-                    <p><strong>Total:</strong> R$ ${order.total.toFixed(2)}</p>
+                    <p><strong>Total:</strong> R$ ${Number(order.total).toFixed(2)}</p>
                     <p><strong>Itens:</strong></p>
                     <ul style="margin-left: 20px; margin-top: 5px;">
                         ${order.items.map(item => `
-                            <li>${item.quantity}x ${item.name} - R$ ${(item.price * item.quantity).toFixed(2)}</li>
+                            <li>${item.quantity}x ${item.name} - R$ ${(Number(item.price) * Number(item.quantity)).toFixed(2)}</li>
                         `).join('')}
                     </ul>
                 </div>
@@ -663,7 +663,7 @@ function createKanbanCard(order) {
         </div>
         <div class="kanban-card-content">
             <div class="kanban-card-items">${itemsList}</div>
-            <div class="kanban-card-total">R$ ${order.total.toFixed(2)}</div>
+            <div class="kanban-card-total">R$ ${Number(order.total).toFixed(2)}</div>
             ${userInfo}
         </div>
     `;
@@ -880,7 +880,7 @@ function renderMenuItem(item) {
             <div class="menu-item-info">
                 <h4 style="color: #333; margin-bottom: 5px;">${item.name}</h4>
                 <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">${item.description || ''}</p>
-                <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${parseFloat(item.price).toFixed(2)}</p>
+                <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${Number(item.price || 0).toFixed(2)}</p>
                 <div style="display: flex; gap: 10px; margin-top: 5px;">
                     ${item.is_available ? '<span style="color: #28a745; font-size: 0.85rem;">✅ Disponível</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">❌ Indisponível</span>'}
                 </div>
@@ -1379,9 +1379,9 @@ function generateRevenueReport(orders, dateFrom, dateTo, container) {
         return orderDate >= dateFrom && orderDate <= dateTo;
     });
     
-    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
     const completedOrders = filteredOrders.filter(o => o.status === 'concluido' || o.status === 'finalizado');
-    const completedRevenue = completedOrders.reduce((sum, order) => sum + order.total, 0);
+    const completedRevenue = completedOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
     
     container.innerHTML = `
         <div class="report-card">
@@ -1393,15 +1393,15 @@ function generateRevenueReport(orders, dateFrom, dateTo, container) {
                     <div class="stat-label">Total de Pedidos</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">R$ ${totalRevenue.toFixed(2)}</div>
+                    <div class="stat-value">R$ ${Number(totalRevenue).toFixed(2)}</div>
                     <div class="stat-label">Receita Total</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">R$ ${completedRevenue.toFixed(2)}</div>
+                    <div class="stat-value">R$ ${Number(completedRevenue).toFixed(2)}</div>
                     <div class="stat-label">Receita Concluída</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">R$ ${(completedRevenue / completedOrders.length || 0).toFixed(2)}</div>
+                    <div class="stat-value">R$ ${Number(completedRevenue / completedOrders.length || 0).toFixed(2)}</div>
                     <div class="stat-label">Ticket Médio</div>
                 </div>
             </div>
@@ -1437,7 +1437,7 @@ function generatePopularItemsReport(orders, container) {
                 </div>
                 <div>
                     <span style="color: #e8c13f; font-weight: bold; margin-right: 20px;">${data.quantity}x</span>
-                    <span style="color: #28a745; font-weight: bold;">R$ ${data.revenue.toFixed(2)}</span>
+                    <span style="color: #28a745; font-weight: bold;">R$ ${Number(data.revenue || 0).toFixed(2)}</span>
                 </div>
             </div>
         `;
@@ -2841,7 +2841,7 @@ async function loadReviews() {
         
         if (statsData.success) {
             const stats = statsData.statistics;
-            document.getElementById('review-average').textContent = stats.average_rating.toFixed(1);
+            document.getElementById('review-average').textContent = Number(stats.average_rating || 0).toFixed(1);
             document.getElementById('review-total').textContent = stats.total_reviews;
             document.getElementById('review-approved').textContent = stats.approved_reviews;
             
@@ -2905,6 +2905,13 @@ async function loadReviewsList() {
         }
         
         const response = await fetch(url);
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Invalid response format - expected JSON but got: ' + contentType);
+        }
+        
         const data = await response.json();
         
         if (!data.success || data.reviews.length === 0) {
@@ -3158,4 +3165,275 @@ async function deleteSchedule(scheduleId) {
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// ==========================================
+// ROLE PERMISSIONS MODAL FUNCTIONS
+// ==========================================
+
+let currentRoleIdForPermissions = null;
+
+/**
+ * Open role permissions modal
+ */
+async function openRolePermissionsModal(roleId) {
+    currentRoleIdForPermissions = roleId;
+    
+    try {
+        // Load role details
+        const roleResponse = await fetch(`/api/admin/roles.php?action=get&id=${roleId}`);
+        const roleData = await roleResponse.json();
+        
+        if (!roleData.success) {
+            throw new Error(roleData.error || 'Erro ao carregar cargo');
+        }
+        
+        const role = roleData.data;
+        document.getElementById('rolePermissionsName').textContent = role.name;
+        
+        // Load all available permissions
+        const permsResponse = await fetch('/api/admin/permissions.php?action=by-resource');
+        const permsData = await permsResponse.json();
+        
+        if (!permsData.success) {
+            throw new Error(permsData.error || 'Erro ao carregar permissões');
+        }
+        
+        const allPermissions = permsData.data;
+        const rolePermissionIds = role.permissions.map(p => p.id);
+        
+        // Build permissions grid
+        const grid = document.getElementById('permissionsGrid');
+        grid.innerHTML = '';
+        
+        // Group permissions by resource
+        for (const [resource, perms] of Object.entries(allPermissions)) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'permission-category';
+            
+            categoryDiv.innerHTML = `
+                <h3>📁 ${resource}</h3>
+            `;
+            
+            perms.forEach(perm => {
+                const isChecked = rolePermissionIds.includes(perm.id);
+                const permItem = document.createElement('div');
+                permItem.className = 'permission-item';
+                permItem.innerHTML = `
+                    <input type="checkbox" id="perm_${perm.id}" value="${perm.id}" ${isChecked ? 'checked' : ''}>
+                    <label for="perm_${perm.id}">
+                        <div class="permission-name">${perm.name}</div>
+                        <div class="permission-description">${perm.description || 'Sem descrição'}</div>
+                    </label>
+                `;
+                categoryDiv.appendChild(permItem);
+            });
+            
+            grid.appendChild(categoryDiv);
+        }
+        
+        // Show modal
+        document.getElementById('rolePermissionsModal').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error opening role permissions modal:', error);
+        alert('❌ Erro ao abrir modal: ' + error.message);
+    }
+}
+
+/**
+ * Close role permissions modal
+ */
+function closeRolePermissionsModal() {
+    document.getElementById('rolePermissionsModal').style.display = 'none';
+    currentRoleIdForPermissions = null;
+}
+
+/**
+ * Save role permissions
+ */
+async function saveRolePermissions() {
+    if (!currentRoleIdForPermissions) return;
+    
+    const checkboxes = document.querySelectorAll('#permissionsGrid input[type="checkbox"]:checked');
+    const permissionIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    try {
+        const response = await fetch('/api/admin/roles.php?action=update-permissions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                role_id: currentRoleIdForPermissions,
+                permission_ids: permissionIds
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Permissões atualizadas com sucesso!');
+            closeRolePermissionsModal();
+            loadRoles();
+        } else {
+            alert('❌ Erro ao atualizar permissões: ' + (data.error || data.message));
+        }
+    } catch (error) {
+        console.error('Error saving permissions:', error);
+        alert('❌ Erro ao salvar permissões');
+    }
+}
+
+// Update the viewRolePermissions function to use the modal
+async function viewRolePermissions(roleId) {
+    openRolePermissionsModal(roleId);
+}
+
+// ==========================================
+// USER ROLES MODAL FUNCTIONS
+// ==========================================
+
+let currentUserIdForRoles = null;
+
+/**
+ * Open user roles modal
+ */
+async function openUserRolesModal(userId) {
+    currentUserIdForRoles = userId;
+    
+    try {
+        // Load user details
+        const userResponse = await fetch(`/api/admin/users.php?action=get&id=${userId}`);
+        const userData = await userResponse.json();
+        
+        if (!userData.success) {
+            throw new Error(userData.error || 'Erro ao carregar usuário');
+        }
+        
+        const user = userData.data;
+        document.getElementById('userRolesName').textContent = user.full_name || user.email;
+        
+        // Load user's current roles
+        const userRolesResponse = await fetch(`/api/admin/roles.php?action=user-roles&user_id=${userId}`);
+        const userRolesData = await userRolesResponse.json();
+        
+        if (!userRolesData.success) {
+            throw new Error(userRolesData.error || 'Erro ao carregar cargos do usuário');
+        }
+        
+        const userRoleIds = userRolesData.data.map(r => r.id);
+        
+        // Load all available roles
+        const rolesResponse = await fetch('/api/admin/roles.php?action=list');
+        const rolesData = await rolesResponse.json();
+        
+        if (!rolesData.success) {
+            throw new Error(rolesData.error || 'Erro ao carregar cargos');
+        }
+        
+        const allRoles = rolesData.data;
+        
+        // Build roles checkboxes
+        const container = document.getElementById('rolesCheckboxes');
+        container.innerHTML = '';
+        
+        allRoles.forEach(role => {
+            const isChecked = userRoleIds.includes(role.id);
+            const roleItem = document.createElement('div');
+            roleItem.className = 'role-checkbox-item';
+            roleItem.innerHTML = `
+                <input type="checkbox" id="role_${role.id}" value="${role.id}" ${isChecked ? 'checked' : ''}>
+                <label for="role_${role.id}">
+                    <div class="role-checkbox-name">${role.name}</div>
+                    <div class="role-checkbox-description">${role.description || 'Sem descrição'}</div>
+                </label>
+            `;
+            container.appendChild(roleItem);
+        });
+        
+        // Show modal
+        document.getElementById('userRolesModal').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error opening user roles modal:', error);
+        alert('❌ Erro ao abrir modal: ' + error.message);
+    }
+}
+
+/**
+ * Close user roles modal
+ */
+function closeUserRolesModal() {
+    document.getElementById('userRolesModal').style.display = 'none';
+    currentUserIdForRoles = null;
+}
+
+/**
+ * Save user roles
+ */
+async function saveUserRoles() {
+    if (!currentUserIdForRoles) return;
+    
+    const checkboxes = document.querySelectorAll('#rolesCheckboxes input[type="checkbox"]:checked');
+    const roleIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    try {
+        const response = await fetch('/api/admin/roles.php?action=assign-roles', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: currentUserIdForRoles,
+                role_ids: roleIds
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Cargos atualizados com sucesso!');
+            closeUserRolesModal();
+            loadUsers();
+        } else {
+            alert('❌ Erro ao atualizar cargos: ' + (data.error || data.message));
+        }
+    } catch (error) {
+        console.error('Error saving roles:', error);
+        alert('❌ Erro ao salvar cargos');
+    }
+}
+
+// Update the manageUserRoles function to use the modal
+async function manageUserRoles(userId) {
+    openUserRolesModal(userId);
+}
+
+// Event listeners for modal buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Role permissions modal
+    const savePermissionsBtn = document.getElementById('saveRolePermissions');
+    if (savePermissionsBtn) {
+        savePermissionsBtn.addEventListener('click', saveRolePermissions);
+    }
+    
+    // User roles modal
+    const saveUserRolesBtn = document.getElementById('saveUserRoles');
+    if (saveUserRolesBtn) {
+        saveUserRolesBtn.addEventListener('click', saveUserRoles);
+    }
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+        const rolePermModal = document.getElementById('rolePermissionsModal');
+        const userRolesModal = document.getElementById('userRolesModal');
+        
+        if (event.target === rolePermModal) {
+            closeRolePermissionsModal();
+        }
+        if (event.target === userRolesModal) {
+            closeUserRolesModal();
+        }
+    });
+});
 

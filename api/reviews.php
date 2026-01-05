@@ -11,10 +11,33 @@
  * - GET /can-review - Check if user can submit review
  */
 
+// Set JSON headers first
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+// Set error handler to return JSON
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Server error occurred',
+        'error' => $errstr
+    ]);
+    exit();
+});
+
+// Set exception handler to return JSON
+set_exception_handler(function($exception) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Server error occurred',
+        'error' => $exception->getMessage()
+    ]);
+    exit();
+});
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
