@@ -18,6 +18,99 @@ $conn = getDBConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
+/**
+ * Process uploaded image: validate, resize, compress
+ * Returns array with 'success', 'data' (binary), 'mime_type', or 'message' on error
+ */
+function processImageUpload($file) {
+    // Validate file
+    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    $fileType = $file['type'];
+    
+    if (!in_array($fileType, $allowedTypes)) {
+        return ['success' => false, 'message' => 'Tipo de arquivo inválido. Use JPEG, PNG ou WebP.'];
+    }
+    
+    // Validate file size (5MB max before processing)
+    if ($file['size'] > 5 * 1024 * 1024) {
+        return ['success' => false, 'message' => 'Arquivo muito grande. Tamanho máximo: 5MB.'];
+    }
+    
+    // Check if GD extension is available
+    if (!extension_loaded('gd')) {
+        // Fallback: store original file without processing
+        $imageData = file_get_contents($file['tmp_name']);
+        return [
+            'success' => true,
+            'data' => $imageData,
+            'mime_type' => $fileType
+        ];
+    }
+    
+    // Load image
+    $image = null;
+    switch ($fileType) {
+        case 'image/jpeg':
+        case 'image/jpg':
+            $image = @imagecreatefromjpeg($file['tmp_name']);
+            break;
+        case 'image/png':
+            $image = @imagecreatefrompng($file['tmp_name']);
+            break;
+        case 'image/webp':
+            $image = @imagecreatefromwebp($file['tmp_name']);
+            break;
+    }
+    
+    if (!$image) {
+        return ['success' => false, 'message' => 'Falha ao processar imagem.'];
+    }
+    
+    // Get original dimensions
+    $origWidth = imagesx($image);
+    $origHeight = imagesy($image);
+    
+    // Calculate new dimensions (max 1024px on longest side)
+    $maxDimension = 1024;
+    if ($origWidth > $maxDimension || $origHeight > $maxDimension) {
+        if ($origWidth > $origHeight) {
+            $newWidth = $maxDimension;
+            $newHeight = (int)(($maxDimension / $origWidth) * $origHeight);
+        } else {
+            $newHeight = $maxDimension;
+            $newWidth = (int)(($maxDimension / $origHeight) * $origWidth);
+        }
+    } else {
+        $newWidth = $origWidth;
+        $newHeight = $origHeight;
+    }
+    
+    // Create resized image
+    $resized = imagecreatetruecolor($newWidth, $newHeight);
+    
+    // Preserve transparency for PNG
+    if ($fileType === 'image/png') {
+        imagealphablending($resized, false);
+        imagesavealpha($resized, true);
+    }
+    
+    imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+    
+    // Convert to JPEG with compression
+    ob_start();
+    imagejpeg($resized, null, 80); // 80% quality
+    $imageData = ob_get_clean();
+    
+    imagedestroy($image);
+    imagedestroy($resized);
+    
+    return [
+        'success' => true,
+        'data' => $imageData,
+        'mime_type' => 'image/jpeg'
+    ];
+}
+
 try {
     switch ($method) {
         case 'GET':
@@ -146,11 +239,10 @@ function handleGet($conn, $action) {
 }
 
 function handlePost($conn, $action) {
-    $data = getRequestBody();
-    
     switch ($action) {
         case 'create-group':
             // Create menu group
+            $data = getRequestBody();
             validateRequired($data, ['name']);
             
             $stmt = $conn->prepare("
@@ -173,31 +265,122 @@ function handlePost($conn, $action) {
             break;
             
         case 'create-item':
-            // Create menu item
-            validateRequired($data, ['group_id', 'name', 'price']);
+        case 'update-item':
+            // Create or update menu item with optional image upload
+            $imageData = null;
+            $imageMimeType = null;
+            $isUpdate = ($action === 'update-item');
+            $data = null; // Initialize to prevent undefined variable warnings
             
-            $stmt = $conn->prepare("
-                INSERT INTO menu_items (group_id, name, description, price, image_url, 
-                                       ingredients, is_available, delivery_enabled, display_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $isAvailable = $data['is_available'] ?? true;
-            $deliveryEnabled = $data['delivery_enabled'] ?? true;
-            
-            if ($stmt->execute([
-                $data['group_id'],
-                $data['name'],
-                $data['description'] ?? null,
-                $data['price'],
-                $data['image_url'] ?? null,
-                $data['ingredients'] ?? null,
-                $isAvailable,
-                $deliveryEnabled,
-                $data['display_order'] ?? 0
-            ])) {
-                sendSuccess(['id' => $conn->lastInsertId()], 'Item created successfully');
+            // Check if this is a multipart form upload (with file)
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                // Process image upload
+                $result = processImageUpload($_FILES['image']);
+                if (!$result['success']) {
+                    sendError($result['message']);
+                    return;
+                }
+                $imageData = $result['data'];
+                $imageMimeType = $result['mime_type'];
+                
+                // Get form data from $_POST
+                $itemId = $_POST['id'] ?? null;
+                $groupId = $_POST['group_id'] ?? null;
+                $name = $_POST['name'] ?? null;
+                $description = $_POST['description'] ?? null;
+                $price = $_POST['price'] ?? null;
+                $isAvailable = isset($_POST['is_available']) && $_POST['is_available'] === '1';
+                $deliveryEnabled = isset($_POST['delivery_enabled']) && $_POST['delivery_enabled'] === '1';
+                $imageUrl = null; // No legacy image_url when uploading file
+                $ingredients = null;
+                $displayOrder = 0;
             } else {
-                sendError('Failed to create item');
+                // JSON request without file
+                $data = getRequestBody();
+                $itemId = $data['id'] ?? null;
+                $groupId = $data['group_id'] ?? null;
+                $name = $data['name'] ?? null;
+                $description = $data['description'] ?? null;
+                $price = $data['price'] ?? null;
+                $isAvailable = $data['is_available'] ?? true;
+                $deliveryEnabled = $data['delivery_enabled'] ?? true;
+                $imageUrl = $data['image_url'] ?? null;
+                $ingredients = $data['ingredients'] ?? null;
+                $displayOrder = $data['display_order'] ?? 0;
+            }
+            
+            if (!$groupId || !$name || !$price) {
+                sendError('Missing required fields: group_id, name, price');
+                return;
+            }
+            
+            if ($isUpdate) {
+                if (!$itemId) {
+                    sendError('Missing item ID for update');
+                    return;
+                }
+                
+                // Build dynamic UPDATE query
+                $updates = [];
+                $values = [];
+                
+                $updates[] = "group_id = ?";
+                $values[] = $groupId;
+                $updates[] = "name = ?";
+                $values[] = $name;
+                $updates[] = "description = ?";
+                $values[] = $description ?: null;
+                $updates[] = "price = ?";
+                $values[] = $price;
+                $updates[] = "is_available = ?";
+                $values[] = $isAvailable;
+                $updates[] = "delivery_enabled = ?";
+                $values[] = $deliveryEnabled;
+                
+                // Only update image if new one was uploaded
+                if ($imageData !== null) {
+                    $updates[] = "image_data = ?";
+                    $values[] = $imageData;
+                    $updates[] = "image_mime_type = ?";
+                    $values[] = $imageMimeType;
+                }
+                
+                $values[] = $itemId;
+                
+                $sql = "UPDATE menu_items SET " . implode(', ', $updates) . " WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                
+                if ($stmt->execute($values)) {
+                    sendSuccess(['id' => $itemId], 'Item updated successfully');
+                } else {
+                    sendError('Failed to update item');
+                }
+            } else {
+                // INSERT new item
+                $stmt = $conn->prepare("
+                    INSERT INTO menu_items (group_id, name, description, price, image_url, 
+                                           ingredients, is_available, delivery_enabled, display_order,
+                                           image_data, image_mime_type)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                if ($stmt->execute([
+                    $groupId,
+                    $name,
+                    $description ?: null,
+                    $price,
+                    $imageUrl,
+                    $ingredients,
+                    $isAvailable,
+                    $deliveryEnabled,
+                    $displayOrder,
+                    $imageData,
+                    $imageMimeType
+                ])) {
+                    sendSuccess(['id' => $conn->lastInsertId()], 'Item created successfully');
+                } else {
+                    sendError('Failed to create item');
+                }
             }
             break;
             

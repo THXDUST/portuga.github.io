@@ -663,20 +663,20 @@ function updateNavMenuForUser(userInfo) {
         // Add "Meus Pedidos" link
         const pedidosLi = document.createElement('li');
         pedidosLi.className = 'user-menu-item';
-        pedidosLi.innerHTML = '<a href="pedidos.html">📦 Meus Pedidos</a>';
+        pedidosLi.innerHTML = '<a href="pedidos.html">Meus Pedidos</a>';
         navMenu.appendChild(pedidosLi);
         
         // Add "Meu Perfil" link
         const perfilLi = document.createElement('li');
         perfilLi.className = 'user-menu-item';
-        perfilLi.innerHTML = '<a href="perfil.html">👤 Meu Perfil</a>';
+        perfilLi.innerHTML = '<a href="perfil.html">Meu Perfil</a>';
         navMenu.appendChild(perfilLi);
         
         // Add user profile/logout button
         const userLi = document.createElement('li');
         userLi.className = 'user-menu-item';
         userLi.innerHTML = `
-            <span style="color: #e8c13f; margin-right: 10px;">👤 ${userInfo.full_name}</span>
+            <span style="color: #e8c13f; margin-right: 10px;">${userInfo.full_name}</span>
             <button onclick="logout()" style="background: transparent; border: 1px solid #e8c13f; color: #e8c13f; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Sair</button>
         `;
         navMenu.appendChild(userLi);
@@ -688,7 +688,7 @@ function updateNavMenuForUser(userInfo) {
             if (!existingAdminLink) {
                 const adminLi = document.createElement('li');
                 adminLi.className = 'admin-menu-item';
-                adminLi.innerHTML = '<a href="admin.html">🛠️ Admin</a>';
+                adminLi.innerHTML = '<a href="admin.html">Admin</a>';
                 // Insert before user profile item
                 navMenu.insertBefore(adminLi, userLi);
             }

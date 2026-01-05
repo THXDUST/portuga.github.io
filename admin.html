@@ -144,9 +144,9 @@
                     <label style="color: #666;">Filtros:</label>
                     <select id="kanban-type-filter" class="form-group" onchange="loadKanbanBoard()">
                         <option value="">Todos os Tipos</option>
-                        <option value="table">🪑 Mesa</option>
-                        <option value="delivery">🚚 Entrega</option>
-                        <option value="pickup">📦 Retirada</option>
+                        <option value="table">Mesa</option>
+                        <option value="delivery">Entrega</option>
+                        <option value="pickup">Retirada</option>
                     </select>
                     
                     <input type="number" id="kanban-table-filter" placeholder="Filtrar por mesa..." 
@@ -261,7 +261,7 @@
             </div>
             
             <div id="tab-schedule" class="admin-tab" style="display: none;">
-                <h2 style="color: #e8c13f; margin-bottom: 25px;">📅 Gestão de Horários</h2>
+                <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Horários</h2>
                 
                 <div style="margin-bottom: 20px;">
                     <button class="btn" onclick="showAddScheduleModal()">➕ Adicionar Horário</button>
@@ -358,7 +358,7 @@
                 <h2 style="color: #e8c13f; margin-bottom: 25px;">Gestão de Usuários</h2>
                 
                 <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
-                    <input type="text" id="user-search" placeholder="🔍 Pesquisar usuário por nome ou email..." 
+                    <input type="text" id="user-search" placeholder="Pesquisar usuário por nome ou email..." 
                            class="form-group" style="flex: 1; min-width: 250px;"
                            onkeyup="debounceUserSearch()">
                     
@@ -637,8 +637,20 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="item-image">URL da Imagem:</label>
+                    <label for="item-image">URL da Imagem (legado):</label>
                     <input type="text" id="item-image" placeholder="https://exemplo.com/imagem.jpg">
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-image-upload">Fazer Upload de Imagem:</label>
+                    <input type="file" id="item-image-upload" accept="image/jpeg,image/jpg,image/png,image/webp">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Formatos aceitos: JPEG, PNG, WebP. Tamanho máximo: 5MB. 
+                        A imagem será redimensionada e comprimida automaticamente.
+                    </small>
+                    <div id="image-preview" style="margin-top: 10px; display: none;">
+                        <img id="preview-img" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border: 2px solid #e8c13f; border-radius: 8px;">
+                    </div>
                 </div>
                 
                 <div class="form-group">

@@ -9,7 +9,7 @@
 <body>
     <!-- Restaurant Closed Banner -->
     <div id="restaurant-closed-banner" style="display: none; background: #dc3545; color: white; text-align: center; padding: 12px; position: fixed; top: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-        <strong>🚫 Restaurante Fechado</strong> - Não estamos aceitando pedidos no momento
+        <strong>Restaurante Fechado</strong> - Não estamos aceitando pedidos no momento
     </div>
 
     <header>
@@ -29,8 +29,8 @@
             <li><a href="index.html">Início</a></li>
             <li><a href="menu.html">Cardápio</a></li>
             <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
-            <li><a href="ouvidoria.html">📞 Fale Conosco</a></li>
-            <li><a href="enviar-curriculo.html">💼 Trabalhe Conosco</a></li>
+            <li><a href="ouvidoria.html">Fale Conosco</a></li>
+            <li><a href="enviar-curriculo.html">Trabalhe Conosco</a></li>
             <li><a href="login.html">Login</a></li>
             <!--<li><a href="admin.html">Admin</a></li>-->
         </ul>
@@ -200,21 +200,23 @@
         
         // Render a single menu item
         function renderMenuItem(item) {
-            const imageUrl = item.image_url || `https://via.placeholder.com/400x200/e8c13f/333?text=${encodeURIComponent(item.name)}`;
+            // Use dish-image.php endpoint which handles BLOB/default.png fallback
+            const imageUrl = `/api/dish-image.php?id=${item.id}`;
+            const fallbackUrl = item.image_url || `https://via.placeholder.com/400x200/e8c13f/333?text=${encodeURIComponent(item.name)}`;
             const price = parseFloat(item.price).toFixed(2);
             const itemId = parseInt(item.id) || 0;
             
             return `
                 <div class="product-card">
-                    <img src="${escapeHtml(imageUrl)}" 
+                    <img src="${imageUrl}" 
                          alt="${escapeHtml(item.name)}" 
                          class="product-image" 
-                         onerror="this.src='https://via.placeholder.com/400x200/e8c13f/333?text=${encodeURIComponent(item.name)}'">
+                         onerror="this.src='${escapeHtml(fallbackUrl)}'">
                     <div class="product-info">
                         <h3 class="product-name">${escapeHtml(item.name)}</h3>
                         <p class="product-description">${escapeHtml(item.description || '')}</p>
                         <p class="product-price">R$ ${price}</p>
-                        <button class="btn" data-item-id="${itemId}" data-item-name="${escapeHtml(item.name)}" data-item-price="${price}" data-item-image="${escapeHtml(imageUrl)}">
+                        <button class="btn" data-item-id="${itemId}" data-item-name="${escapeHtml(item.name)}" data-item-price="${price}" data-item-image="${imageUrl}">
                             Adicionar ao Carrinho
                         </button>
                     </div>

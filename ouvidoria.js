@@ -110,7 +110,7 @@ async function loadMyChats() {
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <h3 style="color: #333; margin: 0 0 10px 0;">
-                                📝 ${chat.protocol_number}
+                                ${chat.protocol_number}
                                 <span style="background: ${status.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; margin-left: 10px;">${status.label}</span>
                             </h3>
                             <p style="color: #666; margin: 0 0 5px 0;"><strong>Assunto:</strong> ${chat.subject}</p>

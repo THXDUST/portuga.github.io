@@ -11,6 +11,11 @@
  * - GET /statistics - Get user statistics
  */
 
+// Ensure we always return JSON, even on PHP errors
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
+// Set JSON header first to prevent HTML output
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -21,6 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Set custom error handler to return JSON
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    // Log error server-side
+    error_log("Profile API Error: $errstr in $errfile on line $errline");
+    
+    // Return generic error to client (don't expose internal details)
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Internal server error']);
+    exit();
+});
+
 // Database configuration
 require_once __DIR__ . '/../config/database.php';
 
@@ -28,11 +44,12 @@ require_once __DIR__ . '/../config/database.php';
 function getDBConnection() {
     $host = getenv('DB_HOST') ?: 'localhost';
     $dbname = getenv('DB_NAME') ?: 'portuga_db';
-    $username = getenv('DB_USER') ?: 'root';
+    $username = getenv('DB_USER') ?: 'postgres';
     $password = getenv('DB_PASS') ?: '';
+    $port = getenv('DB_PORT') ?: '5432';
     
     try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $pdo;
     } catch (PDOException $e) {

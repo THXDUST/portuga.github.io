@@ -291,7 +291,7 @@
 <body>
     <!-- Restaurant Closed Banner -->
     <div id="restaurant-closed-banner" style="display: none; background: #dc3545; color: white; text-align: center; padding: 12px; position: fixed; top: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-        <strong>🚫 Restaurante Fechado</strong> - Não estamos aceitando pedidos no momento
+        <strong>Restaurante Fechado</strong> - Não estamos aceitando pedidos no momento
     </div>
 
     <header>
@@ -311,8 +311,8 @@
             <li><a href="index.html">Início</a></li>
             <li><a href="menu.html">Cardápio</a></li>
             <li><a href="carrinho.html">Carrinho <span id="cart-badge" class="cart-badge" style="display: none;">0</span></a></li>
-            <li><a href="ouvidoria.html">📞 Fale Conosco</a></li>
-            <li><a href="enviar-curriculo.html">💼 Trabalhe Conosco</a></li>
+            <li><a href="ouvidoria.html">Fale Conosco</a></li>
+            <li><a href="enviar-curriculo.html">Trabalhe Conosco</a></li>
             <li><a href="login.html">Login</a></li>
             <li><a href="admin.html">Admin</a></li>
         </ul>
@@ -320,7 +320,7 @@
 
     <main class="profile-container">
         <div id="loading" class="loading">
-            <p>⏳ Carregando perfil...</p>
+            <p>Carregando perfil...</p>
         </div>
 
         <div id="profile-content" style="display: none;">
@@ -328,8 +328,8 @@
             <div class="profile-header">
                 <div class="profile-photo-container">
                     <img id="profile-photo" class="profile-photo hidden" src="" alt="Foto de perfil">
-                    <div id="default-avatar" class="default-avatar">👤</div>
-                    <button class="upload-photo-btn" onclick="document.getElementById('photo-upload').click()">📷</button>
+                    <div id="default-avatar" class="default-avatar" role="img" aria-label="Avatar padrão">?</div>
+                    <button class="upload-photo-btn" onclick="document.getElementById('photo-upload').click()" title="Carregar foto" aria-label="Carregar foto de perfil"></button>
                     <input type="file" id="photo-upload" accept="image/*" style="display: none;">
                 </div>
 
@@ -344,26 +344,26 @@
             <!-- Statistics Section (for all users) -->
             <div class="profile-section" id="statistics-section">
                 <div class="section-header">
-                    <h2 class="section-title">📊 Estatísticas Pessoais</h2>
-                    <span class="toggle-visibility" onclick="toggleSection('statistics')" title="Ocultar/Mostrar">👁️</span>
+                    <h2 class="section-title">Estatísticas Pessoais</h2>
+                    <span class="toggle-visibility" onclick="toggleSection('statistics')" title="Ocultar/Mostrar">⊙</span>
                 </div>
                 <div id="statistics-content">
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-value" id="total-spent">R$ 0,00</div>
-                            <div class="stat-label">💰 Total Gasto</div>
+                            <div class="stat-label">Total Gasto</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value" id="total-orders">0</div>
-                            <div class="stat-label">📦 Pedidos Realizados</div>
+                            <div class="stat-label">Pedidos Realizados</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value" id="most-ordered">-</div>
-                            <div class="stat-label">🍕 Prato Mais Pedido</div>
+                            <div class="stat-label">Prato Mais Pedido</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value" id="last-review">-</div>
-                            <div class="stat-label">⭐ Última Avaliação</div>
+                            <div class="stat-label">Última Avaliação</div>
                         </div>
                     </div>
                 </div>
@@ -372,7 +372,7 @@
             <!-- Employee Schedule Section (for employees only) -->
             <div class="profile-section hidden" id="schedule-section">
                 <div class="section-header">
-                    <h2 class="section-title">📅 Meu Horário</h2>
+                    <h2 class="section-title">Meu Horário</h2>
                 </div>
                 <div id="schedule-content">
                     <table class="schedule-table">
@@ -398,16 +398,16 @@
             <!-- Employee Statistics (for employees only) -->
             <div class="profile-section hidden" id="employee-stats-section">
                 <div class="section-header">
-                    <h2 class="section-title">📈 Estatísticas Profissionais</h2>
+                    <h2 class="section-title">Estatísticas Profissionais</h2>
                 </div>
                 <div id="employee-stats-content">
-                    <h3 style="color: #333; margin-bottom: 15px;">🏆 Top 5 Pratos Mais Vendidos</h3>
+                    <h3 style="color: #333; margin-bottom: 15px;">Top 5 Pratos Mais Vendidos</h3>
                     <div class="top-dishes-list" id="top-dishes-list">
                         <p style="color: #666;">Carregando...</p>
                     </div>
 
                     <div class="favorite-dish-selector">
-                        <label for="favorite-dish">⭐ Meu Prato Favorito:</label>
+                        <label for="favorite-dish">Meu Prato Favorito:</label>
                         <select id="favorite-dish">
                             <option value="">Selecione um prato...</option>
                         </select>
@@ -418,23 +418,23 @@
             <!-- Admin Quick Panel (for admins only) -->
             <div class="profile-section hidden" id="admin-panel-section">
                 <div class="section-header">
-                    <h2 class="section-title">⚡ Painel de Controle Rápido</h2>
+                    <h2 class="section-title">Painel de Controle Rápido</h2>
                 </div>
                 <div class="admin-quick-panel">
                     <a href="admin.html" class="quick-link-card">
-                        <h3>🎛️ Painel Admin</h3>
+                        <h3>Painel Admin</h3>
                         <p>Acesse o painel administrativo completo</p>
                     </a>
                     <a href="admin.html#reviews" class="quick-link-card">
-                        <h3>⭐ Avaliações <span class="pending-badge" id="pending-reviews">0</span></h3>
+                        <h3>Avaliações <span class="pending-badge" id="pending-reviews">0</span></h3>
                         <p>Gerenciar avaliações pendentes</p>
                     </a>
                     <a href="admin.html#resumes" class="quick-link-card">
-                        <h3>👔 Currículos <span class="pending-badge" id="pending-resumes">0</span></h3>
+                        <h3>Currículos <span class="pending-badge" id="pending-resumes">0</span></h3>
                         <p>Ver currículos recebidos</p>
                     </a>
                     <a href="admin.html#ouvidoria" class="quick-link-card">
-                        <h3>💬 Ouvidoria <span class="pending-badge" id="pending-ouvidoria">0</span></h3>
+                        <h3>Ouvidoria <span class="pending-badge" id="pending-ouvidoria">0</span></h3>
                         <p>Atender mensagens da ouvidoria</p>
                     </a>
                 </div>
@@ -457,10 +457,40 @@
             try {
                 // Get profile info
                 const profileResponse = await fetch('/api/profile.php?action=info');
-                const profileData = await profileResponse.json();
+                
+                // Check if response is OK
+                if (!profileResponse.ok) {
+                    // Try to get error message from response
+                    let errorMessage = 'Failed to load profile';
+                    try {
+                        const errorData = await profileResponse.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        // If JSON parsing fails, try to get text
+                        const errorText = await profileResponse.text();
+                        console.error('Non-JSON response:', errorText);
+                        if (errorText.includes('<') && errorText.includes('>')) {
+                            errorMessage = 'Server returned HTML instead of JSON. Please check server configuration.';
+                        } else {
+                            errorMessage = errorText || errorMessage;
+                        }
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                // Parse JSON response
+                let profileData;
+                try {
+                    profileData = await profileResponse.json();
+                } catch (jsonError) {
+                    // If JSON parsing fails, get the text to see what was returned
+                    const responseText = await profileResponse.text();
+                    console.error('Failed to parse JSON. Response text:', responseText);
+                    throw new Error('Server returned invalid JSON. Response: ' + responseText.substring(0, 100));
+                }
 
                 if (!profileData.success) {
-                    throw new Error('Failed to load profile');
+                    throw new Error(profileData.message || 'Failed to load profile');
                 }
 
                 userProfile = profileData.user;
@@ -519,7 +549,7 @@
 
             } catch (error) {
                 console.error('Error loading profile:', error);
-                document.getElementById('loading').innerHTML = '<p style="color: #dc3545;">❌ Erro ao carregar perfil. <a href="login.html">Fazer login</a></p>';
+                document.getElementById('loading').innerHTML = '<p style="color: #dc3545;">Erro ao carregar perfil. <a href="login.html">Fazer login</a></p>';
             }
         }
 
@@ -527,6 +557,12 @@
         async function loadStatistics() {
             try {
                 const response = await fetch('/api/profile.php?action=statistics');
+                
+                if (!response.ok) {
+                    console.error('Failed to load statistics:', response.status);
+                    return;
+                }
+                
                 const data = await response.json();
 
                 if (data.success) {
@@ -543,8 +579,8 @@
                     }
 
                     if (userStatistics.last_review) {
-                        const stars = '⭐'.repeat(userStatistics.last_review.rating);
-                        document.getElementById('last-review').textContent = stars;
+                        const stars = '*'.repeat(userStatistics.last_review.rating);
+                        document.getElementById('last-review').textContent = stars + '/5';
                     }
                 }
             } catch (error) {
@@ -578,7 +614,7 @@
                     if (data.next_shift) {
                         const nextShiftEl = document.getElementById('next-shift');
                         nextShiftEl.innerHTML = `
-                            <strong>📍 Próximo Turno:</strong> 
+                            <strong>Próximo Turno:</strong> 
                             ${capitalize(data.next_shift.day_of_week)}, 
                             ${data.next_shift.shift_start} - ${data.next_shift.shift_end}
                         `;
@@ -664,13 +700,13 @@
                     document.getElementById('profile-photo').classList.remove('hidden');
                     document.getElementById('default-avatar').classList.add('hidden');
                     
-                    alert('✅ Foto atualizada com sucesso!');
+                    alert('Foto atualizada com sucesso!');
                 } else {
-                    alert('❌ Erro ao enviar foto: ' + data.message);
+                    alert('Erro ao enviar foto: ' + data.message);
                 }
             } catch (error) {
                 console.error('Error uploading photo:', error);
-                alert('❌ Erro ao enviar foto');
+                alert('Erro ao enviar foto');
             }
         });
 
@@ -689,7 +725,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('✅ Prato favorito atualizado!');
+                    alert('Prato favorito atualizado!');
                 }
             } catch (error) {
                 console.error('Error updating favorite dish:', error);

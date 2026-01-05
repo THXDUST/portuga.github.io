@@ -35,7 +35,7 @@ async function loadPermissions() {
         for (const [resource, perms] of Object.entries(permissions)) {
             html += `
                 <div class="menu-section" style="margin-bottom: 20px;">
-                    <h3 style="color: #e8c13f; margin-bottom: 15px;">📁 ${resource}</h3>
+                    <h3 style="color: #e8c13f; margin-bottom: 15px;">${resource}</h3>
                     <div style="display: grid; gap: 10px;">
             `;
             
@@ -242,12 +242,12 @@ async function loadRoles() {
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
-                            <h3 style="color: #333; margin: 0 0 10px 0;">👥 ${role.name}</h3>
+                            <h3 style="color: #333; margin: 0 0 10px 0;">${role.name}</h3>
                             <p style="color: #666; margin: 0 0 10px 0;">${role.description || 'Sem descrição'}</p>
                             <small style="color: #999;">Usuários com este cargo: ${role.user_count || 0}</small>
                         </div>
                         <div style="display: flex; gap: 5px;">
-                            <button class="btn btn-secondary" onclick="editRole(${role.id})">✏️ Editar</button>
+                            <button class="btn btn-secondary" onclick="editRole(${role.id})"> Editar</button>
                             <button class="btn" onclick="manageRolePermissions(${role.id})">🔐 Permissões</button>
                             <button class="btn btn-danger" onclick="deleteRole(${role.id})">🗑️</button>
                         </div>
@@ -315,7 +315,7 @@ async function loadPermissionsForRole(selectedPermissions = []) {
         
         for (const [resource, perms] of Object.entries(permissions)) {
             html += `<div style="margin-bottom: 15px;">`;
-            html += `<strong style="color: #333; display: block; margin-bottom: 10px;">📁 ${resource}</strong>`;
+            html += `<strong style="color: #333; display: block; margin-bottom: 10px;">${resource}</strong>`;
             
             perms.forEach(perm => {
                 const isChecked = selectedPermissions.includes(perm.id);
@@ -532,7 +532,7 @@ async function loadUsers() {
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <h3 style="color: #333; margin: 0 0 10px 0;">
-                                👤 ${user.full_name} 
+                                ${user.full_name} 
                                 ${statusBadge}
                                 ${hardcodedBadge}
                             </h3>
@@ -542,10 +542,10 @@ async function loadUsers() {
                         </div>
                         <div style="display: flex; gap: 5px;">
                             ${!isHardcoded ? `
-                                <button class="btn btn-secondary" onclick="editUser(${user.id})">✏️ Editar</button>
-                                <button class="btn" onclick="manageUserRoles(${user.id})">👥 Cargos</button>
+                                <button class="btn btn-secondary" onclick="editUser(${user.id})"> Editar</button>
+                                <button class="btn" onclick="manageUserRoles(${user.id})">Cargos</button>
                                 <button class="btn ${isActive ? 'btn-danger' : ''}" onclick="toggleUserStatus(${user.id}, ${isActive})">
-                                    ${isActive ? '🚫 Desativar' : '✅ Ativar'}
+                                    ${isActive ? ' Desativar' : ' Ativar'}
                                 </button>
                             ` : '<em style="color: #999;">Usuário do sistema</em>'}
                         </div>

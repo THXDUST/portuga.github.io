@@ -299,7 +299,7 @@ if (!is_dir($databaseDir)) {
 </head>
 <body>
     <div class="container">
-        <h1>🔧 Setup Checker</h1>
+        <h1>Setup Checker</h1>
         <p class="subtitle">Verificação e correção automática de configuração</p>
         
         <?php if (!empty($results['checks'])): ?>
@@ -322,7 +322,7 @@ if (!is_dir($databaseDir)) {
         
         <?php if (!empty($results['fixes'])): ?>
         <div class="section">
-            <h2>🔨 Correções Aplicadas</h2>
+            <h2>Correções Aplicadas</h2>
             <?php foreach ($results['fixes'] as $fix): ?>
                 <div class="result-item <?php echo $fix['status']; ?>">
                     <span class="icon">✓</span>
