@@ -880,7 +880,7 @@ function renderMenuItem(item) {
             <div class="menu-item-info">
                 <h4 style="color: #333; margin-bottom: 5px;">${item.name}</h4>
                 <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">${item.description || ''}</p>
-                <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${parseFloat(item.price).toFixed(2)}</p>
+                <p style="color: #e8c13f; font-weight: bold; font-size: 1.1rem;">R$ ${Number(item.price || 0).toFixed(2)}</p>
                 <div style="display: flex; gap: 10px; margin-top: 5px;">
                     ${item.is_available ? '<span style="color: #28a745; font-size: 0.85rem;">✅ Disponível</span>' : '<span style="color: #dc3545; font-size: 0.85rem;">❌ Indisponível</span>'}
                 </div>
@@ -1437,7 +1437,7 @@ function generatePopularItemsReport(orders, container) {
                 </div>
                 <div>
                     <span style="color: #e8c13f; font-weight: bold; margin-right: 20px;">${data.quantity}x</span>
-                    <span style="color: #28a745; font-weight: bold;">R$ ${data.revenue.toFixed(2)}</span>
+                    <span style="color: #28a745; font-weight: bold;">R$ ${Number(data.revenue || 0).toFixed(2)}</span>
                 </div>
             </div>
         `;
@@ -2841,7 +2841,7 @@ async function loadReviews() {
         
         if (statsData.success) {
             const stats = statsData.statistics;
-            document.getElementById('review-average').textContent = stats.average_rating.toFixed(1);
+            document.getElementById('review-average').textContent = Number(stats.average_rating || 0).toFixed(1);
             document.getElementById('review-total').textContent = stats.total_reviews;
             document.getElementById('review-approved').textContent = stats.approved_reviews;
             
