@@ -121,7 +121,7 @@ function showAdminPanel() {
     const loginSection = document.getElementById('login-section');
     const adminPanel = document.getElementById('admin-panel');
     
-    console.log('🔍 [ADMIN] Panel elements check:', {
+    console.log('[ADMIN] Panel elements check:', {
         loginSection: loginSection ? 'Found' : 'NULL',
         adminPanel: adminPanel ? 'Found' : 'NULL',
         loginSection_currentDisplay: loginSection?.style.display || '(empty)',
@@ -169,7 +169,7 @@ function showAdminPanel() {
     }
     
     // Final verification
-    console.log('🔍 [ADMIN] ===== FINAL STATE =====');
+    console.log('[ADMIN] ===== FINAL STATE =====');
     console.log({
         loginSection_display: document.getElementById('login-section')?.style.display,
         adminPanel_display: document.getElementById('admin-panel')?.style.display,
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginSection = document.getElementById('login-section');
     const adminPanel = document.getElementById('admin-panel');
     
-    console.log('🔍 [ADMIN] Elements check:', {
+    console.log('[ADMIN] Elements check:', {
         loginForm: loginForm ? 'Found' : 'NULL',
         loginFormId: loginForm?.id,
         loginSection: loginSection ? 'Found' : 'NULL',
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const usernameEl = document.getElementById('username');
             const passwordEl = document.getElementById('password');
             
-            console.log('🔍 [ADMIN] Login field elements:', {
+            console.log('[ADMIN] Login field elements:', {
                 usernameEl: usernameEl ? `Found (type: ${usernameEl.type})` : 'NULL',
                 usernameValue: usernameEl?.value || 'EMPTY',
                 passwordEl: passwordEl ? `Found (type: ${passwordEl.type})` : 'NULL',
@@ -284,8 +284,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: typeof sessionStorage.getItem('adminLoggedIn')
                 });
                 
-                console.log('🔵 [ADMIN] Preparing to call showAdminPanel...');
-                console.log('🔍 [ADMIN] Function check:', {
+                console.log('[ADMIN] Preparing to call showAdminPanel...');
+                console.log('[ADMIN] Function check:', {
                     showAdminPanel_type: typeof showAdminPanel,
                     showAdminPanel_exists: typeof showAdminPanel !== 'undefined',
                     window_showAdminPanel: typeof window.showAdminPanel
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 100);
             } else {
                 console.error('[ADMIN] Login failed - incorrect credentials');
-                console.error('🔍 [ADMIN] Debug info:', {
+                console.error('[ADMIN] Debug info:', {
                     providedUsername: username,
                     providedPasswordLength: password.length,
                     expectedUsername: ADMIN_CREDENTIALS.username,
@@ -560,7 +560,7 @@ setInterval(function() {
 // ==========================================
 
 async function loadKanbanBoard() {
-    console.log('🔍 Loading Kanban board...');
+    console.log('Loading Kanban board...');
     
     try {
         // Fetch orders from API instead of localStorage
@@ -1878,7 +1878,7 @@ async function loadUsers() {
         if (!searchInput.trim() && !roleFilter && !statusFilter) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 60px 20px; background: #f8f9fa; border-radius: 12px; margin-top: 20px;">
-                    <div style="font-size: 3rem; margin-bottom: 20px;">🔍</div>
+                    <div style="font-size: 3rem; margin-bottom: 20px;">Search</div>
                     <h3 style="color: #666; margin-bottom: 10px;">Pesquise para encontrar usuários</h3>
                     <p style="color: #999;">Use a barra de pesquisa acima para buscar usuários por nome ou email.</p>
                 </div>

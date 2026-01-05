@@ -2,5 +2,5 @@
 ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_data BYTEA;
 ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_mime_type VARCHAR(100);
 
--- Add index for faster queries
-CREATE INDEX IF NOT EXISTS idx_menu_items_has_image ON menu_items((image_data IS NOT NULL));
+-- Add partial index for faster queries when image exists
+CREATE INDEX IF NOT EXISTS idx_menu_items_has_image ON menu_items(id) WHERE image_data IS NOT NULL;

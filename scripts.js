@@ -225,7 +225,7 @@ async function calculateDistanceFromAddress() {
         // Reset button
         if (btn) {
             btn.disabled = false;
-            btn.textContent = '📍 Calcular Distância e Taxa';
+            btn.textContent = 'Calcular Distância e Taxa';
         }
     }
 }
@@ -602,11 +602,11 @@ async function finalizeOrder() {
     
     // Add delivery info or pickup info
     if (forDelivery) {
-        message += '*📍 Endereço de Entrega:*\n';
+        message += '*Endereço de Entrega:*\n';
         message += `${deliveryAddress}\n`;
         message += `Distância: ${calculatedDistance.toFixed(1)} km\n\n`;
     } else {
-        message += '*📍 Tipo:*\n';
+        message += '*Tipo:*\n';
         if (tableNumber) {
             message += `Retirada no local - Mesa ${tableNumber}\n\n`;
         } else {
