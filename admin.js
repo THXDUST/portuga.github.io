@@ -1068,8 +1068,8 @@ function renderMenuItem(item) {
                 </div>
             </div>
             <div class="menu-item-actions">
-                <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;">Editar</button>
-                <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;">Excluir</button>
+                <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;" aria-label="Editar ${item.name}">Editar</button>
+                <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;" aria-label="Excluir ${item.name}">Excluir</button>
             </div>
         </div>
     `;
