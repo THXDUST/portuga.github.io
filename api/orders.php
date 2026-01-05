@@ -234,13 +234,14 @@ function handlePost($conn, $action) {
                 // Insert order
                 $stmt = $conn->prepare("
                     INSERT INTO orders (
-                        user_id, order_number, status, order_type, payment_method,
+                        user_id, order_number, table_number, status, order_type, payment_method,
                         change_for, delivery_address, delivery_distance, delivery_fee,
                         pickup_time, production_start_time, subtotal, total, notes
-                    ) VALUES (?, ?, 'recebido', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, 'recebido', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 
                 $userId = $data['user_id'] ?? null;
+                $tableNumber = $data['table_number'] ?? null;
                 $changeFor = $data['change_for'] ?? null;
                 $deliveryAddress = $data['delivery_address'] ?? null;
                 $deliveryDistance = $data['delivery_distance'] ?? null;
@@ -248,7 +249,10 @@ function handlePost($conn, $action) {
                 $productionStartTime = $data['production_start_time'] ?? null;
                 $notes = $data['notes'] ?? null;
                 
-                $stmt->execute([$userId, $orderNumber, $data['order_type'], $data['payment_method'],
+                // Log order creation for debugging
+                error_log("Creating order - Type: {$data['order_type']}, Table: " . ($tableNumber ?? 'NULL') . ", User: " . ($userId ?? 'NULL'));
+                
+                $stmt->execute([$userId, $orderNumber, $tableNumber, $data['order_type'], $data['payment_method'],
                     $changeFor, $deliveryAddress, $deliveryDistance, $deliveryFee,
                     $pickupTime, $productionStartTime, $subtotal, $total, $notes
                 ]);
