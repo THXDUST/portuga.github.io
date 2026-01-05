@@ -17,14 +17,11 @@ curl -X POST https://your-domain.com/api/admin/run_migrations.php
 # Or with MIGRATIONS_TOKEN environment variable
 curl -X POST https://your-domain.com/api/admin/run_migrations.php \
   -H "X-Migrations-Token: your-secret-token"
-
-# Or with token as query parameter
-curl -X POST "https://your-domain.com/api/admin/run_migrations.php?token=your-secret-token"
 ```
 
 **Security**: The endpoint requires either:
 - Admin user authentication (logged in via session), OR
-- A valid `MIGRATIONS_TOKEN` environment variable matching the provided token
+- A valid `MIGRATIONS_TOKEN` environment variable matching the token in `X-Migrations-Token` header
 
 #### Method 2: Directly via PHP CLI (Development)
 
