@@ -157,7 +157,7 @@ function showAdminPanel() {
             console.error('[ADMIN] Error filtering permissions:', error);
         }
     } else {
-        console.warn('⚠️ [ADMIN] filterAdminMenuByPermissions not available');
+        console.warn('[ADMIN] filterAdminMenuByPermissions not available');
     }
     
     console.log('🔵 [ADMIN] Loading dashboard...');
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = usernameEl.value;
             const password = passwordEl.value;
             
-            console.log('🔐 [ADMIN] Attempting login:', {
+            console.log('[ADMIN] Attempting login:', {
                 username: username,
                 passwordLength: password.length,
                 expectedUsername: ADMIN_CREDENTIALS.username,
@@ -473,7 +473,7 @@ async function renderOrders() {
                     ` : ''}
                     ${order.status === 'concluido' ? `
                         <button class="btn btn-secondary" onclick="changeOrderStatus(${order.id}, 'pendente')">
-                            🔄 Reabrir Pedido
+                            Reabrir Pedido
                         </button>
                     ` : ''}
                     <button class="btn btn-danger" onclick="deleteOrder(${order.id})">
@@ -576,7 +576,7 @@ async function loadKanbanBoard() {
         
         // If no orders found, show empty state
         if (!orders || orders.length === 0) {
-            console.warn('⚠️ No orders found');
+            console.warn('No orders found');
             
             // Show empty state
             ['recebido', 'em_andamento', 'finalizado'].forEach(status => {
@@ -657,7 +657,7 @@ async function loadKanbanBoard() {
         if (kanbanData[status]) {
             kanbanData[status].push(order);
         } else {
-            console.warn(`⚠️ Unknown status "${status}" for order ${order.id}`);
+            console.warn(`Unknown status "${status}" for order ${order.id}`);
         }
     });
     
@@ -1797,7 +1797,7 @@ async function loadResumes() {
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
                             ${resume.resume_file_path ? `<a href="${resume.resume_file_path}" target="_blank" class="btn">📄 Ver Currículo</a>` : ''}
-                            <button class="btn btn-secondary" onclick="updateResumeStatus(${resume.id}, 'em_analise')">🔄 Em Análise</button>
+                            <button class="btn btn-secondary" onclick="updateResumeStatus(${resume.id}, 'em_analise')">Em Análise</button>
                             <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateResumeStatus(${resume.id}, 'aprovado')">Aprovar</button>
                             <button class="btn btn-danger" onclick="updateResumeStatus(${resume.id}, 'rejeitado')">Rejeitar</button>
                         </div>
@@ -1938,9 +1938,9 @@ async function loadUsers() {
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
                             <button class="btn" onclick="editUser(${user.id})" style="padding: 8px 16px;"> Editar</button>
-                            <button class="btn btn-secondary" onclick="manageUserRoles(${user.id})" style="padding: 8px 16px;">🔐 Cargos</button>
+                            <button class="btn btn-secondary" onclick="manageUserRoles(${user.id})" style="padding: 8px 16px;">Cargos</button>
                             ${user.is_active 
-                                ? `<button class="btn btn-danger" onclick="toggleUserStatus(${user.id}, false)" style="padding: 8px 16px;">🚫 Desativar</button>`
+                                ? `<button class="btn btn-danger" onclick="toggleUserStatus(${user.id}, false)" style="padding: 8px 16px;">Desativar</button>`
                                 : `<button class="btn" onclick="toggleUserStatus(${user.id}, true)" style="padding: 8px 16px; background: #28a745; border-color: #28a745;">Ativar</button>`
                             }
                         </div>
@@ -2178,13 +2178,13 @@ async function loadRoles() {
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
-                            <h3 style="color: #333; margin: 0 0 10px 0;">🔐 ${role.name}</h3>
+                            <h3 style="color: #333; margin: 0 0 10px 0;">${role.name}</h3>
                             <p style="color: #666; margin: 0 0 5px 0;">${role.description || 'Sem descrição'}</p>
                             <p style="color: #999; margin: 0; font-size: 0.9rem;">${role.user_count} usuário(s) com este cargo</p>
                             <small style="color: #999;">Criado em: ${new Date(role.created_at).toLocaleString('pt-BR')}</small>
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
-                            <button class="btn" onclick="viewRolePermissions(${role.id})" style="padding: 8px 16px;">👁️ Ver Permissões</button>
+                            <button class="btn" onclick="viewRolePermissions(${role.id})" style="padding: 8px 16px;">Ver Permissões</button>
                             <button class="btn btn-secondary" onclick="editRole(${role.id})" style="padding: 8px 16px;"> Editar</button>
                             ${role.user_count === 0 ? `
                                 <button class="btn btn-danger" onclick="deleteRole(${role.id})" style="padding: 8px 16px;">Excluir</button>
@@ -2380,7 +2380,7 @@ async function loadOuvidoriaMessages() {
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
                             <button class="btn" onclick="respondOuvidoria(${message.id})">Responder</button>
-                            <button class="btn btn-secondary" onclick="updateOuvidoriaStatus(${message.id}, 'em_atendimento')">🔄 Em Atendimento</button>
+                            <button class="btn btn-secondary" onclick="updateOuvidoriaStatus(${message.id}, 'em_atendimento')">Em Atendimento</button>
                             <button class="btn" style="background: #28a745; border-color: #28a745;" onclick="updateOuvidoriaStatus(${message.id}, 'resolvido')">Resolver</button>
                         </div>
                     </div>
@@ -3211,7 +3211,7 @@ async function loadReviewsList() {
                     ` : ''}
                     ${review.status !== 'arquivado' ? `
                         <button class="btn btn-secondary" onclick="updateReviewStatus(${review.id}, 'arquivado')">
-                            📁 Arquivar
+                            Arquivar
                         </button>
                     ` : ''}
                     <button class="btn btn-danger" onclick="deleteReview(${review.id})">
@@ -3234,10 +3234,10 @@ async function loadReviewsList() {
  */
 function getReviewStatusBadge(status) {
     const badges = {
-        'pendente': '<span style="background: #ffc107; color: #856404; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">⏳ Pendente</span>',
+        'pendente': '<span style="background: #ffc107; color: #856404; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">Pendente</span>',
         'aprovado': '<span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">Aprovado</span>',
         'rejeitado': '<span style="background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">Rejeitado</span>',
-        'arquivado': '<span style="background: #6c757d; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">📁 Arquivado</span>'
+        'arquivado': '<span style="background: #6c757d; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;">Arquivado</span>'
     };
     return badges[status] || '';
 }
@@ -3470,7 +3470,7 @@ async function openRolePermissionsModal(roleId) {
             categoryDiv.className = 'permission-category';
             
             categoryDiv.innerHTML = `
-                <h3>📁 ${resource}</h3>
+                <h3>${resource}</h3>
             `;
             
             perms.forEach(perm => {
