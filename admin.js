@@ -171,7 +171,7 @@ async function updateStatistics() {
     const preparingOrders = orders.filter(o => o.status === 'em_andamento' || o.status === 'preparo').length;
     const completedOrders = orders.filter(o => o.status === 'finalizado' || o.status === 'concluido').length;
     
-    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     
     // Update DOM
@@ -179,8 +179,8 @@ async function updateStatistics() {
     document.getElementById('stat-pending').textContent = pendingOrders;
     document.getElementById('stat-preparing').textContent = preparingOrders;
     document.getElementById('stat-completed').textContent = completedOrders;
-    document.getElementById('stat-revenue').textContent = `R$ ${totalRevenue.toFixed(2)}`;
-    document.getElementById('stat-avg-order').textContent = `R$ ${avgOrderValue.toFixed(2)}`;
+    document.getElementById('stat-revenue').textContent = `R$ ${Number(totalRevenue).toFixed(2)}`;
+    document.getElementById('stat-avg-order').textContent = `R$ ${Number(avgOrderValue).toFixed(2)}`;
 }
 
 // Calculate most popular items
@@ -276,11 +276,11 @@ async function renderOrders() {
                 
                 <div class="order-details">
                     <p><strong>Data:</strong> ${formattedDate}</p>
-                    <p><strong>Total:</strong> R$ ${order.total.toFixed(2)}</p>
+                    <p><strong>Total:</strong> R$ ${Number(order.total).toFixed(2)}</p>
                     <p><strong>Itens:</strong></p>
                     <ul style="margin-left: 20px; margin-top: 5px;">
                         ${order.items.map(item => `
-                            <li>${item.quantity}x ${item.name} - R$ ${(item.price * item.quantity).toFixed(2)}</li>
+                            <li>${item.quantity}x ${item.name} - R$ ${(Number(item.price) * Number(item.quantity)).toFixed(2)}</li>
                         `).join('')}
                     </ul>
                 </div>
@@ -663,7 +663,7 @@ function createKanbanCard(order) {
         </div>
         <div class="kanban-card-content">
             <div class="kanban-card-items">${itemsList}</div>
-            <div class="kanban-card-total">R$ ${order.total.toFixed(2)}</div>
+            <div class="kanban-card-total">R$ ${Number(order.total).toFixed(2)}</div>
             ${userInfo}
         </div>
     `;
@@ -1379,9 +1379,9 @@ function generateRevenueReport(orders, dateFrom, dateTo, container) {
         return orderDate >= dateFrom && orderDate <= dateTo;
     });
     
-    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
     const completedOrders = filteredOrders.filter(o => o.status === 'concluido' || o.status === 'finalizado');
-    const completedRevenue = completedOrders.reduce((sum, order) => sum + order.total, 0);
+    const completedRevenue = completedOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
     
     container.innerHTML = `
         <div class="report-card">
@@ -1393,15 +1393,15 @@ function generateRevenueReport(orders, dateFrom, dateTo, container) {
                     <div class="stat-label">Total de Pedidos</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">R$ ${totalRevenue.toFixed(2)}</div>
+                    <div class="stat-value">R$ ${Number(totalRevenue).toFixed(2)}</div>
                     <div class="stat-label">Receita Total</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">R$ ${completedRevenue.toFixed(2)}</div>
+                    <div class="stat-value">R$ ${Number(completedRevenue).toFixed(2)}</div>
                     <div class="stat-label">Receita Concluída</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">R$ ${(completedRevenue / completedOrders.length || 0).toFixed(2)}</div>
+                    <div class="stat-value">R$ ${Number(completedRevenue / completedOrders.length || 0).toFixed(2)}</div>
                     <div class="stat-label">Ticket Médio</div>
                 </div>
             </div>
@@ -2905,6 +2905,13 @@ async function loadReviewsList() {
         }
         
         const response = await fetch(url);
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Invalid response format - expected JSON but got: ' + contentType);
+        }
+        
         const data = await response.json();
         
         if (!data.success || data.reviews.length === 0) {
