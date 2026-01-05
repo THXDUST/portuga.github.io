@@ -1050,8 +1050,15 @@ async function loadMenuManagement() {
 }
 
 function renderMenuItem(item) {
+    const imageUrl = `/api/dish-image.php?id=${item.id}`;
     return `
         <div class="menu-item">
+            ${item.image_data || item.image_url ? `
+                <div class="menu-item-image" style="margin-right: 15px;">
+                    <img src="${imageUrl}" alt="${item.name}" 
+                         style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #e8c13f;">
+                </div>
+            ` : ''}
             <div class="menu-item-info">
                 <h4 style="color: #333; margin-bottom: 5px;">${item.name}</h4>
                 <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">${item.description || ''}</p>
@@ -1061,8 +1068,8 @@ function renderMenuItem(item) {
                 </div>
             </div>
             <div class="menu-item-actions">
-                <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;"></button>
-                <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;"></button>
+                <button class="btn" onclick="editItem(${item.id})" style="padding: 8px 16px;">Editar</button>
+                <button class="btn btn-danger" onclick="deleteItem(${item.id})" style="padding: 8px 16px;">Excluir</button>
             </div>
         </div>
     `;
@@ -1319,6 +1326,9 @@ async function showAddItemModal() {
             document.getElementById('item-available').checked = true;
             document.getElementById('item-delivery-enabled').checked = true;
             
+            // Hide image preview
+            document.getElementById('image-preview').style.display = 'none';
+            
             // Populate group select with hierarchy
             groupSelect.innerHTML = '<option value="">Selecione um grupo</option>';
             
@@ -1335,6 +1345,9 @@ async function showAddItemModal() {
                 });
             });
             
+            // Add image preview event listener
+            setupImagePreview();
+            
             modal.style.display = 'block';
         }
         
@@ -1344,10 +1357,49 @@ async function showAddItemModal() {
     }
 }
 
+function setupImagePreview() {
+    const imageUpload = document.getElementById('item-image-upload');
+    if (imageUpload) {
+        imageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file size
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Arquivo muito grande! O tamanho máximo é 5MB.');
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Tipo de arquivo inválido! Use JPEG, PNG ou WebP.');
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('image-preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+}
+
 function closeItemModal() {
     const modal = document.getElementById('item-modal');
     if (modal) {
         modal.style.display = 'none';
+        // Clear file input and preview
+        const imageUpload = document.getElementById('item-image-upload');
+        if (imageUpload) {
+            imageUpload.value = '';
+        }
+        document.getElementById('image-preview').style.display = 'none';
     }
 }
 
@@ -1359,7 +1411,8 @@ async function saveItem(event) {
     const name = document.getElementById('item-name')?.value;
     const description = document.getElementById('item-description')?.value;
     const price = parseFloat(document.getElementById('item-price')?.value);
-    const image = document.getElementById('item-image')?.value;
+    const imageUrl = document.getElementById('item-image')?.value;
+    const imageFile = document.getElementById('item-image-upload')?.files[0];
     const available = document.getElementById('item-available')?.checked || false;
     const deliveryEnabled = document.getElementById('item-delivery-enabled')?.checked || false;
     
@@ -1369,38 +1422,69 @@ async function saveItem(event) {
     }
     
     try {
-        const itemData = {
-            group_id: groupId,
-            name,
-            description: description || null,
-            price,
-            image_url: image || null,
-            is_available: available,
-            delivery_enabled: deliveryEnabled
-        };
-        
-        let response;
-        if (itemId) {
-            // Update existing item
-            itemData.id = parseInt(itemId);
-            response = await fetch('/api/admin/menu.php?action=update-item', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(itemData)
+        // If there's an image file, use FormData to upload
+        if (imageFile) {
+            const formData = new FormData();
+            formData.append('group_id', groupId);
+            formData.append('name', name);
+            formData.append('description', description || '');
+            formData.append('price', price);
+            formData.append('is_available', available ? '1' : '0');
+            formData.append('delivery_enabled', deliveryEnabled ? '1' : '0');
+            formData.append('image', imageFile);
+            
+            if (itemId) {
+                formData.append('id', itemId);
+            }
+            
+            const action = itemId ? 'update-item' : 'create-item';
+            const method = itemId ? 'POST' : 'POST'; // Both use POST for file upload
+            
+            const response = await fetch(`/api/admin/menu.php?action=${action}`, {
+                method: method,
+                body: formData
             });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || data.message || 'Erro ao salvar item');
+            }
         } else {
-            // Create new item
-            response = await fetch('/api/admin/menu.php?action=create-item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(itemData)
-            });
-        }
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Erro ao salvar item');
+            // No file upload, use JSON
+            const itemData = {
+                group_id: groupId,
+                name,
+                description: description || null,
+                price,
+                image_url: imageUrl || null,
+                is_available: available,
+                delivery_enabled: deliveryEnabled
+            };
+            
+            let response;
+            if (itemId) {
+                // Update existing item
+                itemData.id = parseInt(itemId);
+                response = await fetch('/api/admin/menu.php?action=update-item', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemData)
+                });
+            } else {
+                // Create new item
+                response = await fetch('/api/admin/menu.php?action=create-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemData)
+                });
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Erro ao salvar item');
+            }
         }
         
         closeItemModal();
