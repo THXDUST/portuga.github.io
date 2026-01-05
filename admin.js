@@ -107,49 +107,109 @@ function loadTabContent(tabName) {
 
 // Login function
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔵 [ADMIN] DOMContentLoaded fired');
+    
     const loginForm = document.getElementById('login-form');
     const loginSection = document.getElementById('login-section');
     const adminPanel = document.getElementById('admin-panel');
     
+    console.log('🔍 [ADMIN] Elements check:', {
+        loginForm: loginForm ? '✅ Found' : '❌ NULL',
+        loginSection: loginSection ? '✅ Found' : '❌ NULL',
+        adminPanel: adminPanel ? '✅ Found' : '❌ NULL'
+    });
+    
     // Check if already logged in
     if (checkAuth()) {
+        console.log('✅ [ADMIN] User already logged in, showing panel');
         showAdminPanel();
+        return; // IMPORTANTE: adicionar return aqui
     }
     
     // Handle login
-    console.log(loginForm)
     if (loginForm) {
-        console.log("ading listener");
+        console.log('✅ [ADMIN] Adding submit listener to login form');
+        
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log("clicked");
+            console.log('🔵 [ADMIN] Login form submitted');
+            
+            // Log de TODOS os elementos no documento no momento do submit
+            console.log('📋 [ADMIN] All form inputs at submit time:', {
+                allInputs: document.querySelectorAll('input').length,
+                inputsWithId: Array.from(document.querySelectorAll('input[id]')).map(el => el.id)
+            });
             
             const usernameEl = document.getElementById('username');
             const passwordEl = document.getElementById('password');
             
+            console.log('🔍 [ADMIN] Login field elements:', {
+                usernameEl: usernameEl ? 'Found with value: ' + usernameEl.value : '❌ NULL',
+                passwordEl: passwordEl ? 'Found with length: ' + passwordEl.value.length : '❌ NULL',
+                usernameElType: usernameEl ? usernameEl.type : 'N/A',
+                passwordElType: passwordEl ? passwordEl.type : 'N/A'
+            });
+            
             if (!usernameEl || !passwordEl) {
-                console.error('Login form elements not found');
+                console.error('❌ [ADMIN] Login form elements not found!');
+                alert('ERRO: Campos de login não encontrados. Verifique o console (F12).');
                 return;
             }
             
             const username = usernameEl.value;
             const password = passwordEl.value;
             
+            console.log('🔐 [ADMIN] Attempting login:', {
+                username: username,
+                passwordLength: password.length,
+                expectedUsername: ADMIN_CREDENTIALS.username,
+                expectedPasswordLength: ADMIN_CREDENTIALS.password.length
+            });
+            
             if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                console.log('✅ [ADMIN] Login successful!');
                 sessionStorage.setItem('adminLoggedIn', 'true');
                 showAdminPanel();
             } else {
+                console.error('❌ [ADMIN] Login failed - incorrect credentials');
                 alert('Usuário ou senha incorretos!');
             }
         });
+        
+        console.log('✅ [ADMIN] Login form listener attached successfully');
+    } else {
+        console.error('❌ [ADMIN] Login form NOT FOUND - cannot attach listener');
     }
     
     function showAdminPanel() {
-        if (loginSection) loginSection.style.display = 'none';
-        if (adminPanel) adminPanel.style.display = 'block';
+        console.log('🔵 [ADMIN] showAdminPanel() called');
+        
+        if (loginSection) {
+            loginSection.style.display = 'none';
+            console.log('✅ [ADMIN] Login section hidden');
+        } else {
+            console.warn('⚠️ [ADMIN] Login section element not found');
+        }
+        
+        if (adminPanel) {
+            adminPanel.style.display = 'block';
+            console.log('✅ [ADMIN] Admin panel shown');
+        } else {
+            console.warn('⚠️ [ADMIN] Admin panel element not found');
+        }
+        
+        console.log('🔵 [ADMIN] Initializing tab navigation...');
         initTabNavigation();
-        filterAdminMenuByPermissions();
+        
+        console.log('🔵 [ADMIN] Filtering menu by permissions...');
+        if (typeof filterAdminMenuByPermissions === 'function') {
+            filterAdminMenuByPermissions();
+        }
+        
+        console.log('🔵 [ADMIN] Loading dashboard...');
         loadDashboard();
+        
+        console.log('✅ [ADMIN] Admin panel fully initialized');
     }
 });
 
