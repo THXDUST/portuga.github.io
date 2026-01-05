@@ -2,9 +2,18 @@
 -- Run this if you already have an existing database
 
 -- Add table_number column to orders table
-ALTER TABLE orders 
-ADD COLUMN IF NOT EXISTS table_number INT NULL,
-ADD INDEX IF NOT EXISTS idx_table (table_number);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'table_number'
+    ) THEN
+        ALTER TABLE orders ADD COLUMN table_number INT NULL;
+    END IF;
+END $$;
+
+-- Create index if it doesn't exist
+CREATE INDEX IF NOT EXISTS idx_table ON orders(table_number);
 
 -- Add missing permissions (use ON CONFLICT for PostgreSQL)
 INSERT INTO permissions (name, description, resource, action) VALUES
