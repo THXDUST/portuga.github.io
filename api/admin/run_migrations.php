@@ -33,8 +33,8 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['is_admin']) && $_SESSION['is
     $authenticated = true;
 }
 
-// Check for migrations token in header or env
-$providedToken = $_SERVER['HTTP_X_MIGRATIONS_TOKEN'] ?? $_GET['token'] ?? null;
+// Check for migrations token in header
+$providedToken = $_SERVER['HTTP_X_MIGRATIONS_TOKEN'] ?? null;
 $expectedToken = getenv('MIGRATIONS_TOKEN');
 
 if (!$authenticated && $expectedToken && $providedToken === $expectedToken) {
@@ -73,7 +73,27 @@ try {
     }
     
     $migrationFiles = glob($migrationsDir . '/*.sql');
-    sort($migrationFiles);
+    
+    // Sort by numeric prefix for proper ordering
+    usort($migrationFiles, function($a, $b) {
+        $aName = basename($a);
+        $bName = basename($b);
+        
+        // Extract numeric prefix (e.g., "001" from "001_description.sql")
+        preg_match('/^(\d+)/', $aName, $aMatches);
+        preg_match('/^(\d+)/', $bName, $bMatches);
+        
+        $aNum = isset($aMatches[1]) ? (int)$aMatches[1] : 0;
+        $bNum = isset($bMatches[1]) ? (int)$bMatches[1] : 0;
+        
+        // If both have numeric prefixes, sort numerically
+        if ($aNum !== 0 || $bNum !== 0) {
+            return $aNum - $bNum;
+        }
+        
+        // Fallback to alphabetical sorting
+        return strcmp($aName, $bName);
+    });
     
     $results = [];
     $applied = 0;
