@@ -40,28 +40,11 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 // Database configuration
 require_once __DIR__ . '/../config/database.php';
 
-// Get database connection
-function getDBConnection() {
-    $host = getenv('DB_HOST') ?: 'localhost';
-    $dbname = getenv('DB_NAME') ?: 'portuga_db';
-    $username = getenv('DB_USER') ?: 'postgres';
-    $password = getenv('DB_PASS') ?: '';
-    $port = getenv('DB_PORT') ?: '5432';
-    
-    try {
-        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $pdo;
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-        exit();
-    }
-}
-
 // Get current user from session
 function getCurrentUser() {
-    session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     return $_SESSION['user_id'] ?? null;
 }
 
@@ -72,7 +55,9 @@ function isHardcodedUserId($userId) {
 
 // Get hardcoded user data
 function getHardcodedUserProfile($userId) {
-    session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     
     // Map of hardcoded users
     $hardcodedProfiles = [
@@ -165,7 +150,7 @@ function censorEmail($email) {
 $method = $_SERVER['REQUEST_METHOD'];
 $path = $_GET['action'] ?? '';
 
-$pdo = getDBConnection();
+// Don't connect to database yet - only connect if needed (for non-hardcoded users)
 
 switch ($path) {
     case 'info':
@@ -199,6 +184,9 @@ switch ($path) {
             ]);
             exit();
         }
+        
+        // Regular user - get database connection
+        $pdo = getDBConnection();
         
         try {
             // Get user basic info
@@ -301,6 +289,9 @@ switch ($path) {
             ]);
             exit();
         }
+        
+        // Regular user - get database connection
+        $pdo = getDBConnection();
         
         try {
             // Get total spent
@@ -446,6 +437,9 @@ switch ($path) {
         $filepath = $uploadDir . $filename;
         
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            // Get database connection
+            $pdo = getDBConnection();
+            
             try {
                 // Save to database
                 // Note: user_profile_photos table is not in setup.sql - this feature may not be fully implemented
@@ -503,6 +497,9 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => 'Missing menu_item_id']);
             exit();
         }
+        
+        // Get database connection
+        $pdo = getDBConnection();
         
         try {
             // Note: user_favorite_dishes table is not in setup.sql - this feature may not be fully implemented
@@ -563,6 +560,9 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => 'Invalid section']);
             exit();
         }
+        
+        // Get database connection
+        $pdo = getDBConnection();
         
         try {
             // Ensure user has privacy settings
