@@ -104,6 +104,17 @@
     </div>
 
     <script>
+        // HTML escape function to prevent XSS
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         async function runTests() {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '<p>Running tests...</p>';
@@ -184,12 +195,12 @@
                         html += '<tr><th>ID</th><th>Name</th><th>Image Preview</th><th>Image URL</th></tr>';
                         
                         itemsWithImages.slice(0, 5).forEach(item => {
-                            const imageUrl = `/api/dish-image.php?id=${item.id}`;
+                            const imageUrl = `/api/dish-image.php?id=${encodeURIComponent(item.id)}`;
                             html += '<tr>';
-                            html += '<td>' + item.id + '</td>';
-                            html += '<td>' + item.name + '</td>';
-                            html += '<td><img src="' + imageUrl + '" class="test-image" onerror="this.style.border=\'2px solid red\'"></td>';
-                            html += '<td><a href="' + imageUrl + '" target="_blank">View Image</a></td>';
+                            html += '<td>' + escapeHtml(item.id) + '</td>';
+                            html += '<td>' + escapeHtml(item.name) + '</td>';
+                            html += '<td><img src="' + escapeHtml(imageUrl) + '" class="test-image" onerror="this.style.border=\'2px solid red\'"></td>';
+                            html += '<td><a href="' + escapeHtml(imageUrl) + '" target="_blank">View Image</a></td>';
                             html += '</tr>';
                         });
                         

@@ -2,6 +2,8 @@
 # Test script to verify image upload/display fixes
 # Run this after applying database migrations
 
+set -e  # Exit on any error
+
 echo "=========================================="
 echo "🧪 Image Upload/Display Verification Test"
 echo "=========================================="
@@ -13,20 +15,26 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Database connection parameters from environment or defaults
+DB_HOST="${DB_HOST:-localhost}"
+DB_USER="${DB_USER:-postgres}"
+DB_NAME="${DB_NAME:-portuga_db}"
+
 # Check if we can connect to the database
 echo "1️⃣ Checking database connection..."
-if psql -h localhost -U postgres -d portuga_db -c "SELECT 1" > /dev/null 2>&1; then
+if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1" > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC} Database connection successful"
 else
     echo -e "${RED}✗${NC} Cannot connect to database"
     echo "Please check your database configuration"
+    echo "Set DB_HOST, DB_USER, and DB_NAME environment variables if needed"
     exit 1
 fi
 
 # Check if image_data column exists and is correct type
 echo ""
 echo "2️⃣ Checking image_data column..."
-COLUMN_TYPE=$(psql -h localhost -U postgres -d portuga_db -t -c "
+COLUMN_TYPE=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "
     SELECT data_type 
     FROM information_schema.columns 
     WHERE table_name = 'menu_items' 
@@ -50,7 +58,7 @@ fi
 # Check if image_mime_type column exists
 echo ""
 echo "3️⃣ Checking image_mime_type column..."
-MIME_COLUMN=$(psql -h localhost -U postgres -d portuga_db -t -c "
+MIME_COLUMN=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "
     SELECT column_name 
     FROM information_schema.columns 
     WHERE table_name = 'menu_items' 
@@ -68,7 +76,7 @@ fi
 # Check if migrations tracking table exists
 echo ""
 echo "4️⃣ Checking migrations tracking..."
-MIGRATIONS_COUNT=$(psql -h localhost -U postgres -d portuga_db -t -c "
+MIGRATIONS_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "
     SELECT COUNT(*) FROM schema_migrations
 " 2>/dev/null | tr -d '[:space:]')
 
@@ -76,7 +84,7 @@ if [ -n "$MIGRATIONS_COUNT" ]; then
     echo -e "${GREEN}✓${NC} Found $MIGRATIONS_COUNT applied migration(s)"
     echo ""
     echo "Applied migrations:"
-    psql -h localhost -U postgres -d portuga_db -c "
+    psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "
         SELECT version, applied_at 
         FROM schema_migrations 
         ORDER BY applied_at DESC

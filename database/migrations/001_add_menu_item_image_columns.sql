@@ -7,5 +7,5 @@ ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_mime_type VARCHAR(100);
 CREATE INDEX IF NOT EXISTS idx_menu_items_has_image ON menu_items(id) WHERE image_data IS NOT NULL;
 
 -- Add comments explaining the storage format
-COMMENT ON COLUMN menu_items.image_data IS 'Base64-encoded image data (JPEG format after compression)';
-COMMENT ON COLUMN menu_items.image_mime_type IS 'MIME type of the stored image (typically image/jpeg)';
+COMMENT ON COLUMN menu_items.image_data IS 'Base64-encoded image data (compressed to JPEG format during upload, max 1024px)';
+COMMENT ON COLUMN menu_items.image_mime_type IS 'MIME type of the stored image (always image/jpeg after processing)';
