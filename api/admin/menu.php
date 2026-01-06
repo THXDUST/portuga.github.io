@@ -236,6 +236,7 @@ function handleGet($conn, $action) {
             $sql = "
                 SELECT i.id, i.group_id, i.name, i.description, i.price, i.image_url,
                        i.ingredients, i.is_available, i.display_order, i.created_at,
+                       i.image_data, i.image_mime_type,
                        g.name as group_name
                 FROM menu_items i
                 INNER JOIN menu_groups g ON i.group_id = g.id
@@ -289,7 +290,8 @@ function handleGet($conn, $action) {
             
             $result = $conn->query("
                 SELECT id, group_id, name, description, price, image_url, 
-                       ingredients, is_available, display_order
+                       ingredients, is_available, display_order,
+                       image_data, image_mime_type
                 FROM menu_items
                 WHERE is_available = TRUE
                 ORDER BY display_order, name
