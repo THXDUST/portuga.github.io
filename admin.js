@@ -1407,17 +1407,31 @@ async function saveItem(event) {
     event.preventDefault();
     
     const itemId = document.getElementById('item-id')?.value;
-    const groupId = parseInt(document.getElementById('item-group')?.value);
-    const name = document.getElementById('item-name')?.value;
+    const groupIdValue = document.getElementById('item-group')?.value;
+    const name = document.getElementById('item-name')?.value?.trim();
     const description = document.getElementById('item-description')?.value;
-    const price = parseFloat(document.getElementById('item-price')?.value);
+    const priceValue = document.getElementById('item-price')?.value;
     const imageUrl = document.getElementById('item-image')?.value;
     const imageFile = document.getElementById('item-image-upload')?.files[0];
     const available = document.getElementById('item-available')?.checked || false;
     const deliveryEnabled = document.getElementById('item-delivery-enabled')?.checked || false;
     
-    if (!groupId || !name || isNaN(price)) {
-        alert('Por favor, preencha todos os campos obrigatórios.');
+    // Validação melhorada
+    const groupId = groupIdValue ? parseInt(groupIdValue) : null;
+    const price = priceValue ? parseFloat(priceValue) : null;
+    
+    if (!groupId || isNaN(groupId)) {
+        alert('Por favor, selecione um grupo.');
+        return;
+    }
+    
+    if (!name) {
+        alert('Por favor, informe o nome do prato.');
+        return;
+    }
+    
+    if (price === null || isNaN(price) || price < 0) {
+        alert('Por favor, informe um preço válido.');
         return;
     }
     
