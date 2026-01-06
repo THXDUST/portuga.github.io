@@ -1492,6 +1492,14 @@ async function saveItem(event) {
                 body: formData
             });
             
+            // Check if response is JSON before parsing
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('❌ Resposta não-JSON do servidor:', text);
+                throw new Error('O servidor retornou uma resposta inválida (não-JSON). Verifique os logs do servidor ou o console para mais detalhes.');
+            }
+            
             const data = await response.json();
             
             if (DEBUG_MODE) {
@@ -1534,6 +1542,14 @@ async function saveItem(event) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(itemData)
                 });
+            }
+            
+            // Check if response is JSON before parsing
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('❌ Resposta não-JSON do servidor:', text);
+                throw new Error('O servidor retornou uma resposta inválida (não-JSON). Verifique os logs do servidor ou o console para mais detalhes.');
             }
             
             const data = await response.json();
