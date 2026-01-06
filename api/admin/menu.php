@@ -284,8 +284,8 @@ function handlePost($conn, $action) {
                 $imageMimeType = $result['mime_type'];
                 
                 // Get form data from $_POST and sanitize
-                $itemId = !empty($_POST['id']) ? $_POST['id'] : null;
-                $groupId = !empty($_POST['group_id']) ? intval($_POST['group_id']) : null;
+                $itemId = isset($_POST['id']) && $_POST['id'] !== '' ? $_POST['id'] : null;
+                $groupId = isset($_POST['group_id']) && is_numeric($_POST['group_id']) ? intval($_POST['group_id']) : null;
                 $name = isset($_POST['name']) ? trim($_POST['name']) : null;
                 $description = isset($_POST['description']) ? trim($_POST['description']) : null;
                 $price = isset($_POST['price']) && is_numeric($_POST['price']) ? floatval($_POST['price']) : null;
@@ -297,7 +297,7 @@ function handlePost($conn, $action) {
             } else {
                 // JSON request without file
                 $data = getRequestBody();
-                $itemId = !empty($data['id']) ? $data['id'] : null;
+                $itemId = isset($data['id']) && $data['id'] !== '' ? $data['id'] : null;
                 $groupId = isset($data['group_id']) && is_numeric($data['group_id']) ? intval($data['group_id']) : null;
                 $name = isset($data['name']) ? trim($data['name']) : null;
                 $description = isset($data['description']) ? trim($data['description']) : null;
