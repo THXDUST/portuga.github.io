@@ -10,23 +10,6 @@ error_reporting(0);
 
 require_once __DIR__ . '/../config/database.php';
 
-// Get database connection
-function getDBConnection() {
-    $host = getenv('DB_HOST') ?: 'localhost';
-    $dbname = getenv('DB_NAME') ?: 'portuga_db';
-    $username = getenv('DB_USER') ?: 'postgres';
-    $password = getenv('DB_PASS') ?: '';
-    $port = getenv('DB_PORT') ?: '5432';
-    
-    try {
-        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $pdo;
-    } catch (PDOException $e) {
-        return null;
-    }
-}
-
 // Get dish ID from query parameter
 $dishId = $_GET['id'] ?? null;
 
