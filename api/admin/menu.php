@@ -17,7 +17,7 @@ require_once __DIR__ . '/base.php';
 // Debug mode - set to false in production
 // WARNING: Debug mode logs detailed request data including form fields and file information.
 // Only enable temporarily for troubleshooting and disable immediately after diagnosis.
-define('MENU_DEBUG_MODE', false);
+define('MENU_DEBUG_MODE', true);
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
@@ -476,38 +476,81 @@ function handlePost($conn, $action) {
                 $values[] = $itemId;
                 
                 $sql = "UPDATE menu_items SET " . implode(', ', $updates) . " WHERE id = ?";
-                $stmt = $conn->prepare($sql);
                 
-                if ($stmt->execute($values)) {
+                try {
+                    $stmt = $conn->prepare($sql);
+                    
+                    if (!$stmt->execute($values)) {
+                        $errorInfo = $stmt->errorInfo();
+                        debugLog('UPDATE failed', ['errorInfo' => $errorInfo, 'sql' => $sql]);
+                        error_log('UPDATE menu_items failed: ' . print_r($errorInfo, true));
+                        
+                        if (MENU_DEBUG_MODE) {
+                            sendError('Failed to update item: ' . $errorInfo[2], 500);
+                        } else {
+                            sendError('Failed to update item', 500);
+                        }
+                        return;
+                    }
+                    
                     sendSuccess(['id' => $itemId], 'Item updated successfully');
-                } else {
-                    sendError('Failed to update item');
+                } catch (PDOException $e) {
+                    debugLog('UPDATE exception', ['message' => $e->getMessage()]);
+                    error_log('UPDATE menu_items exception: ' . $e->getMessage());
+                    
+                    if (MENU_DEBUG_MODE) {
+                        sendError('Database error updating item: ' . $e->getMessage(), 500);
+                    } else {
+                        sendError('Erro no banco de dados ao atualizar item. Tente novamente.', 500);
+                    }
+                    return;
                 }
             } else {
                 // INSERT new item
-                $stmt = $conn->prepare("
-                    INSERT INTO menu_items (group_id, name, description, price, image_url, 
-                                           ingredients, is_available, delivery_enabled, display_order,
-                                           image_data, image_mime_type)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
+                $sql = "INSERT INTO menu_items (group_id, name, description, price, image_url, 
+                                       ingredients, is_available, delivery_enabled, display_order,
+                                       image_data, image_mime_type)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 
-                if ($stmt->execute([
-                    $groupId,
-                    $name,
-                    $description ?: null,
-                    $price,
-                    $imageUrl,
-                    $ingredients,
-                    $isAvailable,
-                    $deliveryEnabled,
-                    $displayOrder,
-                    $imageData,
-                    $imageMimeType
-                ])) {
+                try {
+                    $stmt = $conn->prepare($sql);
+                    
+                    if (!$stmt->execute([
+                        $groupId,
+                        $name,
+                        $description ?: null,
+                        $price,
+                        $imageUrl,
+                        $ingredients,
+                        $isAvailable,
+                        $deliveryEnabled,
+                        $displayOrder,
+                        $imageData,
+                        $imageMimeType
+                    ])) {
+                        $errorInfo = $stmt->errorInfo();
+                        debugLog('INSERT failed', ['errorInfo' => $errorInfo, 'sql' => $sql]);
+                        error_log('INSERT menu_items failed: ' . print_r($errorInfo, true));
+                        
+                        if (MENU_DEBUG_MODE) {
+                            sendError('Failed to create item: ' . $errorInfo[2], 500);
+                        } else {
+                            sendError('Failed to create item', 500);
+                        }
+                        return;
+                    }
+                    
                     sendSuccess(['id' => $conn->lastInsertId()], 'Item created successfully');
-                } else {
-                    sendError('Failed to create item');
+                } catch (PDOException $e) {
+                    debugLog('INSERT exception', ['message' => $e->getMessage()]);
+                    error_log('INSERT menu_items exception: ' . $e->getMessage());
+                    
+                    if (MENU_DEBUG_MODE) {
+                        sendError('Database error creating item: ' . $e->getMessage(), 500);
+                    } else {
+                        sendError('Erro no banco de dados ao criar item. Tente novamente.', 500);
+                    }
+                    return;
                 }
             }
             break;
@@ -695,15 +738,41 @@ try {
             sendError('Method not allowed', 405);
     }
 } catch (PDOException $e) {
-    // Database errors
-    debugLog('Database error', ['message' => $e->getMessage()]);
-    sendError('Erro no banco de dados. Tente novamente.', 500);
+    // Database errors - log detailed error and return appropriate message
+    $errorMessage = 'Database error: ' . $e->getMessage();
+    error_log($errorMessage);
+    debugLog('Database error', [
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
+    
+    // In debug mode, expose actual error for troubleshooting
+    if (MENU_DEBUG_MODE) {
+        sendError('Erro no banco de dados: ' . $e->getMessage(), 500);
+    } else {
+        sendError('Erro no banco de dados. Tente novamente.', 500);
+    }
 } catch (Exception $e) {
-    // Generic errors
-    debugLog('Exception caught', ['message' => $e->getMessage()]);
+    // Generic errors - log and return detailed message
+    $errorMessage = 'Exception: ' . $e->getMessage();
+    error_log($errorMessage);
+    debugLog('Exception caught', [
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
     sendError('Erro ao processar requisição: ' . $e->getMessage(), 500);
 } catch (Error $e) {
-    // Fatal errors
-    debugLog('Fatal error caught', ['message' => $e->getMessage()]);
+    // Fatal errors - log detailed error
+    $errorMessage = 'Fatal error: ' . $e->getMessage();
+    error_log($errorMessage);
+    debugLog('Fatal error caught', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
     sendError('Erro crítico no servidor', 500);
 }
