@@ -4,6 +4,9 @@ const ADMIN_CREDENTIALS = {
     password: 'portuga123'
 };
 
+// Debug mode for development
+const DEBUG_MODE = true;  // Set to false in production
+
 // Current active tab
 let currentTab = 'dashboard';
 
@@ -1434,18 +1437,20 @@ async function saveItem(event) {
     
     // Parse and validate price
     const price = parseFloat(priceValue);
-    if (priceValue === '' || priceValue === null || priceValue === undefined || isNaN(price) || price < 0) {
+    if (isNaN(price) || price < 0) {
         alert('Por favor, informe um preço válido (maior ou igual a zero).');
         return;
     }
     
-    console.log('📝 saveItem - Validated data:', {
-        itemId: itemId || '(new)',
-        groupId,
-        name,
-        price,
-        hasImage: !!imageFile
-    });
+    if (DEBUG_MODE) {
+        console.log('📝 saveItem - Validated data:', {
+            itemId: itemId || '(new)',
+            groupId,
+            name,
+            price,
+            hasImage: !!imageFile
+        });
+    }
     
     try {
         // If there's an image file, use FormData to upload
@@ -1465,11 +1470,13 @@ async function saveItem(event) {
                 formData.append('id', String(itemId));
             }
             
-            console.log('📤 Sending FormData (with image) to API...');
-            
-            // Debug: log FormData contents
-            for (let pair of formData.entries()) {
-                console.log(`  ${pair[0]}: ${pair[1]}`);
+            if (DEBUG_MODE) {
+                console.log('📤 Sending FormData (with image) to API...');
+                
+                // Debug: log FormData contents
+                for (let pair of formData.entries()) {
+                    console.log(`  ${pair[0]}: ${pair[1]}`);
+                }
             }
             
             const action = itemId && itemId.trim() ? 'update-item' : 'create-item';
@@ -1482,7 +1489,9 @@ async function saveItem(event) {
             
             const data = await response.json();
             
-            console.log('📥 API Response:', data);
+            if (DEBUG_MODE) {
+                console.log('📥 API Response (FormData):', data);
+            }
             
             if (!data.success) {
                 throw new Error(data.error || data.message || 'Erro ao salvar item');
@@ -1499,8 +1508,10 @@ async function saveItem(event) {
                 delivery_enabled: deliveryEnabled
             };
             
-            console.log('📤 Sending JSON (no image) to API...');
-            console.log('  Data:', JSON.stringify(itemData, null, 2));
+            if (DEBUG_MODE) {
+                console.log('📤 Sending JSON (no image) to API...');
+                console.log('  Data:', JSON.stringify(itemData, null, 2));
+            }
             
             let response;
             if (itemId && itemId.trim()) {
@@ -1522,7 +1533,9 @@ async function saveItem(event) {
             
             const data = await response.json();
             
-            console.log('📥 API Response:', data);
+            if (DEBUG_MODE) {
+                console.log('📥 API Response (JSON):', data);
+            }
             
             if (!data.success) {
                 throw new Error(data.error || 'Erro ao salvar item');

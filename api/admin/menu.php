@@ -313,15 +313,15 @@ function handlePost($conn, $action) {
             $errors = [];
             
             if ($groupId === null || $groupId <= 0) {
-                $errors[] = 'group_id (deve ser um número válido maior que zero)';
+                $errors[] = 'grupo (deve ser um número válido maior que zero)';
             }
             
             if (empty($name)) {
-                $errors[] = 'name (nome do prato não pode estar vazio)';
+                $errors[] = 'nome (não pode estar vazio)';
             }
             
             if ($price === null || $price < 0) {
-                $errors[] = 'price (preço deve ser um número válido maior ou igual a zero)';
+                $errors[] = 'preço (deve ser um número válido maior ou igual a zero)';
             }
             
             if (!empty($errors)) {
