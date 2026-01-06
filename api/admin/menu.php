@@ -6,6 +6,9 @@
 
 require_once __DIR__ . '/base.php';
 
+// Debug mode - set to false in production
+define('MENU_DEBUG_MODE', false);
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -274,12 +277,14 @@ function handlePost($conn, $action) {
             
             // Check if this is a multipart form upload (with file)
             if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                // Debug logging for multipart form data
-                error_log('DEBUG: Processing multipart form with image upload');
-                error_log('DEBUG: $_POST data: ' . json_encode($_POST));
-                error_log('DEBUG: $_FILES data: ' . json_encode(array_map(function($file) {
-                    return ['name' => $file['name'], 'type' => $file['type'], 'size' => $file['size'], 'error' => $file['error']];
-                }, $_FILES)));
+                // Debug logging for multipart form data (only in debug mode)
+                if (MENU_DEBUG_MODE) {
+                    error_log('DEBUG: Processing multipart form with image upload');
+                    error_log('DEBUG: $_POST data: ' . json_encode($_POST));
+                    error_log('DEBUG: $_FILES data: ' . json_encode(array_map(function($file) {
+                        return ['name' => $file['name'], 'type' => $file['type'], 'size' => $file['size'], 'error' => $file['error']];
+                    }, $_FILES)));
+                }
                 
                 // Process image upload
                 $result = processImageUpload($_FILES['image']);
@@ -311,8 +316,10 @@ function handlePost($conn, $action) {
                 $displayOrderRaw = isset($_POST['display_order']) ? trim($_POST['display_order']) : '0';
                 $displayOrder = (is_numeric($displayOrderRaw) && $displayOrderRaw !== '') ? intval($displayOrderRaw) : 0;
                 
-                // Debug log parsed values
-                error_log('DEBUG: Parsed values - group_id: ' . var_export($groupId, true) . ', name: ' . var_export($name, true) . ', price: ' . var_export($price, true));
+                // Debug log parsed values (only in debug mode)
+                if (MENU_DEBUG_MODE) {
+                    error_log('DEBUG: Parsed values - group_id: ' . var_export($groupId, true) . ', name: ' . var_export($name, true) . ', price: ' . var_export($price, true));
+                }
             } else {
                 // JSON request without file
                 $data = getRequestBody();
@@ -348,11 +355,13 @@ function handlePost($conn, $action) {
             }
             
             if (!empty($errors)) {
-                $errorMessage = 'Campos obrigatórios inválidos ou ausentes: ' . implode(', ', $errors);
-                if (!empty($debugInfo)) {
-                    $errorMessage .= ' | Valores recebidos: ' . json_encode($debugInfo);
+                // Log detailed debug info server-side only
+                if (MENU_DEBUG_MODE && !empty($debugInfo)) {
+                    error_log('DEBUG: Validation failed - Valores recebidos: ' . json_encode($debugInfo));
                 }
-                error_log('DEBUG: Validation failed - ' . $errorMessage);
+                
+                // Return generic error message to client (without exposing internal values)
+                $errorMessage = 'Campos obrigatórios inválidos ou ausentes: ' . implode(', ', $errors);
                 sendError($errorMessage);
                 return;
             }
