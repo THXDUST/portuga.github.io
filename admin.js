@@ -1416,14 +1416,14 @@ function formatFileSize(bytes) {
 
 /**
  * Comprime uma imagem antes do upload
- * @param {File|Blob} file - Arquivo de imagem original ou Blob
+ * @param {File|Blob} imageSource - Arquivo de imagem original ou Blob já comprimido
  * @param {number} maxWidth - Largura máxima (default: 1200)
  * @param {number} maxHeight - Altura máxima (default: 1200)
  * @param {number} quality - Qualidade JPEG 0-1 (default: 0.8)
  * @returns {Promise<Blob>} - Imagem comprimida como Blob
  * @throws {Error} - Lança erro se falhar ao ler arquivo, carregar imagem ou comprimir
  */
-async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+async function compressImage(imageSource, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -1454,7 +1454,7 @@ async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 
                 canvas.toBlob(
                     (blob) => {
                         if (blob) {
-                            console.log(`📸 Imagem comprimida: ${formatFileSize(file.size)} → ${formatFileSize(blob.size)}`);
+                            console.log(`📸 Imagem comprimida: ${formatFileSize(imageSource.size)} → ${formatFileSize(blob.size)}`);
                             resolve(blob);
                         } else {
                             reject(new Error('Falha ao comprimir imagem'));
@@ -1468,7 +1468,7 @@ async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 
             img.src = e.target.result;
         };
         reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(imageSource);
     });
 }
 
