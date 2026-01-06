@@ -40,29 +40,94 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 // Database configuration
 require_once __DIR__ . '/../config/database.php';
 
-// Get database connection
-function getDBConnection() {
-    $host = getenv('DB_HOST') ?: 'localhost';
-    $dbname = getenv('DB_NAME') ?: 'portuga_db';
-    $username = getenv('DB_USER') ?: 'postgres';
-    $password = getenv('DB_PASS') ?: '';
-    $port = getenv('DB_PORT') ?: '5432';
-    
-    try {
-        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $pdo;
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-        exit();
-    }
-}
-
 // Get current user from session
 function getCurrentUser() {
-    session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     return $_SESSION['user_id'] ?? null;
+}
+
+// Check if user is a hardcoded user (negative ID)
+function isHardcodedUserId($userId) {
+    return $userId < 0;
+}
+
+// Get hardcoded user data
+function getHardcodedUserProfile($userId) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    // Map of hardcoded users
+    $hardcodedProfiles = [
+        -1 => [
+            'id' => -1,
+            'full_name' => 'Cliente Teste',
+            'email' => 'customer@test',
+            'email_censored' => 'cus***@test',
+            'created_at' => '2026-01-01 00:00:00',
+            'oauth_provider' => 'none',
+            'photo_path' => null,
+            'favorite_dish_id' => null,
+            'favorite_dish_name' => null,
+            'roles' => []
+        ],
+        -2 => [
+            'id' => -2,
+            'full_name' => 'Garçom Teste',
+            'email' => 'waiter@test',
+            'email_censored' => 'wai***@test',
+            'created_at' => '2026-01-01 00:00:00',
+            'oauth_provider' => 'none',
+            'photo_path' => null,
+            'favorite_dish_id' => null,
+            'favorite_dish_name' => null,
+            'roles' => [['name' => 'Atendente', 'description' => 'Atendente do restaurante']]
+        ],
+        -3 => [
+            'id' => -3,
+            'full_name' => 'Administrador Teste',
+            'email' => 'admin@test',
+            'email_censored' => 'adm***@test',
+            'created_at' => '2026-01-01 00:00:00',
+            'oauth_provider' => 'none',
+            'photo_path' => null,
+            'favorite_dish_id' => null,
+            'favorite_dish_name' => null,
+            'roles' => [['name' => 'Admin', 'description' => 'Administrador do sistema']]
+        ]
+    ];
+    
+    if (!isset($hardcodedProfiles[$userId])) {
+        return null;
+    }
+    
+    $profile = $hardcodedProfiles[$userId];
+    
+    // Add default privacy settings
+    $profile['privacy_settings'] = [
+        'show_statistics' => true,
+        'show_total_spent' => true,
+        'show_favorite_dish' => true,
+        'show_order_count' => true,
+        'show_last_review' => true,
+        'updated_at' => '2026-01-01 00:00:00'
+    ];
+    
+    return $profile;
+}
+
+// Get hardcoded user statistics
+function getHardcodedUserStatistics($userId) {
+    return [
+        'total_spent' => 0.0,
+        'total_orders' => 0,
+        'most_ordered' => null,
+        'last_review' => null,
+        'is_employee' => ($userId === -2 || $userId === -3),
+        'employee_stats' => ($userId === -2 || $userId === -3) ? ['top_dishes' => []] : null
+    ];
 }
 
 // Censor email for privacy
@@ -85,7 +150,7 @@ function censorEmail($email) {
 $method = $_SERVER['REQUEST_METHOD'];
 $path = $_GET['action'] ?? '';
 
-$pdo = getDBConnection();
+// Don't connect to database yet - only connect if needed (for non-hardcoded users)
 
 switch ($path) {
     case 'info':
@@ -102,6 +167,26 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => 'Not authenticated']);
             exit();
         }
+        
+        // Handle hardcoded users
+        if (isHardcodedUserId($userId)) {
+            $user = getHardcodedUserProfile($userId);
+            
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'User not found']);
+                exit();
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'user' => $user
+            ]);
+            exit();
+        }
+        
+        // Regular user - get database connection
+        $pdo = getDBConnection();
         
         try {
             // Get user basic info
@@ -193,6 +278,20 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => 'Not authenticated']);
             exit();
         }
+        
+        // Handle hardcoded users
+        if (isHardcodedUserId($userId)) {
+            $statistics = getHardcodedUserStatistics($userId);
+            
+            echo json_encode([
+                'success' => true,
+                'statistics' => $statistics
+            ]);
+            exit();
+        }
+        
+        // Regular user - get database connection
+        $pdo = getDBConnection();
         
         try {
             // Get total spent
@@ -338,6 +437,9 @@ switch ($path) {
         $filepath = $uploadDir . $filename;
         
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            // Get database connection
+            $pdo = getDBConnection();
+            
             try {
                 // Save to database
                 // Note: user_profile_photos table is not in setup.sql - this feature may not be fully implemented
@@ -395,6 +497,9 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => 'Missing menu_item_id']);
             exit();
         }
+        
+        // Get database connection
+        $pdo = getDBConnection();
         
         try {
             // Note: user_favorite_dishes table is not in setup.sql - this feature may not be fully implemented
@@ -455,6 +560,9 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => 'Invalid section']);
             exit();
         }
+        
+        // Get database connection
+        $pdo = getDBConnection();
         
         try {
             // Ensure user has privacy settings

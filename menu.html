@@ -202,7 +202,7 @@
         function renderMenuItem(item) {
             // Use dish-image.php endpoint which handles BLOB/default.png fallback
             const imageUrl = `/api/dish-image.php?id=${item.id}`;
-            const fallbackUrl = item.image_url || `https://via.placeholder.com/400x200/e8c13f/333?text=${encodeURIComponent(item.name)}`;
+            const fallbackUrl = item.image_url || '/images/default.png';
             const price = parseFloat(item.price).toFixed(2);
             const itemId = parseInt(item.id) || 0;
             
