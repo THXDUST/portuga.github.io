@@ -176,25 +176,64 @@ nav {
 
 nav ul {
     list-style: none;
-    display: flex;
-    justify-content: center;
-    padding: 15px 0;
-    flex-wrap: wrap;
+    /* Apply grid layout for all screen sizes */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px 15px;
+    padding: 15px;
+    align-items: start;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 nav ul li {
-    margin: 5px 15px;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    list-style: none;
 }
 
 nav ul li a {
+    display: block;
+    padding: 12px 10px;
     color: #333;
     text-decoration: none;
     font-weight: 600;
-    transition: color 0.3s ease;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    transition: all 0.2s ease;
 }
 
 nav ul li a:hover {
     color: #e8c13f;
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive grid columns for different screen sizes */
+@media (min-width: 1400px) {
+    nav ul {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    nav ul {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    nav ul {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    nav ul {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 /* Hamburger Menu */
@@ -804,15 +843,7 @@ nav ul li a:hover {
         display: block;
         padding: 12px 8px;
         font-size: 0.9rem;
-        border-radius: 6px;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-        transition: all 0.2s ease;
-    }
-    
-    nav ul li a:hover {
-        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        /* Styles already applied in base */
     }
     
     .cart-item {
