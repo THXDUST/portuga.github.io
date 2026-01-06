@@ -60,12 +60,17 @@ try {
     
     // Priority: 1) BLOB data, 2) image_url (legacy), 3) default
     if ($item['image_data']) {
-        // Serve from BLOB
+        // Serve from BLOB - decode Base64 first
+        $imageData = base64_decode($item['image_data']);
+        if ($imageData === false) {
+            // If decode fails, try using data as-is (for legacy non-base64 data)
+            $imageData = $item['image_data'];
+        }
         $mimeType = $item['image_mime_type'] ?: 'image/jpeg';
         header('Content-Type: ' . $mimeType);
-        header('Content-Length: ' . strlen($item['image_data']));
+        header('Content-Length: ' . strlen($imageData));
         header('Cache-Control: public, max-age=86400'); // Cache for 1 day
-        echo $item['image_data'];
+        echo $imageData;
     } elseif ($item['image_url']) {
         // Redirect to legacy image URL
         header('Location: ' . $item['image_url']);
