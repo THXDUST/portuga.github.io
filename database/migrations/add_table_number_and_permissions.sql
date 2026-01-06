@@ -15,7 +15,7 @@ END $$;
 -- Create index if it doesn't exist
 CREATE INDEX IF NOT EXISTS idx_table ON orders(table_number);
 
--- Add missing permissions (use ON CONFLICT for PostgreSQL)
+-- Add missing permissions (use ON CONFLICT for PostgreSQL idempotency)
 INSERT INTO permissions (name, description, resource, action) VALUES
 ('admin_panel_access', 'Acesso ao painel administrativo', 'admin', 'access'),
 ('permissions_management', 'Gerenciar permissões', 'permissions', 'manage'),
@@ -29,20 +29,26 @@ INSERT INTO permissions (name, description, resource, action) VALUES
 ('reports_access', 'Acesso aos relatórios', 'reports', 'access')
 ON CONFLICT (name) DO NOTHING;
 
--- Assign all permissions to Admin role (role_id = 1)
+-- Assign all permissions to Admin role using subquery
+-- This ensures the migration works even if role IDs are different
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT 1, id FROM permissions
+SELECT r.id, p.id 
+FROM roles r, permissions p
+WHERE r.name = 'Admin'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
--- Assign appropriate permissions to Atendente role (role_id = 3)
+-- Assign appropriate permissions to Atendente role using subquery
+-- Only assigns permissions that should be available to Atendente
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT 3, id FROM permissions 
-WHERE name IN (
+SELECT r.id, p.id 
+FROM roles r, permissions p
+WHERE r.name = 'Atendente' 
+  AND p.name IN (
     'admin_panel_access',
     'order_view',
     'order_create', 
     'order_update',
     'orders_status',
     'menu_view'
-)
+  )
 ON CONFLICT (role_id, permission_id) DO NOTHING;
