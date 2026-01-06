@@ -419,12 +419,12 @@ function renderCart() {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
         
-        const imageSrc = item.image || 'https://via.placeholder.com/80x80/e8c13f/333?text=Prato';
+        const imageSrc = item.image || '/images/default.png';
         
         html += `
             <div class="cart-item">
                 <img src="${imageSrc}" alt="${item.name}" class="cart-item-image" 
-                     onerror="this.src='https://via.placeholder.com/80x80/e8c13f/333?text=Prato'">
+                     onerror="this.src='/images/default.png'">
                 <div class="cart-item-info">
                     <h3 class="cart-item-name">${item.name}</h3>
                     <p class="cart-item-price">R$ ${item.price.toFixed(2)}</p>

@@ -65,6 +65,86 @@ function getCurrentUser() {
     return $_SESSION['user_id'] ?? null;
 }
 
+// Check if user is a hardcoded user (negative ID)
+function isHardcodedUserId($userId) {
+    return $userId < 0;
+}
+
+// Get hardcoded user data
+function getHardcodedUserProfile($userId) {
+    session_start();
+    
+    // Map of hardcoded users
+    $hardcodedProfiles = [
+        -1 => [
+            'id' => -1,
+            'full_name' => 'Cliente Teste',
+            'email' => 'customer@test',
+            'email_censored' => 'cus***@test',
+            'created_at' => '2026-01-01 00:00:00',
+            'oauth_provider' => 'none',
+            'photo_path' => null,
+            'favorite_dish_id' => null,
+            'favorite_dish_name' => null,
+            'roles' => []
+        ],
+        -2 => [
+            'id' => -2,
+            'full_name' => 'Garçom Teste',
+            'email' => 'waiter@test',
+            'email_censored' => 'wai***@test',
+            'created_at' => '2026-01-01 00:00:00',
+            'oauth_provider' => 'none',
+            'photo_path' => null,
+            'favorite_dish_id' => null,
+            'favorite_dish_name' => null,
+            'roles' => [['name' => 'Atendente', 'description' => 'Atendente do restaurante']]
+        ],
+        -3 => [
+            'id' => -3,
+            'full_name' => 'Administrador Teste',
+            'email' => 'admin@test',
+            'email_censored' => 'adm***@test',
+            'created_at' => '2026-01-01 00:00:00',
+            'oauth_provider' => 'none',
+            'photo_path' => null,
+            'favorite_dish_id' => null,
+            'favorite_dish_name' => null,
+            'roles' => [['name' => 'Admin', 'description' => 'Administrador do sistema']]
+        ]
+    ];
+    
+    if (!isset($hardcodedProfiles[$userId])) {
+        return null;
+    }
+    
+    $profile = $hardcodedProfiles[$userId];
+    
+    // Add default privacy settings
+    $profile['privacy_settings'] = [
+        'show_statistics' => true,
+        'show_total_spent' => true,
+        'show_favorite_dish' => true,
+        'show_order_count' => true,
+        'show_last_review' => true,
+        'updated_at' => '2026-01-01 00:00:00'
+    ];
+    
+    return $profile;
+}
+
+// Get hardcoded user statistics
+function getHardcodedUserStatistics($userId) {
+    return [
+        'total_spent' => 0.0,
+        'total_orders' => 0,
+        'most_ordered' => null,
+        'last_review' => null,
+        'is_employee' => ($userId === -2 || $userId === -3),
+        'employee_stats' => ($userId === -2 || $userId === -3) ? ['top_dishes' => []] : null
+    ];
+}
+
 // Censor email for privacy
 function censorEmail($email) {
     if (!$email) return '';
@@ -100,6 +180,23 @@ switch ($path) {
         if (!$userId) {
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            exit();
+        }
+        
+        // Handle hardcoded users
+        if (isHardcodedUserId($userId)) {
+            $user = getHardcodedUserProfile($userId);
+            
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'User not found']);
+                exit();
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'user' => $user
+            ]);
             exit();
         }
         
@@ -191,6 +288,17 @@ switch ($path) {
         if (!$userId) {
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            exit();
+        }
+        
+        // Handle hardcoded users
+        if (isHardcodedUserId($userId)) {
+            $statistics = getHardcodedUserStatistics($userId);
+            
+            echo json_encode([
+                'success' => true,
+                'statistics' => $statistics
+            ]);
             exit();
         }
         
