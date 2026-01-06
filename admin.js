@@ -1416,7 +1416,7 @@ async function saveItem(event) {
     const available = document.getElementById('item-available')?.checked || false;
     const deliveryEnabled = document.getElementById('item-delivery-enabled')?.checked || false;
     
-    // Validação melhorada
+    // Enhanced validation
     const groupId = groupIdValue ? parseInt(groupIdValue) : null;
     const price = priceValue ? parseFloat(priceValue) : null;
     
