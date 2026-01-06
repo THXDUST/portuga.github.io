@@ -205,27 +205,6 @@ function processImageUpload($file) {
     }
 }
 
-try {
-    switch ($method) {
-        case 'GET':
-            handleGet($conn, $action);
-            break;
-        case 'POST':
-            handlePost($conn, $action);
-            break;
-        case 'PUT':
-            handlePut($conn, $action);
-            break;
-        case 'DELETE':
-            handleDelete($conn, $action);
-            break;
-        default:
-            sendError('Method not allowed', 405);
-    }
-} catch (Exception $e) {
-    sendError($e->getMessage(), 500);
-}
-
 function handleGet($conn, $action) {
     switch ($action) {
         case 'groups':
