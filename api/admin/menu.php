@@ -230,7 +230,10 @@ function handleGet($conn, $action) {
                 sendSuccess($groups);
             } catch (PDOException $e) {
                 // If the table doesn't exist, return empty array
-                if (strpos($e->getMessage(), 'does not exist') !== false) {
+                // PostgreSQL error code 42P01 = undefined_table
+                $errorInfo = $e->errorInfo ?? null;
+                $sqlState = $errorInfo[0] ?? null;
+                if ($sqlState === '42P01' || strpos($e->getMessage(), 'does not exist') !== false) {
                     sendSuccess([]);
                 } else {
                     throw $e;
@@ -265,7 +268,10 @@ function handleGet($conn, $action) {
                 sendSuccess($items);
             } catch (PDOException $e) {
                 // If the table doesn't exist, return empty array
-                if (strpos($e->getMessage(), 'does not exist') !== false) {
+                // PostgreSQL error code 42P01 = undefined_table
+                $errorInfo = $e->errorInfo ?? null;
+                $sqlState = $errorInfo[0] ?? null;
+                if ($sqlState === '42P01' || strpos($e->getMessage(), 'does not exist') !== false) {
                     sendSuccess([]);
                 } else {
                     throw $e;
