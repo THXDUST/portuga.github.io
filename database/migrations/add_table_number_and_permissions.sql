@@ -33,7 +33,8 @@ ON CONFLICT (name) DO NOTHING;
 -- This ensures the migration works even if role IDs are different
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id 
-FROM roles r, permissions p
+FROM roles r
+CROSS JOIN permissions p
 WHERE r.name = 'Admin'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
@@ -41,7 +42,8 @@ ON CONFLICT (role_id, permission_id) DO NOTHING;
 -- Only assigns permissions that should be available to Atendente
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id 
-FROM roles r, permissions p
+FROM roles r
+CROSS JOIN permissions p
 WHERE r.name = 'Atendente' 
   AND p.name IN (
     'admin_panel_access',
