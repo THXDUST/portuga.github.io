@@ -12,23 +12,6 @@ require_once __DIR__ . '/../config/database.php';
 // Configuration constants
 const SAMPLE_SIZE = 100; // Size of base64 sample to check for validation
 
-// Get database connection
-function getDBConnection() {
-    $host = getenv('DB_HOST') ?: 'localhost';
-    $dbname = getenv('DB_NAME') ?: 'portuga_db';
-    $username = getenv('DB_USER') ?: 'postgres';
-    $password = getenv('DB_PASS') ?: '';
-    $port = getenv('DB_PORT') ?: '5432';
-    
-    try {
-        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $pdo;
-    } catch (PDOException $e) {
-        return null;
-    }
-}
-
 $diagnostics = [
     'timestamp' => date('Y-m-d H:i:s'),
     'database' => [
