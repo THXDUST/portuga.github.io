@@ -96,10 +96,25 @@ Campos obrigatórios inválidos ou ausentes:
 
 ## Production Deployment
 
-Before deploying to production:
-1. Set `DEBUG_MODE = false` in `admin.js` line 6
-2. Test all functionality
+⚠️ **IMPORTANT** - Before deploying to production:
+
+1. **Set `DEBUG_MODE = false` in `admin.js` line 8**
+   ```javascript
+   const DEBUG_MODE = false;  // MUST be false in production
+   ```
+   This prevents information disclosure through console logs.
+
+2. Test all functionality in staging environment first
+
 3. Check browser console for any errors
+
+4. Verify no sensitive data is logged
+
+## Security Considerations
+
+- **DEBUG_MODE**: Exposes form data and API responses in console
+- **Production**: MUST set DEBUG_MODE=false to prevent information leakage
+- **Error Messages**: Use Portuguese to be user-friendly without exposing system internals
 
 ## Need Help?
 

@@ -5,7 +5,8 @@ const ADMIN_CREDENTIALS = {
 };
 
 // Debug mode for development
-const DEBUG_MODE = true;  // Set to false in production
+// IMPORTANT: Set to false in production to prevent information disclosure
+const DEBUG_MODE = false;  // Change to true only for development/debugging
 
 // Current active tab
 let currentTab = 'dashboard';

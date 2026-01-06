@@ -266,6 +266,13 @@ PHP's `is_numeric("NaN")` returns `false`, which our validation now checks.
 1. This fix doesn't address database schema issues (if any)
 2. Assumes menu groups already exist before adding items
 3. Doesn't validate image file formats (handled elsewhere)
+4. Error messages use Portuguese field names (grupo, nome, preço) which is consistent for Portuguese users but the main error prefix "Campos obrigatórios inválidos ou ausentes:" could be localized further
+
+## Security Notes
+
+1. **DEBUG_MODE**: Set to `false` in production to prevent information disclosure through console logs
+2. **Sensitive Data**: Debug logs may expose form data - only enable in development environment
+3. **Error Messages**: Portuguese error messages are user-friendly but don't expose sensitive system information
 
 ## Future Improvements
 
@@ -274,3 +281,5 @@ Consider adding:
 - TypeScript for better type safety
 - Unit tests for the saveItem function
 - Integration tests for the API endpoint
+- Environment variable for DEBUG_MODE instead of hardcoded value
+- Centralized error message management with full i18n support
