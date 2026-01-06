@@ -1367,19 +1367,17 @@ function setupImagePreview() {
         imageUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                // Validate file size
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Arquivo muito grande! O tamanho máximo é 5MB.');
-                    e.target.value = '';
-                    return;
-                }
-                
                 // Validate file type
                 const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
                 if (!validTypes.includes(file.type)) {
                     alert('Tipo de arquivo inválido! Use JPEG, PNG ou WebP.');
                     e.target.value = '';
                     return;
+                }
+                
+                // Show file size warning if large (but don't block - compression will handle it)
+                if (file.size > 5 * 1024 * 1024) {
+                    console.log(`⚠️ Arquivo grande detectado (${formatFileSize(file.size)}). Será comprimido automaticamente antes do upload.`);
                 }
                 
                 // Show preview
@@ -1405,6 +1403,73 @@ function closeItemModal() {
         }
         document.getElementById('image-preview').style.display = 'none';
     }
+}
+
+/**
+ * Formata tamanho de arquivo em MB
+ * @param {number} bytes - Tamanho em bytes
+ * @returns {string} - Tamanho formatado (ex: "2.45MB")
+ */
+function formatFileSize(bytes) {
+    return (bytes / 1024 / 1024).toFixed(2) + 'MB';
+}
+
+/**
+ * Comprime uma imagem antes do upload
+ * @param {File|Blob} imageSource - Arquivo de imagem original ou Blob já comprimido
+ * @param {number} maxWidth - Largura máxima (default: 1200)
+ * @param {number} maxHeight - Altura máxima (default: 1200)
+ * @param {number} quality - Qualidade JPEG 0-1 (default: 0.8)
+ * @returns {Promise<Blob>} - Imagem comprimida como Blob
+ * @throws {Error} - Lança erro se falhar ao ler arquivo, carregar imagem ou comprimir
+ */
+async function compressImage(imageSource, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Calcular novas dimensões mantendo aspect ratio
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = Math.round((width * maxHeight) / height);
+                    height = maxHeight;
+                }
+                
+                // Criar canvas e desenhar imagem redimensionada
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Converter para Blob JPEG comprimido
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            console.log(`📸 Imagem comprimida: ${formatFileSize(imageSource.size)} → ${formatFileSize(blob.size)}`);
+                            resolve(blob);
+                        } else {
+                            reject(new Error('Falha ao comprimir imagem'));
+                        }
+                    },
+                    'image/jpeg',
+                    quality
+                );
+            };
+            img.onerror = () => reject(new Error('Falha ao carregar imagem'));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+        reader.readAsDataURL(imageSource);
+    });
 }
 
 async function saveItem(event) {
@@ -1472,8 +1537,35 @@ async function saveItem(event) {
             formData.append('is_available', available ? '1' : '0');
             formData.append('delivery_enabled', deliveryEnabled ? '1' : '0');
             
-            // Append image file LAST to avoid any potential parsing issues
-            formData.append('image', imageFile);
+            // COMPRIMIR A IMAGEM ANTES DE ADICIONAR AO FORMDATA
+            try {
+                // Mostrar feedback ao usuário
+                console.log(`📤 Comprimindo imagem... Tamanho original: ${formatFileSize(imageFile.size)}`);
+                
+                // Comprimir imagem
+                const compressedBlob = await compressImage(imageFile, 1200, 1200, 0.8);
+                console.log(`✅ Imagem comprimida: ${formatFileSize(compressedBlob.size)}`);
+                
+                // Verificar se ainda está muito grande (> 5MB)
+                if (compressedBlob.size > 5 * 1024 * 1024) {
+                    // Tentar comprimir mais - usar o blob já comprimido como base
+                    console.log(`⚠️ Imagem ainda muito grande (${formatFileSize(compressedBlob.size)}). Tentando compressão adicional...`);
+                    const moreCompressedBlob = await compressImage(compressedBlob, 800, 800, 0.6);
+                    console.log(`🔄 Nova compressão: ${formatFileSize(moreCompressedBlob.size)}`);
+                    
+                    if (moreCompressedBlob.size > 5 * 1024 * 1024) {
+                        throw new Error('Imagem muito grande mesmo após compressão. Por favor, use uma imagem menor.');
+                    }
+                    formData.append('image', moreCompressedBlob, 'image.jpg');
+                } else {
+                    // Append image file LAST to avoid any potential parsing issues
+                    formData.append('image', compressedBlob, 'image.jpg');
+                }
+            } catch (compressError) {
+                console.error('Erro ao comprimir imagem:', compressError);
+                alert('Erro ao processar imagem: ' + compressError.message);
+                return;
+            }
             
             if (DEBUG_MODE) {
                 console.log('📤 Sending FormData (with image) to API...');
