@@ -59,19 +59,23 @@ try {
     }
     
     // Priority: 1) BLOB data, 2) image_url (legacy), 3) default
-    if ($item['image_data']) {
+    // Check if image_data exists and is not empty (trim whitespace for safety)
+    if (!empty($item['image_data']) && trim($item['image_data']) !== '') {
         // Serve from BLOB - decode Base64 first
-        $imageData = base64_decode($item['image_data']);
-        if ($imageData === false) {
-            // If decode fails, try using data as-is (for legacy non-base64 data)
-            $imageData = $item['image_data'];
+        $imageData = base64_decode($item['image_data'], true); // Strict mode
+        
+        // Validate decoded data is not empty and decode was successful
+        if ($imageData !== false && strlen($imageData) > 0) {
+            $mimeType = $item['image_mime_type'] ?: 'image/jpeg';
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . strlen($imageData));
+            header('Cache-Control: public, max-age=86400'); // Cache for 1 day
+            echo $imageData;
+        } else {
+            // Invalid base64 or empty data, fall back to default
+            serveDefaultImage();
         }
-        $mimeType = $item['image_mime_type'] ?: 'image/jpeg';
-        header('Content-Type: ' . $mimeType);
-        header('Content-Length: ' . strlen($imageData));
-        header('Cache-Control: public, max-age=86400'); // Cache for 1 day
-        echo $imageData;
-    } elseif ($item['image_url']) {
+    } elseif (!empty($item['image_url']) && trim($item['image_url']) !== '') {
         // Redirect to legacy image URL
         header('Location: ' . $item['image_url']);
     } else {
