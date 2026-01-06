@@ -283,34 +283,49 @@ function handlePost($conn, $action) {
                 $imageData = $result['data'];
                 $imageMimeType = $result['mime_type'];
                 
-                // Get form data from $_POST
-                $itemId = $_POST['id'] ?? null;
-                $groupId = $_POST['group_id'] ?? null;
-                $name = $_POST['name'] ?? null;
-                $description = $_POST['description'] ?? null;
-                $price = $_POST['price'] ?? null;
+                // Get form data from $_POST and sanitize
+                $itemId = !empty($_POST['id']) ? $_POST['id'] : null;
+                $groupId = !empty($_POST['group_id']) ? intval($_POST['group_id']) : null;
+                $name = isset($_POST['name']) ? trim($_POST['name']) : null;
+                $description = isset($_POST['description']) ? trim($_POST['description']) : null;
+                $price = isset($_POST['price']) && is_numeric($_POST['price']) ? floatval($_POST['price']) : null;
                 $isAvailable = isset($_POST['is_available']) && $_POST['is_available'] === '1';
                 $deliveryEnabled = isset($_POST['delivery_enabled']) && $_POST['delivery_enabled'] === '1';
                 $imageUrl = null; // No legacy image_url when uploading file
-                $ingredients = $_POST['ingredients'] ?? null;
-                $displayOrder = $_POST['display_order'] ?? 0;
+                $ingredients = isset($_POST['ingredients']) ? trim($_POST['ingredients']) : null;
+                $displayOrder = isset($_POST['display_order']) && is_numeric($_POST['display_order']) ? intval($_POST['display_order']) : 0;
             } else {
                 // JSON request without file
                 $data = getRequestBody();
-                $itemId = $data['id'] ?? null;
-                $groupId = $data['group_id'] ?? null;
-                $name = $data['name'] ?? null;
-                $description = $data['description'] ?? null;
-                $price = $data['price'] ?? null;
+                $itemId = !empty($data['id']) ? $data['id'] : null;
+                $groupId = isset($data['group_id']) && is_numeric($data['group_id']) ? intval($data['group_id']) : null;
+                $name = isset($data['name']) ? trim($data['name']) : null;
+                $description = isset($data['description']) ? trim($data['description']) : null;
+                $price = isset($data['price']) && is_numeric($data['price']) ? floatval($data['price']) : null;
                 $isAvailable = $data['is_available'] ?? true;
                 $deliveryEnabled = $data['delivery_enabled'] ?? true;
                 $imageUrl = $data['image_url'] ?? null;
-                $ingredients = $data['ingredients'] ?? null;
-                $displayOrder = $data['display_order'] ?? 0;
+                $ingredients = isset($data['ingredients']) ? trim($data['ingredients']) : null;
+                $displayOrder = isset($data['display_order']) && is_numeric($data['display_order']) ? intval($data['display_order']) : 0;
             }
             
-            if (!$groupId || !$name || !$price) {
-                sendError('Missing required fields: group_id, name, price');
+            // Strict validation with proper type checking
+            $errors = [];
+            
+            if ($groupId === null || $groupId <= 0) {
+                $errors[] = 'group_id (deve ser um número válido maior que zero)';
+            }
+            
+            if (empty($name)) {
+                $errors[] = 'name (nome do prato não pode estar vazio)';
+            }
+            
+            if ($price === null || $price < 0) {
+                $errors[] = 'price (preço deve ser um número válido maior ou igual a zero)';
+            }
+            
+            if (!empty($errors)) {
+                sendError('Campos obrigatórios inválidos ou ausentes: ' . implode(', ', $errors));
                 return;
             }
             

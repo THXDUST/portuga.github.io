@@ -1406,9 +1406,10 @@ function closeItemModal() {
 async function saveItem(event) {
     event.preventDefault();
     
+    // Get raw values from form
     const itemId = document.getElementById('item-id')?.value;
     const groupIdValue = document.getElementById('item-group')?.value;
-    const name = document.getElementById('item-name')?.value?.trim();
+    const nameValue = document.getElementById('item-name')?.value;
     const description = document.getElementById('item-description')?.value;
     const priceValue = document.getElementById('item-price')?.value;
     const imageUrl = document.getElementById('item-image')?.value;
@@ -1416,43 +1417,63 @@ async function saveItem(event) {
     const available = document.getElementById('item-available')?.checked || false;
     const deliveryEnabled = document.getElementById('item-delivery-enabled')?.checked || false;
     
-    // Enhanced validation
-    const groupId = groupIdValue ? parseInt(groupIdValue) : null;
-    const price = priceValue ? parseFloat(priceValue) : null;
-    
-    if (!groupId || isNaN(groupId)) {
-        alert('Por favor, selecione um grupo.');
-        return;
-    }
-    
+    // Enhanced validation and sanitization
+    // Clean and validate name
+    const name = nameValue ? nameValue.trim() : '';
     if (!name) {
         alert('Por favor, informe o nome do prato.');
         return;
     }
     
-    if (price === null || isNaN(price) || price < 0) {
-        alert('Por favor, informe um preço válido.');
+    // Parse and validate group_id
+    const groupId = parseInt(groupIdValue);
+    if (!groupIdValue || isNaN(groupId) || groupId <= 0) {
+        alert('Por favor, selecione um grupo válido.');
         return;
     }
+    
+    // Parse and validate price
+    const price = parseFloat(priceValue);
+    if (priceValue === '' || priceValue === null || priceValue === undefined || isNaN(price) || price < 0) {
+        alert('Por favor, informe um preço válido (maior ou igual a zero).');
+        return;
+    }
+    
+    console.log('📝 saveItem - Validated data:', {
+        itemId: itemId || '(new)',
+        groupId,
+        name,
+        price,
+        hasImage: !!imageFile
+    });
     
     try {
         // If there's an image file, use FormData to upload
         if (imageFile) {
             const formData = new FormData();
-            formData.append('group_id', groupId);
-            formData.append('name', name);
-            formData.append('description', description || '');
-            formData.append('price', price);
+            
+            // Append with explicit string conversion to ensure proper formatting
+            formData.append('group_id', String(groupId));
+            formData.append('name', String(name));
+            formData.append('description', String(description || ''));
+            formData.append('price', String(price));
             formData.append('is_available', available ? '1' : '0');
             formData.append('delivery_enabled', deliveryEnabled ? '1' : '0');
             formData.append('image', imageFile);
             
-            if (itemId) {
-                formData.append('id', itemId);
+            if (itemId && itemId.trim()) {
+                formData.append('id', String(itemId));
             }
             
-            const action = itemId ? 'update-item' : 'create-item';
-            const method = itemId ? 'POST' : 'POST'; // Both use POST for file upload
+            console.log('📤 Sending FormData (with image) to API...');
+            
+            // Debug: log FormData contents
+            for (let pair of formData.entries()) {
+                console.log(`  ${pair[0]}: ${pair[1]}`);
+            }
+            
+            const action = itemId && itemId.trim() ? 'update-item' : 'create-item';
+            const method = 'POST'; // POST for file upload
             
             const response = await fetch(`/api/admin/menu.php?action=${action}`, {
                 method: method,
@@ -1460,6 +1481,8 @@ async function saveItem(event) {
             });
             
             const data = await response.json();
+            
+            console.log('📥 API Response:', data);
             
             if (!data.success) {
                 throw new Error(data.error || data.message || 'Erro ao salvar item');
@@ -1476,8 +1499,11 @@ async function saveItem(event) {
                 delivery_enabled: deliveryEnabled
             };
             
+            console.log('📤 Sending JSON (no image) to API...');
+            console.log('  Data:', JSON.stringify(itemData, null, 2));
+            
             let response;
-            if (itemId) {
+            if (itemId && itemId.trim()) {
                 // Update existing item
                 itemData.id = parseInt(itemId);
                 response = await fetch('/api/admin/menu.php?action=update-item', {
@@ -1495,6 +1521,8 @@ async function saveItem(event) {
             }
             
             const data = await response.json();
+            
+            console.log('📥 API Response:', data);
             
             if (!data.success) {
                 throw new Error(data.error || 'Erro ao salvar item');
