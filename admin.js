@@ -1367,19 +1367,18 @@ function setupImagePreview() {
         imageUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                // Validate file size
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Arquivo muito grande! O tamanho máximo é 5MB.');
-                    e.target.value = '';
-                    return;
-                }
-                
                 // Validate file type
                 const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
                 if (!validTypes.includes(file.type)) {
                     alert('Tipo de arquivo inválido! Use JPEG, PNG ou WebP.');
                     e.target.value = '';
                     return;
+                }
+                
+                // Show file size warning if large (but don't block - compression will handle it)
+                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                if (file.size > 5 * 1024 * 1024) {
+                    console.log(`⚠️ Arquivo grande detectado (${fileSizeMB}MB). Será comprimido automaticamente antes do upload.`);
                 }
                 
                 // Show preview
