@@ -183,15 +183,22 @@ CREATE TABLE IF NOT EXISTS menu_items (
     display_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    image_data TEXT,
+    image_mime_type VARCHAR(100),
     FOREIGN KEY (group_id) REFERENCES menu_groups(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_menu_items_group ON menu_items(group_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_available ON menu_items(is_available);
 CREATE INDEX IF NOT EXISTS idx_menu_items_order ON menu_items(display_order);
+CREATE INDEX IF NOT EXISTS idx_menu_items_has_image ON menu_items(id) WHERE image_data IS NOT NULL;
 
 CREATE TRIGGER menu_items_updated_at BEFORE UPDATE ON menu_items
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Comments for image storage columns
+COMMENT ON COLUMN menu_items.image_data IS 'Base64-encoded image data (compressed to JPEG format during upload, max 1024px)';
+COMMENT ON COLUMN menu_items.image_mime_type IS 'MIME type of the stored image (always image/jpeg after processing)';
 
 -- Table: orders
 -- Enhanced order management
