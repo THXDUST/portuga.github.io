@@ -34,10 +34,15 @@ Updated `api/admin/menu.php` to:
 
 Debug mode (`MENU_DEBUG_MODE`) is now **temporarily enabled** to help diagnose the actual error. Once the issue is identified and fixed, it should be disabled for production.
 
-**Location**: `api/admin/menu.php` line 20
+**Configuration**: `api/admin/menu.php` line 22
 ```php
-define('MENU_DEBUG_MODE', true);  // Set to false in production
+// Controlled via environment variable or defaults to 'true'
+define('MENU_DEBUG_MODE', filter_var(getenv('MENU_DEBUG_MODE') ?: 'true', FILTER_VALIDATE_BOOLEAN));
 ```
+
+**To disable debug mode**, either:
+1. Set environment variable: `MENU_DEBUG_MODE=false`
+2. Or change the default in code: `getenv('MENU_DEBUG_MODE') ?: 'false'`
 
 When debug mode is enabled:
 - Actual database error messages are exposed to the client
@@ -159,13 +164,21 @@ LINE 2:                                        ingredients, is_avail...
 
 ### Disable Debug Mode
 
-Once the issue is identified and resolved:
+Once the issue is identified and resolved, disable debug mode:
 
+**Option 1: Environment Variable (Recommended)**
+```bash
+export MENU_DEBUG_MODE=false
+# Or add to .env file:
+echo "MENU_DEBUG_MODE=false" >> .env
+```
+
+**Option 2: Change Default in Code**
 1. Open `api/admin/menu.php`
-2. Find line 20
+2. Find line 22
 3. Change:
    ```php
-   define('MENU_DEBUG_MODE', false);  // Disabled for production
+   define('MENU_DEBUG_MODE', filter_var(getenv('MENU_DEBUG_MODE') ?: 'false', FILTER_VALIDATE_BOOLEAN));
    ```
 4. Commit the change
 

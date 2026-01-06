@@ -17,7 +17,9 @@ require_once __DIR__ . '/base.php';
 // Debug mode - set to false in production
 // WARNING: Debug mode logs detailed request data including form fields and file information.
 // Only enable temporarily for troubleshooting and disable immediately after diagnosis.
-define('MENU_DEBUG_MODE', true);
+// Can be controlled via MENU_DEBUG_MODE environment variable or hardcoded below.
+// Set environment variable: MENU_DEBUG_MODE=true or export MENU_DEBUG_MODE=true
+define('MENU_DEBUG_MODE', filter_var(getenv('MENU_DEBUG_MODE') ?: 'true', FILTER_VALIDATE_BOOLEAN));
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');

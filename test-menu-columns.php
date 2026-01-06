@@ -2,6 +2,10 @@
 /**
  * Test script to verify menu_items table structure
  * Checks if all required columns exist for menu item operations
+ * 
+ * WARNING: This is a diagnostic tool for troubleshooting only.
+ * DO NOT deploy this script to production servers.
+ * Delete this file after completing diagnosis.
  */
 
 error_reporting(E_ALL);
@@ -25,7 +29,7 @@ try {
     // Check if menu_items table exists
     $stmt = $conn->query("
         SELECT EXISTS (
-            SELECT FROM information_schema.tables 
+            SELECT 1 FROM information_schema.tables 
             WHERE table_schema = 'public' 
             AND table_name = 'menu_items'
         ) as table_exists
