@@ -292,8 +292,8 @@ function handlePost($conn, $action) {
                 $isAvailable = isset($_POST['is_available']) && $_POST['is_available'] === '1';
                 $deliveryEnabled = isset($_POST['delivery_enabled']) && $_POST['delivery_enabled'] === '1';
                 $imageUrl = null; // No legacy image_url when uploading file
-                $ingredients = null;
-                $displayOrder = 0;
+                $ingredients = $_POST['ingredients'] ?? null;
+                $displayOrder = $_POST['display_order'] ?? 0;
             } else {
                 // JSON request without file
                 $data = getRequestBody();
