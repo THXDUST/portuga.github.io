@@ -274,6 +274,13 @@ function handlePost($conn, $action) {
             
             // Check if this is a multipart form upload (with file)
             if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                // Debug logging for multipart form data
+                error_log('DEBUG: Processing multipart form with image upload');
+                error_log('DEBUG: $_POST data: ' . json_encode($_POST));
+                error_log('DEBUG: $_FILES data: ' . json_encode(array_map(function($file) {
+                    return ['name' => $file['name'], 'type' => $file['type'], 'size' => $file['size'], 'error' => $file['error']];
+                }, $_FILES)));
+                
                 // Process image upload
                 $result = processImageUpload($_FILES['image']);
                 if (!$result['success']) {
@@ -283,17 +290,29 @@ function handlePost($conn, $action) {
                 $imageData = $result['data'];
                 $imageMimeType = $result['mime_type'];
                 
-                // Get form data from $_POST and sanitize
+                // Get form data from $_POST and sanitize with improved validation
                 $itemId = isset($_POST['id']) && $_POST['id'] !== '' ? $_POST['id'] : null;
-                $groupId = isset($_POST['group_id']) && is_numeric($_POST['group_id']) ? intval($_POST['group_id']) : null;
+                
+                // Improved numeric validation - trim whitespace and handle edge cases
+                $groupIdRaw = isset($_POST['group_id']) ? trim($_POST['group_id']) : '';
+                $groupId = (is_numeric($groupIdRaw) && $groupIdRaw !== '') ? intval($groupIdRaw) : null;
+                
                 $name = isset($_POST['name']) ? trim($_POST['name']) : null;
                 $description = isset($_POST['description']) ? trim($_POST['description']) : null;
-                $price = isset($_POST['price']) && is_numeric($_POST['price']) ? floatval($_POST['price']) : null;
+                
+                $priceRaw = isset($_POST['price']) ? trim($_POST['price']) : '';
+                $price = (is_numeric($priceRaw) && $priceRaw !== '') ? floatval($priceRaw) : null;
+                
                 $isAvailable = isset($_POST['is_available']) && $_POST['is_available'] === '1';
                 $deliveryEnabled = isset($_POST['delivery_enabled']) && $_POST['delivery_enabled'] === '1';
                 $imageUrl = null; // No legacy image_url when uploading file
                 $ingredients = isset($_POST['ingredients']) ? trim($_POST['ingredients']) : null;
-                $displayOrder = isset($_POST['display_order']) && is_numeric($_POST['display_order']) ? intval($_POST['display_order']) : 0;
+                
+                $displayOrderRaw = isset($_POST['display_order']) ? trim($_POST['display_order']) : '0';
+                $displayOrder = (is_numeric($displayOrderRaw) && $displayOrderRaw !== '') ? intval($displayOrderRaw) : 0;
+                
+                // Debug log parsed values
+                error_log('DEBUG: Parsed values - group_id: ' . var_export($groupId, true) . ', name: ' . var_export($name, true) . ', price: ' . var_export($price, true));
             } else {
                 // JSON request without file
                 $data = getRequestBody();
@@ -309,23 +328,32 @@ function handlePost($conn, $action) {
                 $displayOrder = isset($data['display_order']) && is_numeric($data['display_order']) ? intval($data['display_order']) : 0;
             }
             
-            // Strict validation with proper type checking
+            // Strict validation with proper type checking and detailed error messages
             $errors = [];
+            $debugInfo = [];
             
             if ($groupId === null || $groupId <= 0) {
                 $errors[] = 'grupo (deve ser um número válido maior que zero)';
+                $debugInfo['group_id'] = isset($_POST['group_id']) ? $_POST['group_id'] : (isset($data['group_id']) ? $data['group_id'] : 'NOT SET');
             }
             
             if (empty($name)) {
                 $errors[] = 'nome (não pode estar vazio)';
+                $debugInfo['name'] = isset($_POST['name']) ? $_POST['name'] : (isset($data['name']) ? $data['name'] : 'NOT SET');
             }
             
             if ($price === null || $price < 0) {
                 $errors[] = 'preço (deve ser um número válido maior ou igual a zero)';
+                $debugInfo['price'] = isset($_POST['price']) ? $_POST['price'] : (isset($data['price']) ? $data['price'] : 'NOT SET');
             }
             
             if (!empty($errors)) {
-                sendError('Campos obrigatórios inválidos ou ausentes: ' . implode(', ', $errors));
+                $errorMessage = 'Campos obrigatórios inválidos ou ausentes: ' . implode(', ', $errors);
+                if (!empty($debugInfo)) {
+                    $errorMessage .= ' | Valores recebidos: ' . json_encode($debugInfo);
+                }
+                error_log('DEBUG: Validation failed - ' . $errorMessage);
+                sendError($errorMessage);
                 return;
             }
             

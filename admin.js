@@ -1458,6 +1458,12 @@ async function saveItem(event) {
         if (imageFile) {
             const formData = new FormData();
             
+            // Append all text fields FIRST (before the image file)
+            // This ensures proper parsing on the server side
+            if (itemId && itemId.trim()) {
+                formData.append('id', String(itemId));
+            }
+            
             // Append with explicit string conversion to ensure proper formatting
             formData.append('group_id', String(groupId));
             formData.append('name', String(name));
@@ -1465,11 +1471,9 @@ async function saveItem(event) {
             formData.append('price', String(price));
             formData.append('is_available', available ? '1' : '0');
             formData.append('delivery_enabled', deliveryEnabled ? '1' : '0');
-            formData.append('image', imageFile);
             
-            if (itemId && itemId.trim()) {
-                formData.append('id', String(itemId));
-            }
+            // Append image file LAST to avoid any potential parsing issues
+            formData.append('image', imageFile);
             
             if (DEBUG_MODE) {
                 console.log('📤 Sending FormData (with image) to API...');
