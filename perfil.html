@@ -172,19 +172,16 @@
             font-size: 0.9rem;
         }
 
+        .schedule-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
         .schedule-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            overflow-x: auto;
-            display: block;
-        }
-
-        .schedule-table thead,
-        .schedule-table tbody {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
+            min-width: 500px;
         }
 
         .schedule-table th,
@@ -504,22 +501,24 @@
                     <h2 class="section-title">Meu Horário</h2>
                 </div>
                 <div id="schedule-content">
-                    <table class="schedule-table">
-                        <thead>
-                            <tr>
-                                <th>Dia</th>
-                                <th>Entrada</th>
-                                <th>Almoço</th>
-                                <th>Retorno</th>
-                                <th>Saída</th>
-                            </tr>
-                        </thead>
-                        <tbody id="schedule-tbody">
-                            <tr>
-                                <td colspan="5" style="text-align: center; color: #666;">Nenhum horário configurado</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="schedule-table-wrapper">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Dia</th>
+                                    <th>Entrada</th>
+                                    <th>Almoço</th>
+                                    <th>Retorno</th>
+                                    <th>Saída</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-tbody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: #666;">Nenhum horário configurado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <div id="next-shift" style="margin-top: 15px; padding: 15px; background: #e8f4f8; border-radius: 8px;"></div>
                 </div>
             </div>
