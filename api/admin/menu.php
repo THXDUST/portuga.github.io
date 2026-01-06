@@ -211,48 +211,66 @@ function handleGet($conn, $action) {
     switch ($action) {
         case 'groups':
             // List all menu groups with subgroups
-            $result = $conn->query("
-                SELECT g.id, g.name, g.description, g.parent_id, 
-                       g.display_order, g.is_active, g.created_at,
-                       p.name as parent_name,
-                       COUNT(DISTINCT i.id) as item_count,
-                       COUNT(DISTINCT sg.id) as subgroup_count
-                FROM menu_groups g
-                LEFT JOIN menu_groups p ON g.parent_id = p.id
-                LEFT JOIN menu_items i ON g.id = i.group_id
-                LEFT JOIN menu_groups sg ON g.id = sg.parent_id
-                GROUP BY g.id, g.name, g.description, g.parent_id, 
-                         g.display_order, g.is_active, g.created_at, p.name
-                ORDER BY g.parent_id, g.display_order, g.name
-            ");
-            $groups = $result->fetchAll(PDO::FETCH_ASSOC);
-            sendSuccess($groups);
+            try {
+                $result = $conn->query("
+                    SELECT g.id, g.name, g.description, g.parent_id, 
+                           g.display_order, g.is_active, g.created_at,
+                           p.name as parent_name,
+                           COUNT(DISTINCT i.id) as item_count,
+                           COUNT(DISTINCT sg.id) as subgroup_count
+                    FROM menu_groups g
+                    LEFT JOIN menu_groups p ON g.parent_id = p.id
+                    LEFT JOIN menu_items i ON g.id = i.group_id
+                    LEFT JOIN menu_groups sg ON g.id = sg.parent_id
+                    GROUP BY g.id, g.name, g.description, g.parent_id, 
+                             g.display_order, g.is_active, g.created_at, p.name
+                    ORDER BY g.parent_id NULLS FIRST, g.display_order, g.name
+                ");
+                $groups = $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
+                sendSuccess($groups);
+            } catch (PDOException $e) {
+                // If the table doesn't exist, return empty array
+                if (strpos($e->getMessage(), 'does not exist') !== false) {
+                    sendSuccess([]);
+                } else {
+                    throw $e;
+                }
+            }
             break;
             
         case 'items':
             // List all menu items with group info
-            $groupId = $_GET['group_id'] ?? null;
-            
-            $sql = "
-                SELECT i.id, i.group_id, i.name, i.description, i.price, i.image_url,
-                       i.ingredients, i.is_available, i.display_order, i.created_at,
-                       i.image_data, i.image_mime_type,
-                       g.name as group_name
-                FROM menu_items i
-                INNER JOIN menu_groups g ON i.group_id = g.id
-            ";
-            
-            if ($groupId) {
-                $sql .= " WHERE i.group_id = ?";
-                $stmt = $conn->prepare($sql . " ORDER BY i.display_order, i.name");
-                $stmt->execute([$groupId]);
-                $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } else {
-                $result = $conn->query($sql . " ORDER BY g.name, i.display_order, i.name");
-                $items = $result->fetchAll(PDO::FETCH_ASSOC);
+            try {
+                $groupId = $_GET['group_id'] ?? null;
+                
+                $sql = "
+                    SELECT i.id, i.group_id, i.name, i.description, i.price, i.image_url,
+                           i.ingredients, i.is_available, i.display_order, i.created_at,
+                           i.image_data, i.image_mime_type,
+                           g.name as group_name
+                    FROM menu_items i
+                    LEFT JOIN menu_groups g ON i.group_id = g.id
+                ";
+                
+                if ($groupId) {
+                    $sql .= " WHERE i.group_id = ?";
+                    $stmt = $conn->prepare($sql . " ORDER BY i.display_order, i.name");
+                    $stmt->execute([$groupId]);
+                    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } else {
+                    $result = $conn->query($sql . " ORDER BY g.name, i.display_order, i.name");
+                    $items = $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
+                }
+                
+                sendSuccess($items);
+            } catch (PDOException $e) {
+                // If the table doesn't exist, return empty array
+                if (strpos($e->getMessage(), 'does not exist') !== false) {
+                    sendSuccess([]);
+                } else {
+                    throw $e;
+                }
             }
-            
-            sendSuccess($items);
             break;
             
         case 'item':
