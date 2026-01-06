@@ -1556,10 +1556,10 @@ async function saveItem(event) {
                     if (moreCompressedBlob.size > 5 * 1024 * 1024) {
                         throw new Error('Imagem muito grande mesmo após compressão. Por favor, use uma imagem menor.');
                     }
-                    formData.append('image', moreCompressedBlob, 'image.jpg');
+                    formData.append('image_data', moreCompressedBlob, 'image.jpg');
                 } else {
                     // Append image file LAST to avoid any potential parsing issues
-                    formData.append('image', compressedBlob, 'image.jpg');
+                    formData.append('image_data', compressedBlob, 'image.jpg');
                 }
             } catch (compressError) {
                 console.error('Erro ao comprimir imagem:', compressError);
