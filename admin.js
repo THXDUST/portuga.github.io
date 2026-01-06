@@ -1376,9 +1376,8 @@ function setupImagePreview() {
                 }
                 
                 // Show file size warning if large (but don't block - compression will handle it)
-                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
                 if (file.size > 5 * 1024 * 1024) {
-                    console.log(`⚠️ Arquivo grande detectado (${fileSizeMB}MB). Será comprimido automaticamente antes do upload.`);
+                    console.log(`⚠️ Arquivo grande detectado (${formatFileSize(file.size)}). Será comprimido automaticamente antes do upload.`);
                 }
                 
                 // Show preview
@@ -1407,12 +1406,22 @@ function closeItemModal() {
 }
 
 /**
+ * Formata tamanho de arquivo em MB
+ * @param {number} bytes - Tamanho em bytes
+ * @returns {string} - Tamanho formatado (ex: "2.45MB")
+ */
+function formatFileSize(bytes) {
+    return (bytes / 1024 / 1024).toFixed(2) + 'MB';
+}
+
+/**
  * Comprime uma imagem antes do upload
- * @param {File} file - Arquivo de imagem original
+ * @param {File|Blob} file - Arquivo de imagem original ou Blob
  * @param {number} maxWidth - Largura máxima (default: 1200)
  * @param {number} maxHeight - Altura máxima (default: 1200)
  * @param {number} quality - Qualidade JPEG 0-1 (default: 0.8)
  * @returns {Promise<Blob>} - Imagem comprimida como Blob
+ * @throws {Error} - Lança erro se falhar ao ler arquivo, carregar imagem ou comprimir
  */
 async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
     return new Promise((resolve, reject) => {
@@ -1445,7 +1454,7 @@ async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 
                 canvas.toBlob(
                     (blob) => {
                         if (blob) {
-                            console.log(`📸 Imagem comprimida: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                            console.log(`📸 Imagem comprimida: ${formatFileSize(file.size)} → ${formatFileSize(blob.size)}`);
                             resolve(blob);
                         } else {
                             reject(new Error('Falha ao comprimir imagem'));
@@ -1531,21 +1540,18 @@ async function saveItem(event) {
             // COMPRIMIR A IMAGEM ANTES DE ADICIONAR AO FORMDATA
             try {
                 // Mostrar feedback ao usuário
-                const originalSize = (imageFile.size / 1024 / 1024).toFixed(2);
-                console.log(`📤 Comprimindo imagem... Tamanho original: ${originalSize}MB`);
+                console.log(`📤 Comprimindo imagem... Tamanho original: ${formatFileSize(imageFile.size)}`);
                 
                 // Comprimir imagem
                 const compressedBlob = await compressImage(imageFile, 1200, 1200, 0.8);
-                const compressedSize = (compressedBlob.size / 1024 / 1024).toFixed(2);
-                console.log(`✅ Imagem comprimida: ${compressedSize}MB`);
+                console.log(`✅ Imagem comprimida: ${formatFileSize(compressedBlob.size)}`);
                 
                 // Verificar se ainda está muito grande (> 5MB)
                 if (compressedBlob.size > 5 * 1024 * 1024) {
-                    // Tentar comprimir mais
-                    console.log(`⚠️ Imagem ainda muito grande (${compressedSize}MB). Tentando compressão adicional...`);
-                    const moreCompressedBlob = await compressImage(imageFile, 800, 800, 0.6);
-                    const finalSize = (moreCompressedBlob.size / 1024 / 1024).toFixed(2);
-                    console.log(`🔄 Nova compressão: ${finalSize}MB`);
+                    // Tentar comprimir mais - usar o blob já comprimido como base
+                    console.log(`⚠️ Imagem ainda muito grande (${formatFileSize(compressedBlob.size)}). Tentando compressão adicional...`);
+                    const moreCompressedBlob = await compressImage(compressedBlob, 800, 800, 0.6);
+                    console.log(`🔄 Nova compressão: ${formatFileSize(moreCompressedBlob.size)}`);
                     
                     if (moreCompressedBlob.size > 5 * 1024 * 1024) {
                         throw new Error('Imagem muito grande mesmo após compressão. Por favor, use uma imagem menor.');
