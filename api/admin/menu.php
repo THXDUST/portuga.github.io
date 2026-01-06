@@ -102,7 +102,7 @@ function processImageUpload($file) {
             }
             return [
                 'success' => true,
-                'data' => $imageData,
+                'data' => base64_encode($imageData),
                 'mime_type' => $fileType
             ];
         }
@@ -194,7 +194,7 @@ function processImageUpload($file) {
         
         return [
             'success' => true,
-            'data' => $imageData,
+            'data' => base64_encode($imageData),
             'mime_type' => 'image/jpeg'
         ];
         
