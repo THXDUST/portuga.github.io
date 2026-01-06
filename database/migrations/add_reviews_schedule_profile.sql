@@ -2,33 +2,36 @@
 -- Created: 2026-12-30
 -- Description: Adds tables for review system, employee schedules, user profiles, and enhanced maintenance mode
 
-USE portuga_db;
-
 -- ============================================
 -- REVIEWS SYSTEM
 -- ============================================
 
 -- Table: reviews (customer satisfaction reviews)
 CREATE TABLE IF NOT EXISTS reviews (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NULL COMMENT 'NULL for anonymous reviews',
+    id SERIAL PRIMARY KEY,
+    user_id INT NULL,
     order_id INT NULL,
-    rating INT NOT NULL CHECK (rating >= 0 AND rating <= 5) COMMENT 'Rating from 0 to 5 stars',
+    rating INT NOT NULL CHECK (rating >= 0 AND rating <= 5),
     comment TEXT,
-    status ENUM('pendente', 'aprovado', 'rejeitado', 'arquivado') DEFAULT 'pendente',
-    ip_address VARCHAR(45) NULL COMMENT 'For rate limiting',
+    status TEXT CHECK (status IN ('pendente', 'aprovado', 'rejeitado', 'arquivado')) DEFAULT 'pendente',
+    ip_address VARCHAR(45) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     approved_by INT NULL,
     approved_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
-    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_status (status),
-    INDEX idx_rating (rating),
-    INDEX idx_created (created_at),
-    INDEX idx_user (user_id),
-    INDEX idx_ip_created (ip_address, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+COMMENT ON COLUMN reviews.user_id IS 'NULL for anonymous reviews';
+COMMENT ON COLUMN reviews.rating IS 'Rating from 0 to 5 stars';
+COMMENT ON COLUMN reviews.ip_address IS 'For rate limiting';
+
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_reviews_created ON reviews(created_at);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_ip_created ON reviews(ip_address, created_at);
 
 -- ============================================
 -- EMPLOYEE SCHEDULE SYSTEM
@@ -38,9 +41,9 @@ CREATE TABLE IF NOT EXISTS reviews (
 DROP TABLE IF EXISTS employee_schedule;
 
 CREATE TABLE employee_schedule (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
-    day_of_week ENUM('segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo') NOT NULL,
+    day_of_week TEXT CHECK (day_of_week IN ('segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo')) NOT NULL,
     shift_start TIME NOT NULL,
     lunch_start TIME NULL,
     lunch_end TIME NULL,
@@ -48,12 +51,17 @@ CREATE TABLE employee_schedule (
     notes TEXT,
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_user_day (user_id, day_of_week),
-    INDEX idx_user (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_schedule_user_day ON employee_schedule(user_id, day_of_week);
+CREATE INDEX IF NOT EXISTS idx_schedule_user ON employee_schedule(user_id);
+
+-- Trigger for updated_at on employee_schedule table
+CREATE TRIGGER employee_schedule_updated_at BEFORE UPDATE ON employee_schedule
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
 -- USER PROFILE SYSTEM
@@ -61,39 +69,50 @@ CREATE TABLE employee_schedule (
 
 -- Table: user_profile_photos
 CREATE TABLE IF NOT EXISTS user_profile_photos (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     photo_path VARCHAR(512) NOT NULL,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_profile_photos_user ON user_profile_photos(user_id);
+
+-- Trigger for updated_at on user_profile_photos table
+CREATE TRIGGER user_profile_photos_updated_at BEFORE UPDATE ON user_profile_photos
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Table: user_favorite_dishes
 CREATE TABLE IF NOT EXISTS user_favorite_dishes (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     menu_item_id INT NOT NULL,
     set_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
-    INDEX idx_user (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_favorite_dishes_user ON user_favorite_dishes(user_id);
 
 -- Table: user_privacy_settings
 CREATE TABLE IF NOT EXISTS user_privacy_settings (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     show_statistics BOOLEAN DEFAULT TRUE,
     show_total_spent BOOLEAN DEFAULT TRUE,
     show_favorite_dish BOOLEAN DEFAULT TRUE,
     show_order_count BOOLEAN DEFAULT TRUE,
     show_last_review BOOLEAN DEFAULT TRUE,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_privacy_settings_user ON user_privacy_settings(user_id);
+
+-- Trigger for updated_at on user_privacy_settings table
+CREATE TRIGGER user_privacy_settings_updated_at BEFORE UPDATE ON user_privacy_settings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
 -- NOTES/ANNOUNCEMENTS SYSTEM
@@ -101,30 +120,50 @@ CREATE TABLE IF NOT EXISTS user_privacy_settings (
 
 -- Table: notes (announcements/communications displayed on homepage)
 CREATE TABLE IF NOT EXISTS notes (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    note_type ENUM('info', 'warning', 'success', 'promo') DEFAULT 'info',
+    note_type TEXT CHECK (note_type IN ('info', 'warning', 'success', 'promo')) DEFAULT 'info',
     is_active BOOLEAN DEFAULT TRUE,
     display_order INT DEFAULT 0,
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NULL,
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_active (is_active),
-    INDEX idx_order (display_order),
-    INDEX idx_expires (expires_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_notes_active ON notes(is_active);
+CREATE INDEX IF NOT EXISTS idx_notes_order ON notes(display_order);
+CREATE INDEX IF NOT EXISTS idx_notes_expires ON notes(expires_at);
+
+-- Trigger for updated_at on notes table
+CREATE TRIGGER notes_updated_at BEFORE UPDATE ON notes
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
 -- ENHANCED MAINTENANCE MODE
 -- ============================================
 
 -- Update maintenance_mode table with new columns
-ALTER TABLE maintenance_mode 
-    ADD COLUMN IF NOT EXISTS restricted_pages JSON NULL COMMENT 'Array of page names in maintenance',
-    ADD COLUMN IF NOT EXISTS page_messages JSON NULL COMMENT 'Custom messages per page';
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'maintenance_mode' AND column_name = 'restricted_pages'
+    ) THEN
+        ALTER TABLE maintenance_mode ADD COLUMN restricted_pages JSON NULL;
+        COMMENT ON COLUMN maintenance_mode.restricted_pages IS 'Array of page names in maintenance';
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'maintenance_mode' AND column_name = 'page_messages'
+    ) THEN
+        ALTER TABLE maintenance_mode ADD COLUMN page_messages JSON NULL;
+        COMMENT ON COLUMN maintenance_mode.page_messages IS 'Custom messages per page';
+    END IF;
+END $$;
 
 -- ============================================
 -- PERMISSIONS
@@ -168,9 +207,9 @@ ON CONFLICT (name) DO NOTHING;
 -- ============================================
 
 -- Show newly created tables
-SHOW TABLES LIKE '%reviews%';
-SHOW TABLES LIKE '%schedule%';
-SHOW TABLES LIKE '%profile%';
-SHOW TABLES LIKE '%notes%';
+SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%reviews%';
+SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%schedule%';
+SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%profile%';
+SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%notes%';
 
 SELECT 'Migration completed successfully!' AS status;
