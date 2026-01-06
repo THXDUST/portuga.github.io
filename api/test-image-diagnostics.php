@@ -9,6 +9,9 @@ header('Access-Control-Allow-Origin: *');
 
 require_once __DIR__ . '/../config/database.php';
 
+// Configuration constants
+const SAMPLE_SIZE = 100; // Size of base64 sample to check for validation
+
 // Get database connection
 function getDBConnection() {
     $host = getenv('DB_HOST') ?: 'localhost';
@@ -148,8 +151,8 @@ try {
         
         // Validate base64 if image data exists
         if ($item['has_image_data'] && $item['image_data_size'] > 0) {
-            $stmt2 = $pdo->prepare("SELECT SUBSTRING(image_data, 1, 100) as sample FROM menu_items WHERE id = ?");
-            $stmt2->execute([$item['id']]);
+            $stmt2 = $pdo->prepare("SELECT SUBSTRING(image_data, 1, ?) as sample FROM menu_items WHERE id = ?");
+            $stmt2->execute([SAMPLE_SIZE, $item['id']]);
             $sample = $stmt2->fetch(PDO::FETCH_ASSOC);
             
             // Check if it looks like valid base64
@@ -203,10 +206,14 @@ try {
                 
                 // Check if it's a valid image by looking at magic bytes
                 $magic = bin2hex(substr($decoded, 0, 4));
-                if (substr($magic, 0, 4) === 'ffd8') {
+                // JPEG files start with FFD8FF (followed by various markers like E0, E1, E2, E3, etc.)
+                if (substr($magic, 0, 4) === 'ffd8' && strlen($magic) >= 6 && substr($magic, 4, 2) === 'ff') {
                     $testItem['image_format'] = 'JPEG';
-                } elseif (substr($magic, 0, 8) === '89504e47') {
+                } elseif ($magic === '89504e47') {
                     $testItem['image_format'] = 'PNG';
+                } elseif (substr($magic, 0, 4) === 'ffd8') {
+                    // Legacy check for JPEG without full signature validation
+                    $testItem['image_format'] = 'JPEG (possible)';
                 } else {
                     $testItem['image_format'] = 'Unknown (magic: ' . $magic . ')';
                 }

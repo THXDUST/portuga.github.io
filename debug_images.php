@@ -51,10 +51,10 @@ try {
             echo "  Has image_data: {$item['has_image_data']}";
             if ($item['has_image_data'] === 'YES') {
                 echo " ({$item['image_data_size']} bytes)";
-                // Check if it's base64
+                // Check if it's base64 - use consistent sample size
                 $sampleSize = min(50, $item['image_data_size']);
-                $stmt2 = $pdo->prepare("SELECT SUBSTRING(image_data, 1, 50) as sample FROM menu_items WHERE id = ?");
-                $stmt2->execute([$item['id']]);
+                $stmt2 = $pdo->prepare("SELECT SUBSTRING(image_data, 1, ?) as sample FROM menu_items WHERE id = ?");
+                $stmt2->execute([$sampleSize, $item['id']]);
                 $sample = $stmt2->fetch(PDO::FETCH_ASSOC);
                 $isBase64 = preg_match('/^[A-Za-z0-9+\/]+=*$/', $sample['sample']);
                 echo $isBase64 ? " [Base64 ✓]" : " [NOT Base64 ⚠️]";
