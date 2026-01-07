@@ -8,7 +8,7 @@
  * Without an API key, the system will use OpenStreetMap Nominatim (free, no key required)
  */
 
-const WHATSAPP_NUMBER = '5513997597759';
+const WHATSAPP_NUMBER = '5513996379775'; // '5513997597759'; número do alemão 
 
 function getCart() {
     const cart = localStorage.getItem('cart');
