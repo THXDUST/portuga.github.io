@@ -55,6 +55,28 @@ async function getOrdersFromAPI() {
                 if (!hasAdmin) {
                     orders = orders.filter(order => order.user_id === currentUser.id);
                 }
+            } else {
+                // Guest user - filter by table number if available
+                const cachedTable = getCachedTableNumber();
+                if (cachedTable) {
+                    orders = orders.filter(order => 
+                        order.table_number && order.table_number == cachedTable
+                    );
+                } else {
+                    // No user and no table - show no orders
+                    orders = [];
+                }
+            }
+        } else {
+            // No auth system - filter by table number if available
+            const cachedTable = getCachedTableNumber();
+            if (cachedTable) {
+                orders = orders.filter(order => 
+                    order.table_number && order.table_number == cachedTable
+                );
+            } else {
+                // No table cached - show no orders
+                orders = [];
             }
         }
         
@@ -153,6 +175,9 @@ async function loadOrderHistory() {
         return;
     }
     
+    // Fetch existing reviews to check which orders have been reviewed
+    const reviewedOrders = await getReviewedOrders();
+    
     // Sort orders by date (newest first)
     const sortedOrders = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
@@ -168,13 +193,25 @@ async function loadOrderHistory() {
             'preparo': { label: 'Em Preparo', color: '#17a2b8' },
             'em_andamento': { label: 'Em Preparo', color: '#17a2b8' },
             'concluido': { label: 'Finalizado', color: '#28a745' },
-            'finalizado': { label: 'Finalizado', color: '#28a745' }
+            'finalizado': { label: 'Finalizado', color: '#28a745' },
+            'entregue': { label: 'Entregue', color: '#28a745' }
         };
         
         const statusInfo = statusMap[order.status] || { label: order.status, color: '#6c757d' };
-        const orderTypeLabel = order.order_type === 'viagem' ? 'Viagem' : 'Local';
+        
+        // Determine order type label
+        let orderTypeLabel = 'Local';
+        if (order.order_type === 'viagem' || order.order_type === 'entrega') {
+            orderTypeLabel = 'Entrega';
+        } else if (order.order_type === 'retirada') {
+            orderTypeLabel = 'Retirada';
+        }
+        
         const tableInfo = order.table_number ? ` - Mesa ${order.table_number}` : '';
         const itemCount = order.item_count || (order.items ? order.items.length : 0);
+        
+        // Check if order can be reviewed
+        const canReview = shouldShowReviewButton(order, reviewedOrders);
         
         html += `
             <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
@@ -187,13 +224,69 @@ async function loadOrderHistory() {
                         ${statusInfo.label}
                     </span>
                 </div>
-                <div style="color: #666;">
+                <div style="color: #666; margin-bottom: 15px;">
                     ${orderTypeLabel}${tableInfo} • ${itemCount} item(ns) • <strong style="color: #28a745;">R$ ${parseFloat(order.total).toFixed(2)}</strong>
                 </div>
+                ${canReview ? `
+                    <button class="btn btn-success" onclick="openReviewModal(${order.id})" style="padding: 8px 16px; font-size: 0.9rem;">
+                        ⭐ Avaliar Pedido
+                    </button>
+                ` : ''}
             </div>
         `;
     });
     
     html += '</div>';
     container.innerHTML = html;
+}
+
+// Check if review button should be shown
+function shouldShowReviewButton(order, reviewedOrders) {
+    // Check if order status is completed/delivered
+    const completedStatuses = ['concluido', 'finalizado', 'entregue'];
+    if (!completedStatuses.includes(order.status)) {
+        return false;
+    }
+    
+    // Check if already reviewed
+    if (reviewedOrders.includes(order.id)) {
+        return false;
+    }
+    
+    // Check if within 3 hours of completion
+    const completedDate = new Date(order.updated_at || order.created_at);
+    const now = new Date();
+    const hoursDiff = (now - completedDate) / (1000 * 60 * 60);
+    
+    if (hoursDiff > 3) {
+        return false;
+    }
+    
+    return true;
+}
+
+// Get list of already reviewed order IDs
+async function getReviewedOrders() {
+    try {
+        const response = await fetch('/api/reviews.php?action=my-reviews');
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            return data.data.map(review => review.order_id);
+        }
+        
+        return [];
+    } catch (error) {
+        console.error('Error fetching reviewed orders:', error);
+        return [];
+    }
+}
+
+// Open review modal for specific order
+function openReviewModal(orderId) {
+    // Store order ID in sessionStorage
+    sessionStorage.setItem('reviewOrderId', orderId);
+    
+    // Redirect to review page
+    window.location.href = `avaliar.html?order=${orderId}`;
 }

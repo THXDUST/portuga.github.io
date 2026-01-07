@@ -56,21 +56,58 @@
                 </div>
 
                 <div class="delivery-options" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <label style="display: flex; align-items: center; margin-bottom: 15px; cursor: pointer;">
-                        <input type="checkbox" id="for-delivery" onchange="toggleDeliveryFields()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                        <span style="font-weight: 600; color: #333;">Para Viagem</span>
+                    <h4 style="margin: 0 0 15px 0; color: #333;">Tipo de Pedido *</h4>
+                    
+                    <label style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer; padding: 10px; background: white; border-radius: 8px; border: 2px solid #e9ecef;">
+                        <input type="radio" name="order-type" value="local" onchange="handleOrderTypeChange()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span style="font-weight: 600; color: #333;">🪑 Comer no Local</span>
                     </label>
                     
+                    <label style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer; padding: 10px; background: white; border-radius: 8px; border: 2px solid #e9ecef;">
+                        <input type="radio" name="order-type" value="retirada" onchange="handleOrderTypeChange()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span style="font-weight: 600; color: #333;">🥡 Retirada (Buscar no local)</span>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; margin-bottom: 15px; cursor: pointer; padding: 10px; background: white; border-radius: 8px; border: 2px solid #e9ecef;">
+                        <input type="radio" name="order-type" value="entrega" onchange="handleOrderTypeChange()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span style="font-weight: 600; color: #333;">🚗 Entrega (Delivery)</span>
+                    </label>
+                    
+                    <!-- Table Number Field (for Local orders) -->
                     <div id="table-number-field" style="display: none; margin-top: 15px;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">🪑 Número da Mesa *</label>
                         <input type="number" id="table-number" placeholder="Ex: 5" min="1" max="100" 
                                style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
                         <small style="color: #666; display: block; margin-top: 5px;">
-                            Informe o número da mesa para pedido no local
+                            Informe o número da mesa onde está sentado
                         </small>
                     </div>
                     
-                    <div id="delivery-fields" style="display: none;">
+                    <!-- Pickup Fields (for Retirada orders) -->
+                    <div id="pickup-fields" style="display: none; margin-top: 15px;">
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">⏰ Horário de Retirada *</label>
+                            <input type="time" id="pickup-time-required" 
+                                   style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                Deve ser pelo menos 30 minutos à frente do horário atual
+                            </small>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">👤 Nome para Retirada *</label>
+                            <input type="text" id="pickup-name" placeholder="Ex: João Silva" 
+                                   style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery Fields (for Entrega orders) -->
+                    <div id="delivery-fields" style="display: none; margin-top: 15px;">
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">👤 Nome (opcional)</label>
+                            <input type="text" id="delivery-customer-name" placeholder="Ex: Maria Silva" 
+                                   style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Rua *</label>
                             <input type="text" id="delivery-street" placeholder="Ex: Rua das Flores" 
@@ -134,16 +171,6 @@
                 <div id="delivery-error" style="display: none; padding: 10px; background: #f8d7da; color: #721c24; border-radius: 8px; margin: 10px 0; font-size: 0.9rem;">
                 </div>
 
-                <!-- Pickup/Delivery Time -->
-                <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">⏰ Horário de Retirada/Entrega (opcional)</label>
-                    <input type="time" id="pickup-time" 
-                           style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Horário de funcionamento: 11:00 - 23:00. Se não informar, prepararemos o mais rápido possível.
-                    </small>
-                </div>
-
                 <div id="payment-options" style="display: none; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                     <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">Forma de Pagamento *</label>
                     
@@ -187,8 +214,11 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 Portuga - Restaurante & Pizzaria</p>
+            <p>&copy; <span id="current-year"></span> Portuga - Restaurante & Pizzaria</p>
             <p>Sabor português com tradição brasileira</p>
+            <div class="footer-propaganda">
+                <p>Serviços profissionais de desenvolvimento web disponíveis. Contato: <a href="mailto:wiikmy.jb@gmail.com">wiikmy.jb@gmail.com</a></p>
+            </div>
         </div>
     </footer>
 
@@ -196,6 +226,122 @@
     <script src="auth.js"></script>
     <script src="scripts/auth-check.js"></script>
     <script>
+        // Handle order type selection
+        function handleOrderTypeChange() {
+            const orderType = document.querySelector('input[name="order-type"]:checked')?.value;
+            
+            // Hide all fields first
+            document.getElementById('table-number-field').style.display = 'none';
+            document.getElementById('pickup-fields').style.display = 'none';
+            document.getElementById('delivery-fields').style.display = 'none';
+            document.getElementById('delivery-fee-row').style.display = 'none';
+            document.getElementById('payment-options').style.display = 'none';
+            
+            // Show appropriate fields based on order type
+            if (orderType === 'local') {
+                document.getElementById('table-number-field').style.display = 'block';
+                // Auto-fill table number if cached
+                const cachedTable = getCachedTableNumber();
+                if (cachedTable) {
+                    document.getElementById('table-number').value = cachedTable;
+                }
+            } else if (orderType === 'retirada') {
+                document.getElementById('pickup-fields').style.display = 'block';
+                // Set minimum pickup time (30 minutes from now)
+                setMinimumPickupTime();
+            } else if (orderType === 'entrega') {
+                // Check if user is logged in
+                if (!isUserLoggedIn()) {
+                    showInlineMessage('Você precisa fazer login para solicitar entrega', 'warning');
+                    document.querySelector('input[name="order-type"]:checked').checked = false;
+                    return;
+                }
+                document.getElementById('delivery-fields').style.display = 'block';
+                document.getElementById('delivery-fee-row').style.display = 'flex';
+                document.getElementById('payment-options').style.display = 'block';
+            }
+        }
+        
+        // Set minimum pickup time (30 minutes from now)
+        function setMinimumPickupTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const minTime = `${hours}:${minutes}`;
+            
+            const pickupTimeInput = document.getElementById('pickup-time-required');
+            if (pickupTimeInput) {
+                pickupTimeInput.min = minTime;
+                pickupTimeInput.value = minTime;
+            }
+        }
+        
+        // Validate order before finalizing
+        function validateOrder() {
+            const orderType = document.querySelector('input[name="order-type"]:checked')?.value;
+            
+            if (!orderType) {
+                showInlineMessage('Por favor, selecione o tipo de pedido', 'error');
+                return false;
+            }
+            
+            if (orderType === 'local') {
+                const tableNumber = document.getElementById('table-number').value;
+                if (!tableNumber) {
+                    showInlineMessage('Por favor, informe o número da mesa', 'error');
+                    return false;
+                }
+                // Validate table number range (get from settings or default to 20)
+                const maxTables = 20; // TODO: Get from restaurant settings
+                if (tableNumber < 1 || tableNumber > maxTables) {
+                    showInlineMessage(`Número de mesa inválido. Deve estar entre 1 e ${maxTables}`, 'error');
+                    return false;
+                }
+            } else if (orderType === 'retirada') {
+                const pickupTime = document.getElementById('pickup-time-required').value;
+                const pickupName = document.getElementById('pickup-name').value;
+                
+                if (!pickupTime) {
+                    showInlineMessage('Por favor, informe o horário de retirada', 'error');
+                    return false;
+                }
+                if (!pickupName) {
+                    showInlineMessage('Por favor, informe o nome para retirada', 'error');
+                    return false;
+                }
+                
+                // Validate pickup time is at least 30 minutes from now
+                const now = new Date();
+                const [hours, minutes] = pickupTime.split(':');
+                const pickupDateTime = new Date();
+                pickupDateTime.setHours(parseInt(hours), parseInt(minutes), 0);
+                
+                const minTime = new Date(now.getTime() + 30 * 60000); // 30 minutes from now
+                if (pickupDateTime < minTime) {
+                    showInlineMessage('Horário de retirada deve ser pelo menos 30 minutos à frente', 'error');
+                    return false;
+                }
+            } else if (orderType === 'entrega') {
+                if (!isUserLoggedIn()) {
+                    showInlineMessage('Você precisa fazer login para solicitar entrega', 'error');
+                    return false;
+                }
+                
+                const street = document.getElementById('delivery-street').value;
+                const number = document.getElementById('delivery-number').value;
+                const neighborhood = document.getElementById('delivery-neighborhood').value;
+                const city = document.getElementById('delivery-city').value;
+                
+                if (!street || !number || !neighborhood || !city) {
+                    showInlineMessage('Por favor, preencha todos os campos do endereço', 'error');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
         document.addEventListener('DOMContentLoaded', async function() {
             await updateNavigationUI();
         
@@ -213,23 +359,31 @@
                     container.insertBefore(banner, container.firstChild);
                 }
                 
-                const deliveryCheckbox = document.getElementById('for-delivery');
-                if (deliveryCheckbox) {
-                    deliveryCheckbox.checked = false;
-                    deliveryCheckbox.disabled = true;
-                    const label = deliveryCheckbox.parentElement;
-                    if (label) {
-                        label.style.opacity = '0.5';
-                        label.title = 'Entrega não disponível para pedidos de mesa';
-                    }
+                // Pre-select "Comer no Local" and set table number
+                const localRadio = document.querySelector('input[name="order-type"][value="local"]');
+                if (localRadio) {
+                    localRadio.checked = true;
+                    handleOrderTypeChange();
+                    document.getElementById('table-number').value = mesaNumber;
                 }
             } else {
-                // Show table number field if user is logged in and not in delivery mode
-                const tableNumberField = document.getElementById('table-number-field');
-                const deliveryCheckbox = document.getElementById('for-delivery');
-                if (tableNumberField && window.isUserLoggedIn && (!deliveryCheckbox || !deliveryCheckbox.checked)) {
-                    if (isUserLoggedIn()) {
-                        tableNumberField.style.display = 'block';
+                // Check if user is logged in
+                const loggedIn = isUserLoggedIn();
+                
+                if (!loggedIn) {
+                    // For guests, only allow "Comer no Local" if they have a table number
+                    const retiradaRadio = document.querySelector('input[name="order-type"][value="retirada"]');
+                    const entregaRadio = document.querySelector('input[name="order-type"][value="entrega"]');
+                    
+                    if (retiradaRadio) {
+                        retiradaRadio.disabled = true;
+                        retiradaRadio.parentElement.style.opacity = '0.5';
+                        retiradaRadio.parentElement.title = 'Faça login para solicitar retirada';
+                    }
+                    if (entregaRadio) {
+                        entregaRadio.disabled = true;
+                        entregaRadio.parentElement.style.opacity = '0.5';
+                        entregaRadio.parentElement.title = 'Faça login para solicitar entrega';
                     }
                 }
             }

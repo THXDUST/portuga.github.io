@@ -48,7 +48,7 @@ switch ($path) {
         try {
             $stmt = $pdo->query("
                 SELECT id, title, content, note_type, display_order, created_at
-                FROM notes
+                FROM system_notes
                 WHERE is_active = TRUE
                 AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
                 ORDER BY display_order ASC, created_at DESC
@@ -89,7 +89,7 @@ switch ($path) {
                 SELECT 
                     n.*,
                     u.full_name as created_by_name
-                FROM notes n
+                FROM system_notes n
                 LEFT JOIN users u ON n.created_by = u.id
                 ORDER BY n.display_order ASC, n.created_at DESC
             ");
@@ -134,7 +134,7 @@ switch ($path) {
         
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO notes (title, content, note_type, is_active, display_order, created_by, expires_at)
+                INSERT INTO system_notes (title, content, note_type, is_active, display_order, created_by, expires_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             
@@ -220,7 +220,7 @@ switch ($path) {
             }
             
             $params[] = $data['id'];
-            $sql = "UPDATE notes SET " . implode(', ', $fields) . " WHERE id = ?";
+            $sql = "UPDATE system_notes SET " . implode(', ', $fields) . " WHERE id = ?";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -261,7 +261,7 @@ switch ($path) {
         }
         
         try {
-            $stmt = $pdo->prepare("DELETE FROM notes WHERE id = ?");
+            $stmt = $pdo->prepare("DELETE FROM system_notes WHERE id = ?");
             $stmt->execute([$noteId]);
             
             echo json_encode([

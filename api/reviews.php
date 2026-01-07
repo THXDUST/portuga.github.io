@@ -11,6 +11,13 @@
  * - GET /can-review - Check if user can submit review
  */
 
+// Start output buffering to catch any errors
+ob_start();
+
+// Suppress errors in output
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
 // Set JSON headers first
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -19,22 +26,28 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 // Set error handler to return JSON
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    ob_clean(); // Clear any output
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Server error occurred',
-        'error' => $errstr
+        'error' => $errstr,
+        'file' => basename($errfile),
+        'line' => $errline
     ]);
     exit();
 });
 
 // Set exception handler to return JSON
 set_exception_handler(function($exception) {
+    ob_clean(); // Clear any output
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Server error occurred',
-        'error' => $exception->getMessage()
+        'error' => $exception->getMessage(),
+        'file' => basename($exception->getFile()),
+        'line' => $exception->getLine()
     ]);
     exit();
 });
@@ -176,8 +189,8 @@ switch ($path) {
         
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO reviews (user_id, order_id, rating, comment, ip_address, status)
-                VALUES (?, ?, ?, ?, ?, 'pendente')
+                INSERT INTO reviews (user_id, order_id, rating, comment, waiter_id, waiter_rating, ip_address, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'pendente')
             ");
             
             $stmt->execute([
@@ -185,6 +198,8 @@ switch ($path) {
                 $data['order_id'] ?? null,
                 $data['rating'],
                 $data['comment'] ?? null,
+                $data['waiter_id'] ?? null,
+                $data['waiter_rating'] ?? null,
                 $ipAddress
             ]);
             
@@ -489,9 +504,97 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => 'Erro ao deletar avaliação']);
         }
         break;
+    
+    case 'get-available-waiters':
+        if ($method !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit();
+        }
+        
+        $orderId = $_GET['order_id'] ?? null;
+        
+        try {
+            if ($orderId) {
+                // Get waiters who were working during the order time
+                $stmt = $pdo->prepare("
+                    SELECT DISTINCT u.id, u.username, u.full_name
+                    FROM users u
+                    INNER JOIN employee_schedule es ON u.id = es.employee_id
+                    INNER JOIN orders o ON o.id = ?
+                    WHERE es.schedule_date = DATE(o.created_at)
+                    AND es.start_time <= CAST(o.created_at AS TIME)
+                    AND es.end_time >= CAST(o.created_at AS TIME)
+                    AND es.is_active = true
+                    ORDER BY u.full_name, u.username
+                ");
+                $stmt->execute([$orderId]);
+            } else {
+                // Get all active employees with waiter role
+                $stmt = $pdo->query("
+                    SELECT u.id, u.username, u.full_name
+                    FROM users u
+                    INNER JOIN user_roles ur ON u.id = ur.user_id
+                    INNER JOIN roles r ON ur.role_id = r.id
+                    WHERE r.name = 'waiter' OR r.name = 'garcom'
+                    AND u.is_active = true
+                    ORDER BY u.full_name, u.username
+                ");
+            }
+            
+            $waiters = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $waiters
+            ]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Erro ao carregar garçons']);
+        }
+        break;
+    
+    case 'my-reviews':
+        if ($method !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit();
+        }
+        
+        $userId = getCurrentUser();
+        
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Não autorizado']);
+            exit();
+        }
+        
+        try {
+            $stmt = $pdo->prepare("
+                SELECT r.id, r.order_id, r.rating, r.waiter_rating, r.comment, r.created_at, r.status
+                FROM reviews r
+                WHERE r.user_id = ?
+                ORDER BY r.created_at DESC
+            ");
+            
+            $stmt->execute([$userId]);
+            $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $reviews
+            ]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Erro ao carregar avaliações']);
+        }
+        break;
         
     default:
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Endpoint not found']);
         break;
 }
+
+// Flush output buffer
+ob_end_flush();

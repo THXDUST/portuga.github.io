@@ -56,8 +56,11 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 Portuga - Restaurante & Pizzaria</p>
+            <p>&copy; <span id="current-year"></span> Portuga - Restaurante & Pizzaria</p>
             <p>Sabor português com tradição brasileira</p>
+            <div class="footer-propaganda">
+                <p>Serviços profissionais de desenvolvimento web disponíveis. Contato: <a href="mailto:wiikmy.jb@gmail.com">wiikmy.jb@gmail.com</a></p>
+            </div>
         </div>
     </footer>
 
@@ -156,11 +159,22 @@
                 
                 // Render subgroups with their items
                 if (group.subgroups && group.subgroups.length > 0) {
-                    group.subgroups.forEach(subgroup => {
+                    group.subgroups.forEach((subgroup, subIndex) => {
                         const subItems = subgroup.items ? Object.values(subgroup.items) : [];
                         
                         if (subItems.length > 0) {
-                            html += `<h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">${escapeHtml(subgroup.name)}</h3>`;
+                            const subgroupId = `subgroup-${group.id}-${subgroup.id || subIndex}`;
+                            const isFirstSubgroup = subIndex === 0;
+                            
+                            html += `
+                                <h3 class="collapsible-header" onclick="toggleMenuSection('${subgroupId}')" 
+                                    style="margin-top: 30px; margin-bottom: 15px; color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px 15px; border-radius: 8px;">
+                                    <span>${escapeHtml(subgroup.name)}</span>
+                                    <span class="collapse-icon" id="icon-${subgroupId}" style="font-size: 0.8em;">${isFirstSubgroup ? '▼' : '▶'}</span>
+                                </h3>
+                            `;
+                            
+                            html += `<div class="collapsible-content" id="${subgroupId}" style="display: ${isFirstSubgroup ? 'block' : 'none'};">`;
                             
                             if (subgroup.description) {
                                 html += `<p style="color: #666; margin-bottom: 15px;">${escapeHtml(subgroup.description)}</p>`;
@@ -171,6 +185,7 @@
                                 html += renderMenuItem(item);
                             });
                             html += `</div>`;
+                            html += `</div>`; // Close collapsible-content
                         }
                     });
                 }
@@ -233,6 +248,10 @@
         
         // Update navigation UI and load menu on page load
         document.addEventListener('DOMContentLoaded', async () => {
+            // Set current year
+            const yearSpan = document.getElementById('current-year');
+            if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+            
             await updateNavigationUI();
             await loadDynamicMenu();
             

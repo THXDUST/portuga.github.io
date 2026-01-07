@@ -301,6 +301,29 @@
                     <div class="rating-label" id="rating-label">Clique nas estrelas para avaliar</div>
                 </div>
 
+                <!-- Waiter Rating Section -->
+                <div id="waiter-rating-section" style="display: none; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                    <div class="star-rating">
+                        <label>Avalie o atendimento do garçom (opcional):</label>
+                        <div style="margin: 15px 0;">
+                            <label for="waiter-select" style="display: block; margin-bottom: 8px; font-weight: 500; color: #666;">Selecione o garçom que atendeu:</label>
+                            <select id="waiter-select" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                <option value="">Selecione um garçom (opcional)</option>
+                            </select>
+                        </div>
+                        <div id="waiter-star-rating-container" style="display: none; margin-top: 15px;">
+                            <div class="stars" id="waiter-star-rating">
+                                <span class="star" data-rating="1">★</span>
+                                <span class="star" data-rating="2">★</span>
+                                <span class="star" data-rating="3">★</span>
+                                <span class="star" data-rating="4">★</span>
+                                <span class="star" data-rating="5">★</span>
+                            </div>
+                            <div class="rating-label" id="waiter-rating-label">Clique nas estrelas para avaliar o garçom</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="comment">Deixe um comentário (opcional):</label>
                     <textarea 
@@ -333,6 +356,7 @@
     <script src="scripts.js"></script>
     <script>
         let selectedRating = 0;
+        let selectedWaiterRating = 0;
         let canSubmitReview = true;
 
         function checkAuthStatus() {
@@ -342,10 +366,88 @@
                 document.getElementById('login-required').style.display = 'none';
                 document.getElementById('review-form').style.display = 'block';
                 checkCanReview();
+                loadWaitersForReview(); // Load available waiters
             } else {
                 document.getElementById('login-required').style.display = 'block';
                 document.getElementById('review-form').style.display = 'none';
             }
+        }
+
+        async function loadWaitersForReview() {
+            try {
+                // Get order ID from URL if provided
+                const urlParams = new URLSearchParams(window.location.search);
+                const orderId = urlParams.get('order');
+                
+                let apiUrl = '/api/reviews.php?action=get-available-waiters';
+                if (orderId) {
+                    apiUrl += `&order_id=${orderId}`;
+                }
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const waiterSelect = document.getElementById('waiter-select');
+                    const waiterSection = document.getElementById('waiter-rating-section');
+                    
+                    // Populate waiter dropdown
+                    data.data.forEach(waiter => {
+                        const option = document.createElement('option');
+                        option.value = waiter.id;
+                        option.textContent = waiter.full_name || waiter.username;
+                        waiterSelect.appendChild(option);
+                    });
+                    
+                    // Show waiter section
+                    waiterSection.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading waiters:', error);
+            }
+        }
+        
+        // Handle waiter selection
+        document.getElementById('waiter-select').addEventListener('change', function() {
+            const waiterStarContainer = document.getElementById('waiter-star-rating-container');
+            if (this.value) {
+                waiterStarContainer.style.display = 'block';
+            } else {
+                waiterStarContainer.style.display = 'none';
+                selectedWaiterRating = 0;
+                updateWaiterStars(0);
+            }
+        });
+        
+        // Waiter star rating functionality
+        const waiterStars = document.querySelectorAll('#waiter-star-rating .star');
+        const waiterRatingLabel = document.getElementById('waiter-rating-label');
+        
+        waiterStars.forEach(star => {
+            star.addEventListener('click', function() {
+                selectedWaiterRating = parseInt(this.dataset.rating);
+                updateWaiterStars(selectedWaiterRating);
+                waiterRatingLabel.textContent = ratingLabels[selectedWaiterRating];
+            });
+
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.dataset.rating);
+                updateWaiterStars(rating);
+            });
+        });
+
+        document.getElementById('waiter-star-rating').addEventListener('mouseleave', function() {
+            updateWaiterStars(selectedWaiterRating);
+        });
+
+        function updateWaiterStars(rating) {
+            waiterStars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
         }
 
         async function checkCanReview() {
@@ -429,8 +531,17 @@
 
             const reviewData = {
                 rating: selectedRating,
-                comment: commentTextarea.value.trim() || null
+                comment: commentTextarea.value.trim() || null,
+                waiter_id: document.getElementById('waiter-select').value || null,
+                waiter_rating: selectedWaiterRating > 0 ? selectedWaiterRating : null
             };
+
+            // If order ID is provided in URL, include it
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('order');
+            if (orderId) {
+                reviewData.order_id = orderId;
+            }
 
             try {
                 const response = await fetch('/api/reviews.php?action=submit', {

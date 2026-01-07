@@ -506,3 +506,127 @@ ON CONFLICT (setting_key) DO NOTHING;
 -- Insert initial maintenance mode record
 INSERT INTO maintenance_mode (id, is_active) VALUES (1, FALSE)
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================
+-- FEATURE ENHANCEMENTS - NEW TABLES & COLUMNS
+-- ============================================
+
+-- 1. Add local_enabled column to menu_items for consumption location availability
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS local_enabled BOOLEAN DEFAULT TRUE;
+CREATE INDEX IF NOT EXISTS idx_menu_items_local_enabled ON menu_items(local_enabled);
+COMMENT ON COLUMN menu_items.local_enabled IS 'Item available for in-restaurant consumption';
+
+-- 2. Table: reviews - Customer and waiter reviews
+CREATE TABLE IF NOT EXISTS reviews (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    waiter_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+    waiter_rating INTEGER CHECK (waiter_rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(order_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_order ON reviews(order_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_waiter ON reviews(waiter_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_created ON reviews(created_at);
+
+-- 3. Add favorite dish to users table for waiter profile feature
+ALTER TABLE users ADD COLUMN IF NOT EXISTS favorite_dish_id INTEGER REFERENCES menu_items(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_users_favorite_dish ON users(favorite_dish_id);
+COMMENT ON COLUMN users.favorite_dish_id IS 'Waiter favorite dish (manually selected or auto-calculated)';
+
+-- 4. Table: custom_messages - Customizable system messages with rich text
+CREATE TABLE IF NOT EXISTS custom_messages (
+    id SERIAL PRIMARY KEY,
+    message_key VARCHAR(100) UNIQUE NOT NULL,
+    message_title VARCHAR(255),
+    message_content TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_custom_messages_key ON custom_messages(message_key);
+CREATE INDEX IF NOT EXISTS idx_custom_messages_active ON custom_messages(is_active);
+
+CREATE TRIGGER custom_messages_updated_at BEFORE UPDATE ON custom_messages
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert default custom messages
+INSERT INTO custom_messages (message_key, message_title, message_content) VALUES
+('welcome', 'Boas-vindas', 'Bem-vindo ao Restaurante Portuga!'),
+('order_confirmed', 'Pedido Confirmado', 'Seu pedido foi confirmado e está sendo preparado.'),
+('order_ready', 'Pedido Pronto', 'Seu pedido está pronto!'),
+('order_delivered', 'Pedido Entregue', 'Seu pedido foi entregue. Obrigado pela preferência!')
+ON CONFLICT (message_key) DO NOTHING;
+
+-- 5. Table: system_notes - Homepage announcements and notes
+CREATE TABLE IF NOT EXISTS system_notes (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    note_type VARCHAR(20) DEFAULT 'info' CHECK (note_type IN ('info', 'warning', 'success', 'promo')),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_system_notes_active ON system_notes(is_active);
+CREATE INDEX IF NOT EXISTS idx_system_notes_expires ON system_notes(expires_at);
+CREATE INDEX IF NOT EXISTS idx_system_notes_created ON system_notes(created_at);
+CREATE INDEX IF NOT EXISTS idx_system_notes_type ON system_notes(note_type);
+
+CREATE TRIGGER system_notes_updated_at BEFORE UPDATE ON system_notes
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 6. Add waiter_id to orders table for waiter assignment
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS waiter_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_orders_waiter ON orders(waiter_id);
+COMMENT ON COLUMN orders.waiter_id IS 'Waiter assigned to this order';
+
+-- 7. Update order_type constraint to include 'retirada' (pickup)
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_order_type_check;
+ALTER TABLE orders ADD CONSTRAINT orders_order_type_check 
+    CHECK (order_type IN ('viagem', 'local', 'retirada'));
+
+-- 8. Add additional order information columns
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_name VARCHAR(255);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+CREATE INDEX IF NOT EXISTS idx_orders_pickup_name ON orders(pickup_name);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_name ON orders(customer_name);
+COMMENT ON COLUMN orders.pickup_name IS 'Name for pickup orders';
+COMMENT ON COLUMN orders.customer_name IS 'Customer name for delivery orders';
+
+-- 9. Add max_tables setting to restaurant_settings
+INSERT INTO restaurant_settings (setting_key, setting_value, setting_type, description)
+VALUES ('max_tables', '20', 'number', 'Número máximo de mesas no restaurante')
+ON CONFLICT (setting_key) DO NOTHING;
+
+-- 10. Add lunch schedule columns to employee_schedule
+ALTER TABLE employee_schedule ADD COLUMN IF NOT EXISTS lunch_start TIME;
+ALTER TABLE employee_schedule ADD COLUMN IF NOT EXISTS lunch_duration INTEGER DEFAULT 60;
+CREATE INDEX IF NOT EXISTS idx_employee_schedule_lunch ON employee_schedule(lunch_start);
+COMMENT ON COLUMN employee_schedule.lunch_start IS 'Lunch break start time';
+COMMENT ON COLUMN employee_schedule.lunch_duration IS 'Lunch break duration in minutes';
+
+-- Add permissions for new features
+INSERT INTO permissions (name, description, resource, action) VALUES
+('reviews_view', 'Visualizar avaliações', 'reviews', 'read'),
+('reviews_access', 'Acesso às avaliações', 'reviews', 'access'),
+('notes_view', 'Visualizar notas do sistema', 'notes', 'read'),
+('notes_create', 'Criar notas do sistema', 'notes', 'create'),
+('notes_update', 'Atualizar notas do sistema', 'notes', 'update'),
+('notes_delete', 'Deletar notas do sistema', 'notes', 'delete'),
+('notes_access', 'Acesso às notas do sistema', 'notes', 'access'),
+('schedule_view', 'Visualizar escalas', 'schedule', 'read'),
+('schedule_create', 'Criar escalas', 'schedule', 'create'),
+('schedule_update', 'Atualizar escalas', 'schedule', 'update'),
+('schedule_delete', 'Deletar escalas', 'schedule', 'delete'),
+('schedule_access', 'Acesso ao planner de escalas', 'schedule', 'access')
+ON CONFLICT (name) DO NOTHING;
