@@ -598,7 +598,7 @@ async function finalizeOrder() {
     const cart = getCart();
     
     if (cart.length === 0) {
-        alert('Seu carrinho está vazio!');
+        showInlineMessage('Seu carrinho está vazio!', 'warning');
         return;
     }
     
@@ -608,25 +608,28 @@ async function finalizeOrder() {
         return;
     }
     
-    // Check for mesa parameter
-    const mesaNumber = sessionStorage.getItem('mesaNumber');
+    // Get selected order type
+    const orderType = document.querySelector('input[name="order-type"]:checked')?.value;
     
-    // Check if user is logged in (unless ordering with mesa parameter)
-    if (!mesaNumber && window.isUserLoggedIn && !isUserLoggedIn()) {
-        // User is not logged in and not ordering from a table
-        const currentUrl = window.location.pathname + window.location.search;
-        const redirectUrl = `/login.html?redirect=${encodeURIComponent(currentUrl)}`;
-        
-        if (confirm('Você precisa estar logado para fazer um pedido. Deseja fazer login agora?')) {
-            window.location.href = redirectUrl;
-        }
+    if (!orderType) {
+        showInlineMessage('Por favor, selecione o tipo de pedido', 'error');
         return;
     }
     
-    const forDelivery = document.getElementById('for-delivery')?.checked || false;
-    const deliveryFee = getDeliveryFee();
-    let tableNumber = null;
+    // Validate order based on type
+    if (!validateOrder()) {
+        return;
+    }
+    
     let userId = null;
+    let tableNumber = null;
+    let pickupName = null;
+    let pickupTime = null;
+    let customerName = null;
+    let deliveryAddress = '';
+    let deliveryFee = 0;
+    let orderTypeLabel = '';
+    let orderTypeDetails = '';
     
     // Get user ID if logged in
     if (window.getCurrentUser) {
@@ -636,55 +639,36 @@ async function finalizeOrder() {
         }
     }
     
-    // Handle table number
-    if (mesaNumber) {
-        // Using mesa parameter from URL
-        tableNumber = parseInt(mesaNumber);
-    } else if (!forDelivery) {
-        // For local orders when logged in, get table number from field
-        const tableNumberInput = document.getElementById('table-number');
-        if (tableNumberInput && tableNumberInput.value) {
-            tableNumber = parseInt(tableNumberInput.value);
-            if (!tableNumber || tableNumber <= 0) {
-                alert('Por favor, informe um número de mesa válido.');
-                return;
-            }
-        }
-    }
-    
-    // Get pickup/delivery time (OPTIONAL)
-    const pickupTime = document.getElementById('pickup-time')?.value || '';
-    
-    // Validate pickup time IF provided (11:00 - 23:00)
-    if (pickupTime) {
-        const [hours, minutes] = pickupTime.split(':').map(Number);
-        if (hours < 11 || hours >= 23) {
-            alert('Horário fora do período de funcionamento (11:00 - 23:00).');
-            return;
-        }
-    }
-    
-    // Validate delivery info if delivery is checked
-    let deliveryAddress = '';
-    if (forDelivery) {
-        const street = document.getElementById('delivery-street')?.value || '';
-        const number = document.getElementById('delivery-number')?.value || '';
-        const neighborhood = document.getElementById('delivery-neighborhood')?.value || '';
-        const city = document.getElementById('delivery-city')?.value || '';
-        const complement = document.getElementById('delivery-complement')?.value || '';
+    // Process based on order type
+    if (orderType === 'local') {
+        // Comer no Local
+        tableNumber = parseInt(document.getElementById('table-number').value);
+        orderTypeLabel = '🪑 Comer no Local';
+        orderTypeDetails = `Mesa ${tableNumber}`;
         
-        if (!street || !number || !neighborhood || !city) {
-            alert('Por favor, preencha todos os campos obrigatórios do endereço.');
-            return;
-        }
+    } else if (orderType === 'retirada') {
+        // Retirada
+        pickupTime = document.getElementById('pickup-time-required').value;
+        pickupName = document.getElementById('pickup-name').value;
+        orderTypeLabel = '🥡 Retirada';
+        orderTypeDetails = `Horário: ${pickupTime} - Nome: ${pickupName}`;
+        
+    } else if (orderType === 'entrega') {
+        // Entrega
+        const street = document.getElementById('delivery-street').value;
+        const number = document.getElementById('delivery-number').value;
+        const neighborhood = document.getElementById('delivery-neighborhood').value;
+        const city = document.getElementById('delivery-city').value;
+        const complement = document.getElementById('delivery-complement')?.value || '';
+        customerName = document.getElementById('delivery-customer-name')?.value || '';
         
         if (!calculatedDistance || calculatedDistance <= 0) {
-            alert('Por favor, calcule a distância antes de finalizar o pedido.');
+            showInlineMessage('Por favor, calcule a distância antes de finalizar o pedido', 'error');
             return;
         }
         
         if (calculatedDistance > 18) {
-            alert('Desculpe, não realizamos entregas para distâncias acima de 18 km.');
+            showInlineMessage('Desculpe, não realizamos entregas para distâncias acima de 18 km', 'error');
             return;
         }
         
@@ -694,10 +678,17 @@ async function finalizeOrder() {
             deliveryAddress += ` (${complement})`;
         }
         
-        // Get payment method
+        deliveryFee = getDeliveryFee();
+        orderTypeLabel = '🚗 Entrega';
+        orderTypeDetails = `Endereço: ${deliveryAddress}\nDistância: ${calculatedDistance.toFixed(1)} km`;
+        if (customerName) {
+            orderTypeDetails = `Nome: ${customerName}\n` + orderTypeDetails;
+        }
+        
+        // Validate payment method for delivery
         const paymentMethod = document.querySelector('input[name="payment-method"]:checked');
         if (!paymentMethod) {
-            alert('Por favor, selecione a forma de pagamento.');
+            showInlineMessage('Por favor, selecione a forma de pagamento', 'error');
             return;
         }
         
@@ -705,7 +696,7 @@ async function finalizeOrder() {
         if (paymentMethod.value === 'cash-with-change') {
             const changeAmount = document.getElementById('change-amount')?.value || '';
             if (!changeAmount || parseFloat(changeAmount) <= 0) {
-                alert('Por favor, informe o valor para o troco.');
+                showInlineMessage('Por favor, informe o valor para o troco', 'error');
                 return;
             }
         }
@@ -714,10 +705,9 @@ async function finalizeOrder() {
     // Build WhatsApp message
     let message = '*Novo Pedido - Restaurante Portuga*\n\n';
     
-    // Add table number if applicable
-    if (tableNumber) {
-        message += `*🪑 Mesa: ${tableNumber}*\n\n`;
-    }
+    // Add order type with details
+    message += `*Tipo de Pedido:* ${orderTypeLabel}\n`;
+    message += `${orderTypeDetails}\n\n`;
     
     message += '*📋 Itens do Pedido:*\n';
     
@@ -734,36 +724,16 @@ async function finalizeOrder() {
     message += '*💵 Valores:*\n';
     message += `Subtotal: R$ ${subtotal.toFixed(2)}\n`;
     
-    // Add delivery info if applicable
-    if (forDelivery && deliveryFee > 0) {
-        message += `Taxa de Entrega: R$ ${deliveryFee.toFixed(2)} (${calculatedDistance.toFixed(1)} km)\n`;
+    // Add delivery fee if applicable
+    if (orderType === 'entrega' && deliveryFee > 0) {
+        message += `Taxa de Entrega: R$ ${deliveryFee.toFixed(2)}\n`;
     }
     
     const total = subtotal + deliveryFee;
     message += `*Total: R$ ${total.toFixed(2)}*\n\n`;
     
-    // Add delivery info or pickup info
-    if (forDelivery) {
-        message += '*Endereço de Entrega:*\n';
-        message += `${deliveryAddress}\n`;
-        message += `Distância: ${calculatedDistance.toFixed(1)} km\n\n`;
-    } else {
-        message += '*Tipo:*\n';
-        if (tableNumber) {
-            message += `Retirada no local - Mesa ${tableNumber}\n\n`;
-        } else {
-            message += 'Retirada no local\n\n';
-        }
-    }
-    
-    // Add pickup time (only if provided)
-    if (pickupTime) {
-        message += '*⏰ Horário de Retirada/Entrega:*\n';
-        message += `${pickupTime}\n\n`;
-    }
-    
     // Add payment method (only for delivery)
-    if (forDelivery) {
+    if (orderType === 'entrega') {
         const paymentMethod = document.querySelector('input[name="payment-method"]:checked');
         message += '*💳 Forma de Pagamento:*\n';
         
@@ -782,15 +752,17 @@ async function finalizeOrder() {
     
     // Save order with all info (await API call)
     await saveOrder(cart, total, {
-        forDelivery,
+        orderType: orderType,
         deliveryDistance: calculatedDistance,
-        deliveryAddress,
-        deliveryFee,
-        pickupTime,
-        paymentMethod: forDelivery ? document.querySelector('input[name="payment-method"]:checked')?.value : null,
-        changeAmount: forDelivery && document.querySelector('input[name="payment-method"]:checked')?.value === 'cash-with-change' 
+        deliveryAddress: orderType === 'entrega' ? deliveryAddress : null,
+        deliveryFee: deliveryFee,
+        pickupTime: orderType === 'retirada' ? pickupTime : null,
+        pickupName: orderType === 'retirada' ? pickupName : null,
+        customerName: orderType === 'entrega' ? customerName : null,
+        paymentMethod: orderType === 'entrega' ? document.querySelector('input[name="payment-method"]:checked')?.value : null,
+        changeAmount: orderType === 'entrega' && document.querySelector('input[name="payment-method"]:checked')?.value === 'cash-with-change' 
             ? document.getElementById('change-amount')?.value : null,
-        tableNumber: tableNumber,
+        tableNumber: orderType === 'local' ? tableNumber : null,
         userId: userId
     });
     
@@ -799,8 +771,10 @@ async function finalizeOrder() {
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
     
+    // Clear cart after successful order
     clearCart();
     renderCart();
+    showInlineMessage('Pedido enviado com sucesso! Aguarde a confirmação pelo WhatsApp.', 'success');
 }
 
 async function saveOrder(cart, total, deliveryInfo = {}) {
