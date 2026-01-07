@@ -3899,3 +3899,90 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// ==========================================
+// CUSTOM MESSAGES (RICH TEXT EDITOR)
+// ==========================================
+
+/**
+ * Format text in rich text editor
+ */
+function formatText(command, value = null) {
+    document.getElementById('message-editor').focus();
+    document.execCommand(command, false, value);
+}
+
+/**
+ * Load selected message from database
+ */
+async function loadSelectedMessage() {
+    const messageType = document.getElementById('message-type-select').value;
+    
+    try {
+        const response = await fetch(`/api/admin/custom-messages.php?action=get&message_key=${messageType}`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            const message = data.data;
+            document.getElementById('message-title').value = message.message_title || '';
+            document.getElementById('message-editor').innerHTML = message.message_content || '<p>Digite sua mensagem aqui...</p>';
+            document.getElementById('message-active').checked = message.is_active || false;
+        } else {
+            // No message exists yet, clear fields
+            document.getElementById('message-title').value = '';
+            document.getElementById('message-editor').innerHTML = '<p>Digite sua mensagem aqui...</p>';
+            document.getElementById('message-active').checked = true;
+        }
+    } catch (error) {
+        console.error('Error loading message:', error);
+        showInlineMessage('Erro ao carregar mensagem', 'error');
+    }
+}
+
+/**
+ * Save custom message
+ */
+async function saveCustomMessage() {
+    const messageType = document.getElementById('message-type-select').value;
+    const title = document.getElementById('message-title').value;
+    const content = document.getElementById('message-editor').innerHTML;
+    const isActive = document.getElementById('message-active').checked;
+    
+    if (!title.trim()) {
+        showInlineMessage('Por favor, informe o título da mensagem', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/custom-messages.php?action=save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message_key: messageType,
+                message_title: title,
+                message_content: content,
+                is_active: isActive
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showInlineMessage('Mensagem salva com sucesso!', 'success');
+        } else {
+            throw new Error(data.error || 'Erro ao salvar mensagem');
+        }
+    } catch (error) {
+        console.error('Error saving message:', error);
+        showInlineMessage('Erro ao salvar mensagem: ' + error.message, 'error');
+    }
+}
+
+// Load first message on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('message-type-select')) {
+        loadSelectedMessage();
+    }
+});
+
