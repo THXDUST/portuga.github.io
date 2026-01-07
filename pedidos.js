@@ -55,6 +55,28 @@ async function getOrdersFromAPI() {
                 if (!hasAdmin) {
                     orders = orders.filter(order => order.user_id === currentUser.id);
                 }
+            } else {
+                // Guest user - filter by table number if available
+                const cachedTable = getCachedTableNumber();
+                if (cachedTable) {
+                    orders = orders.filter(order => 
+                        order.table_number && order.table_number == cachedTable
+                    );
+                } else {
+                    // No user and no table - show no orders
+                    orders = [];
+                }
+            }
+        } else {
+            // No auth system - filter by table number if available
+            const cachedTable = getCachedTableNumber();
+            if (cachedTable) {
+                orders = orders.filter(order => 
+                    order.table_number && order.table_number == cachedTable
+                );
+            } else {
+                // No table cached - show no orders
+                orders = [];
             }
         }
         
