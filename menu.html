@@ -248,6 +248,10 @@
         
         // Update navigation UI and load menu on page load
         document.addEventListener('DOMContentLoaded', async () => {
+            // Set current year
+            const yearSpan = document.getElementById('current-year');
+            if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+            
             await updateNavigationUI();
             await loadDynamicMenu();
             

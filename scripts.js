@@ -92,9 +92,25 @@ function setupDynamicNavigation() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupDynamicNavigation);
     document.addEventListener('DOMContentLoaded', checkAndCacheTableNumber);
+    document.addEventListener('DOMContentLoaded', setCurrentYear);
 } else {
     setupDynamicNavigation();
     checkAndCacheTableNumber();
+    setCurrentYear();
+}
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+/**
+ * Set current year in footer
+ */
+function setCurrentYear() {
+    const yearSpan = document.getElementById('current-year');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
 }
 
 // ============================================

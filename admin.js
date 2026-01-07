@@ -1931,8 +1931,6 @@ function generateCustomerFlowReport(orders, container) {
             `;
         }
     }
-        `;
-    }
     
     html += '</div></div>';
     container.innerHTML = html;
