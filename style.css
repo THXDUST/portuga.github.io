@@ -4,6 +4,9 @@
     box-sizing: border-box;
 }
 
+/* Import Great Vibes font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
@@ -29,23 +32,28 @@ body.restaurant-closed header {
 }
 
 header {
-    background: linear-gradient(135deg, #e8c13f 0%, #d4a734 100%);
-    color: #333;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('images/restaurant.jpg') center/cover no-repeat;
+    color: #fff;
     padding: 40px 0;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 header h1 {
-    font-size: 3rem;
+    font-family: 'Great Vibes', cursive;
+    font-size: 3.5rem;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    color: #e8c13f;
 }
 
 .subtitle {
     font-size: 1.5rem;
     font-weight: 300;
-    opacity: 0.9;
+    opacity: 0.95;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 main {
@@ -116,6 +124,25 @@ footer {
 
 footer p {
     margin: 5px 0;
+}
+
+.footer-propaganda {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+}
+
+.footer-propaganda a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.footer-propaganda a:hover {
+    color: #fff;
+    text-decoration: underline;
 }
 
 .btn {
@@ -1712,4 +1739,74 @@ nav ul li a:hover {
     color: #000;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* ============================================
+   INLINE MESSAGES (replacing alert())
+   ============================================ */
+.inline-message {
+    padding: 12px 20px;
+    margin: 15px 0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.inline-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.inline-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.inline-message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.inline-message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.inline-message-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0 0 0 15px;
+    line-height: 1;
+}
+
+.inline-message-close:hover {
+    opacity: 1;
+}
+
+/* Dynamic navigation - hide current page button */
+.nav-current-page {
+    display: none !important;
 }

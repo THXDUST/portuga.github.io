@@ -10,6 +10,95 @@
 
 const WHATSAPP_NUMBER = '5513996379775'; // '5513997597759'; número do alemão 
 
+// ============================================
+// INLINE MESSAGE FUNCTIONS (Replacing alert())
+// ============================================
+
+/**
+ * Show inline message near a specific element
+ * @param {string} message - Message text to display
+ * @param {string} type - Message type: 'success', 'error', 'warning', 'info'
+ * @param {HTMLElement} targetElement - Element to show message near (default: body)
+ * @param {number} duration - Auto-hide duration in ms (0 = no auto-hide)
+ */
+function showInlineMessage(message, type = 'info', targetElement = null, duration = 5000) {
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `inline-message ${type}`;
+    messageDiv.innerHTML = `
+        <span>${message}</span>
+        <button class="inline-message-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    
+    // Insert near target element or at top of body
+    if (targetElement) {
+        targetElement.insertAdjacentElement('afterend', messageDiv);
+    } else {
+        document.body.insertBefore(messageDiv, document.body.firstChild);
+    }
+    
+    // Auto-hide after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            if (messageDiv.parentElement) {
+                messageDiv.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => messageDiv.remove(), 300);
+            }
+        }, duration);
+    }
+    
+    return messageDiv;
+}
+
+// Add slideOut animation to CSS dynamically if not exists
+if (!document.getElementById('inline-message-animations')) {
+    const style = document.createElement('style');
+    style.id = 'inline-message-animations';
+    style.textContent = `
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// ============================================
+// DYNAMIC NAVIGATION - Hide current page button
+// ============================================
+
+/**
+ * Hide navigation button for current page
+ */
+function setupDynamicNavigation() {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const navLinks = document.querySelectorAll('nav a');
+    
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+            link.parentElement.classList.add('nav-current-page');
+        }
+    });
+}
+
+// Run on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupDynamicNavigation);
+} else {
+    setupDynamicNavigation();
+}
+
+// ============================================
+// CART FUNCTIONS
+// ============================================ 
+
 function getCart() {
     const cart = localStorage.getItem('cart');
     return cart ? JSON.parse(cart) : [];
@@ -52,7 +141,11 @@ function addToCart(name, price, image) {
     }
     
     saveCart(cart);
-    alert(`${name} adicionado ao carrinho!`);
+    
+    // Show inline message instead of alert
+    // Try to find the button that was clicked to show message near it
+    const activeButton = event?.target?.closest('button');
+    showInlineMessage(`✓ ${name} adicionado ao carrinho!`, 'success', activeButton, 3000);
 }
 
 function removeFromCart(id) {
