@@ -11,6 +11,13 @@
  * - GET /can-review - Check if user can submit review
  */
 
+// Start output buffering to catch any errors
+ob_start();
+
+// Suppress errors in output
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
 // Set JSON headers first
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -19,22 +26,28 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 // Set error handler to return JSON
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    ob_clean(); // Clear any output
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Server error occurred',
-        'error' => $errstr
+        'error' => $errstr,
+        'file' => basename($errfile),
+        'line' => $errline
     ]);
     exit();
 });
 
 // Set exception handler to return JSON
 set_exception_handler(function($exception) {
+    ob_clean(); // Clear any output
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Server error occurred',
-        'error' => $exception->getMessage()
+        'error' => $exception->getMessage(),
+        'file' => basename($exception->getFile()),
+        'line' => $exception->getLine()
     ]);
     exit();
 });
@@ -495,3 +508,6 @@ switch ($path) {
         echo json_encode(['success' => false, 'message' => 'Endpoint not found']);
         break;
 }
+
+// Flush output buffer
+ob_end_flush();
