@@ -790,11 +790,11 @@ function createKanbanCard(order) {
     
     // Handle both old format (items array) and new format (order_items from API)
     const items = order.items || order.order_items || [];
-    const itemsList = items.map(item => {
+    const itemsList = Array.isArray(items) ? items.map(item => {
         const quantity = item.quantity;
         const name = item.name || item.item_name;
         return `${quantity}x ${name}`;
-    }).join(', ');
+    }).join(', ') : 'N/A';
     
     // Determine order type and details - handle both old and new format
     let orderTypeInfo = '';
@@ -803,22 +803,22 @@ function createKanbanCard(order) {
     // New format uses order_type and table_number directly
     if (order.table_number) {
         orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.table_number}</span>`;
-        orderTypeClass = ' kanban-card-table';
+        orderTypeClass = 'kanban-card-table';
     } else if (order.order_type === 'viagem' || (order.delivery && order.delivery.forDelivery)) {
         orderTypeInfo = '<span class="kanban-badge kanban-badge-delivery">🚚 Entrega</span>';
-        orderTypeClass = ' kanban-card-delivery';
+        orderTypeClass = 'kanban-card-delivery';
     } else if (order.order_type === 'local' || order.delivery) {
         // Old format check
         if (order.delivery && order.delivery.tableNumber) {
             orderTypeInfo = `<span class="kanban-badge kanban-badge-table">🪑 Mesa ${order.delivery.tableNumber}</span>`;
-            orderTypeClass = ' kanban-card-table';
+            orderTypeClass = 'kanban-card-table';
         } else {
             orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">Retirada</span>';
-            orderTypeClass = ' kanban-card-pickup';
+            orderTypeClass = 'kanban-card-pickup';
         }
     } else {
         orderTypeInfo = '<span class="kanban-badge kanban-badge-pickup">Retirada</span>';
-        orderTypeClass = ' kanban-card-pickup';
+        orderTypeClass = 'kanban-card-pickup';
     }
     
     // Add user info if available
@@ -1802,7 +1802,13 @@ async function generateReport() {
 
 function generateRevenueReport(orders, dateFrom, dateTo, container) {
     const filteredOrders = orders.filter(order => {
-        const orderDate = new Date(order.date).toISOString().split('T')[0];
+        const dateStr = order.date || order.created_at;
+        if (!dateStr) return false;
+        
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return false; // Skip invalid dates
+        
+        const orderDate = date.toISOString().split('T')[0];
         return orderDate >= dateFrom && orderDate <= dateTo;
     });
     
@@ -1840,12 +1846,21 @@ function generatePopularItemsReport(orders, container) {
     const itemCounts = {};
     
     orders.forEach(order => {
-        order.items.forEach(item => {
-            if (!itemCounts[item.name]) {
-                itemCounts[item.name] = { quantity: 0, revenue: 0 };
+        const items = order.items || order.order_items || [];
+        if (!Array.isArray(items)) return;
+        
+        items.forEach(item => {
+            const itemName = item.name || item.item_name;
+            const itemPrice = item.price || item.item_price;
+            const itemQuantity = item.quantity || 1;
+            
+            if (!itemName) return;
+            
+            if (!itemCounts[itemName]) {
+                itemCounts[itemName] = { quantity: 0, revenue: 0 };
             }
-            itemCounts[item.name].quantity += item.quantity;
-            itemCounts[item.name].revenue += item.price * item.quantity;
+            itemCounts[itemName].quantity += itemQuantity;
+            itemCounts[itemName].revenue += itemPrice * itemQuantity;
         });
     });
     
@@ -1855,20 +1870,24 @@ function generatePopularItemsReport(orders, container) {
     
     let html = '<div class="report-card"><h3>Top 10 Produtos Mais Pedidos</h3><div style="margin-top: 20px;">';
     
-    sortedItems.forEach(([name, data], index) => {
-        html += `
-            <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between;">
-                <div>
-                    <span style="font-weight: bold; margin-right: 10px;">#${index + 1}</span>
-                    <span>${name}</span>
+    if (sortedItems.length === 0) {
+        html += '<p style="text-align: center; color: #666;">Nenhum dado disponível para o período selecionado.</p>';
+    } else {
+        sortedItems.forEach(([name, data], index) => {
+            html += `
+                <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between;">
+                    <div>
+                        <span style="font-weight: bold; margin-right: 10px;">#${index + 1}</span>
+                        <span>${name}</span>
+                    </div>
+                    <div>
+                        <span style="color: #e8c13f; font-weight: bold; margin-right: 20px;">${data.quantity}x</span>
+                        <span style="color: #28a745; font-weight: bold;">R$ ${Number(data.revenue || 0).toFixed(2)}</span>
+                    </div>
                 </div>
-                <div>
-                    <span style="color: #e8c13f; font-weight: bold; margin-right: 20px;">${data.quantity}x</span>
-                    <span style="color: #28a745; font-weight: bold;">R$ ${Number(data.revenue || 0).toFixed(2)}</span>
-                </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    }
     
     html += '</div></div>';
     container.innerHTML = html;
@@ -1878,26 +1897,40 @@ function generateCustomerFlowReport(orders, container) {
     const hourCounts = {};
     
     orders.forEach(order => {
-        const hour = new Date(order.date).getHours();
+        const dateStr = order.date || order.created_at;
+        if (!dateStr) return;
+        
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return; // Skip invalid dates
+        
+        const hour = date.getHours();
         hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     });
     
     let html = '<div class="report-card"><h3>Fluxo de Clientes por Horário</h3><div style="margin-top: 20px;">';
     
-    for (let hour = 0; hour < 24; hour++) {
-        const count = hourCounts[hour] || 0;
-        const barWidth = count > 0 ? (count / Math.max(...Object.values(hourCounts))) * 100 : 0;
-        
-        html += `
-            <div style="margin: 10px 0;">
-                <div style="display: flex; align-items: center;">
-                    <span style="min-width: 60px;">${hour}:00</span>
-                    <div style="flex: 1; background: #e9ecef; height: 30px; border-radius: 4px; margin: 0 10px; overflow: hidden;">
-                        <div style="width: ${barWidth}%; height: 100%; background: #e8c13f; transition: width 0.3s;"></div>
+    const maxCount = Math.max(...Object.values(hourCounts), 1); // Avoid division by zero
+    
+    if (Object.keys(hourCounts).length === 0) {
+        html += '<p style="text-align: center; color: #666;">Nenhum dado disponível para o período selecionado.</p>';
+    } else {
+        for (let hour = 0; hour < 24; hour++) {
+            const count = hourCounts[hour] || 0;
+            const barWidth = count > 0 ? (count / maxCount) * 100 : 0;
+            
+            html += `
+                <div style="margin: 10px 0;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="min-width: 60px;">${hour}:00</span>
+                        <div style="flex: 1; background: #e9ecef; height: 30px; border-radius: 4px; margin: 0 10px; overflow: hidden;">
+                            <div style="width: ${barWidth}%; height: 100%; background: #e8c13f; transition: width 0.3s;"></div>
+                        </div>
+                        <span style="min-width: 40px; text-align: right; font-weight: bold;">${count}</span>
                     </div>
-                    <span style="min-width: 40px; text-align: right; font-weight: bold;">${count}</span>
                 </div>
-            </div>
+            `;
+        }
+    }
         `;
     }
     
