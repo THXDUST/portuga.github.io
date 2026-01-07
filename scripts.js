@@ -91,8 +91,41 @@ function setupDynamicNavigation() {
 // Run on page load
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupDynamicNavigation);
+    document.addEventListener('DOMContentLoaded', checkAndCacheTableNumber);
 } else {
     setupDynamicNavigation();
+    checkAndCacheTableNumber();
+}
+
+// ============================================
+// TABLE NUMBER CACHE (via URL ?mesa=X)
+// ============================================
+
+/**
+ * Check URL for mesa parameter and cache in sessionStorage
+ */
+function checkAndCacheTableNumber() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mesaNumber = urlParams.get('mesa');
+    
+    if (mesaNumber && !isNaN(parseInt(mesaNumber))) {
+        sessionStorage.setItem('mesaNumber', mesaNumber);
+        console.log('Table number cached:', mesaNumber);
+    }
+}
+
+/**
+ * Get cached table number from sessionStorage
+ */
+function getCachedTableNumber() {
+    return sessionStorage.getItem('mesaNumber');
+}
+
+/**
+ * Clear cached table number
+ */
+function clearCachedTableNumber() {
+    sessionStorage.removeItem('mesaNumber');
 }
 
 // ============================================
