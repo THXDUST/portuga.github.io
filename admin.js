@@ -1484,6 +1484,7 @@ async function saveItem(event) {
     const imageUrl = document.getElementById('item-image')?.value;
     const imageFile = document.getElementById('item-image-upload')?.files[0];
     const available = document.getElementById('item-available')?.checked || false;
+    const localEnabled = document.getElementById('item-local-enabled')?.checked || false;
     const deliveryEnabled = document.getElementById('item-delivery-enabled')?.checked || false;
     
     // Enhanced validation and sanitization
@@ -1535,6 +1536,7 @@ async function saveItem(event) {
             formData.append('description', String(description || ''));
             formData.append('price', String(price));
             formData.append('is_available', available ? '1' : '0');
+            formData.append('local_enabled', localEnabled ? '1' : '0');
             formData.append('delivery_enabled', deliveryEnabled ? '1' : '0');
             
             // COMPRIMIR A IMAGEM ANTES DE ADICIONAR AO FORMDATA
@@ -1610,6 +1612,7 @@ async function saveItem(event) {
                 price,
                 image_url: imageUrl || null,
                 is_available: available,
+                local_enabled: localEnabled,
                 delivery_enabled: deliveryEnabled
             };
             
@@ -1720,6 +1723,7 @@ async function editItem(itemId) {
             document.getElementById('item-price').value = item.price;
             document.getElementById('item-image').value = item.image_url || '';
             document.getElementById('item-available').checked = item.is_available;
+            document.getElementById('item-local-enabled').checked = item.local_enabled !== false; // Default to true if not set
             document.getElementById('item-delivery-enabled').checked = item.delivery_enabled !== false; // Default to true if not set
             
             modal.style.display = 'block';
