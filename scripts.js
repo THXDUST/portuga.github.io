@@ -1142,7 +1142,7 @@ async function validateCanPlaceOrder() {
     const isOpen = await checkRestaurantStatus();
     
     if (!isOpen) {
-        alert('❌ Restaurante Fechado\n\nDesculpe, o restaurante está fechado no momento e não estamos aceitando pedidos. Por favor, tente novamente mais tarde.');
+        showInlineMessage('Restaurante Fechado - Desculpe, o restaurante está fechado no momento e não estamos aceitando pedidos. Por favor, tente novamente mais tarde.', 'error', null, 8000);
         return false;
     }
     
