@@ -214,6 +214,7 @@ CREATE TABLE IF NOT EXISTS orders (
     delivery_address TEXT NULL,
     delivery_distance DECIMAL(5, 2) NULL,
     delivery_fee DECIMAL(10, 2) DEFAULT 0.00,
+    
     pickup_time TIMESTAMP NULL,
     production_start_time TIMESTAMP NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
@@ -513,8 +514,13 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 1. Add local_enabled column to menu_items for consumption location availability
 ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS local_enabled BOOLEAN DEFAULT TRUE;
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS pdv_code INTEGER DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_menu_items_local_enabled ON menu_items(local_enabled);
 COMMENT ON COLUMN menu_items.local_enabled IS 'Item available for in-restaurant consumption';
+
+ALTER TABLE orders
+ADD COLUMN IF NOT EXISTS waiter_id INTEGER
+REFERENCES users(id) ON DELETE SET NULL;
 
 -- 2. Table: reviews - Customer and waiter reviews
 CREATE TABLE IF NOT EXISTS reviews (
