@@ -659,7 +659,10 @@ async function finalizeOrder() {
         const number = document.getElementById('delivery-number').value;
         const neighborhood = document.getElementById('delivery-neighborhood').value;
         const city = document.getElementById('delivery-city').value;
+        const state = document.getElementById('delivery-state')?.value || 'SP';
         const complement = document.getElementById('delivery-complement')?.value || '';
+        const cep = document.getElementById('delivery-cep')?.value || '';
+        const phone = document.getElementById('delivery-phone')?.value || '';
         customerName = document.getElementById('delivery-customer-name')?.value || '';
         
         if (!calculatedDistance || calculatedDistance <= 0) {
@@ -763,7 +766,16 @@ async function finalizeOrder() {
         changeAmount: orderType === 'entrega' && document.querySelector('input[name="payment-method"]:checked')?.value === 'cash-with-change' 
             ? document.getElementById('change-amount')?.value : null,
         tableNumber: orderType === 'local' ? tableNumber : null,
-        userId: userId
+        userId: userId,
+        // New address fields
+        phoneNumber: orderType === 'entrega' ? document.getElementById('delivery-phone')?.value : null,
+        cep: orderType === 'entrega' ? document.getElementById('delivery-cep')?.value : null,
+        addressStreet: orderType === 'entrega' ? document.getElementById('delivery-street')?.value : null,
+        addressNumber: orderType === 'entrega' ? document.getElementById('delivery-number')?.value : null,
+        addressComplement: orderType === 'entrega' ? document.getElementById('delivery-complement')?.value : null,
+        addressNeighborhood: orderType === 'entrega' ? document.getElementById('delivery-neighborhood')?.value : null,
+        addressCity: orderType === 'entrega' ? document.getElementById('delivery-city')?.value : null,
+        addressState: orderType === 'entrega' ? document.getElementById('delivery-state')?.value : null
     });
     
     const encodedMessage = encodeURIComponent(message);
@@ -783,7 +795,7 @@ async function saveOrder(cart, total, deliveryInfo = {}) {
         const orderData = {
             user_id: deliveryInfo.userId || null,
             order_number: 'WEB' + Date.now(),
-            order_type: deliveryInfo.forDelivery ? 'viagem' : 'local',
+            order_type: deliveryInfo.orderType || 'local',
             table_number: deliveryInfo.tableNumber || null,
             status: 'recebido',
             payment_method: deliveryInfo.paymentMethod ? 
@@ -793,8 +805,19 @@ async function saveOrder(cart, total, deliveryInfo = {}) {
             delivery_distance: deliveryInfo.deliveryDistance || null,
             delivery_fee: deliveryInfo.deliveryFee || 0,
             pickup_time: deliveryInfo.pickupTime || null,
+            pickup_name: deliveryInfo.pickupName || null,
+            customer_name: deliveryInfo.customerName || null,
             subtotal: total - (deliveryInfo.deliveryFee || 0),
             total: total,
+            // New address fields
+            phone_number: deliveryInfo.phoneNumber || null,
+            cep: deliveryInfo.cep || null,
+            address_street: deliveryInfo.addressStreet || null,
+            address_number: deliveryInfo.addressNumber || null,
+            address_complement: deliveryInfo.addressComplement || null,
+            address_neighborhood: deliveryInfo.addressNeighborhood || null,
+            address_city: deliveryInfo.addressCity || null,
+            address_state: deliveryInfo.addressState || null,
             items: cart.map(item => ({
                 menu_item_id: null,
                 name: item.name,

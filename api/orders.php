@@ -236,8 +236,11 @@ function handlePost($conn, $action) {
                     INSERT INTO orders (
                         user_id, order_number, table_number, status, order_type, payment_method,
                         change_for, delivery_address, delivery_distance, delivery_fee,
-                        pickup_time, production_start_time, subtotal, total, notes
-                    ) VALUES (?, ?, ?, 'recebido', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        pickup_time, production_start_time, subtotal, total, notes,
+                        pickup_name, customer_name,
+                        phone_number, cep, address_street, address_number, 
+                        address_complement, address_neighborhood, address_city, address_state
+                    ) VALUES (?, ?, ?, 'recebido', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 
                 $userId = $data['user_id'] ?? null;
@@ -248,13 +251,29 @@ function handlePost($conn, $action) {
                 $pickupTime = $data['pickup_time'] ?? null;
                 $productionStartTime = $data['production_start_time'] ?? null;
                 $notes = $data['notes'] ?? null;
+                $pickupName = $data['pickup_name'] ?? null;
+                $customerName = $data['customer_name'] ?? null;
+                
+                // New address fields
+                $phoneNumber = $data['phone_number'] ?? null;
+                $cep = $data['cep'] ?? null;
+                $addressStreet = $data['address_street'] ?? null;
+                $addressNumber = $data['address_number'] ?? null;
+                $addressComplement = $data['address_complement'] ?? null;
+                $addressNeighborhood = $data['address_neighborhood'] ?? null;
+                $addressCity = $data['address_city'] ?? null;
+                $addressState = $data['address_state'] ?? null;
                 
                 // Log order creation for debugging
                 error_log("Creating order - Type: {$data['order_type']}, Table: " . ($tableNumber ?? 'NULL') . ", User: " . ($userId ?? 'NULL'));
                 
-                $stmt->execute([$userId, $orderNumber, $tableNumber, $data['order_type'], $data['payment_method'],
+                $stmt->execute([
+                    $userId, $orderNumber, $tableNumber, $data['order_type'], $data['payment_method'],
                     $changeFor, $deliveryAddress, $deliveryDistance, $deliveryFee,
-                    $pickupTime, $productionStartTime, $subtotal, $total, $notes
+                    $pickupTime, $productionStartTime, $subtotal, $total, $notes,
+                    $pickupName, $customerName,
+                    $phoneNumber, $cep, $addressStreet, $addressNumber,
+                    $addressComplement, $addressNeighborhood, $addressCity, $addressState
                 ]);
                 $orderId = $conn->lastInsertId();
                 

@@ -227,6 +227,7 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS waiter_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_orders_waiter ON orders(waiter_id);
 
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
@@ -589,9 +590,7 @@ CREATE INDEX IF NOT EXISTS idx_system_notes_type ON system_notes(note_type);
 CREATE TRIGGER system_notes_updated_at BEFORE UPDATE ON system_notes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 6. Add waiter_id to orders table for waiter assignment
--- ERRO AQUI Erro no comando #100: SQLSTATE[42703]: Undefined column: 7 ERROR: column "waiter_id" does not exist
-CREATE INDEX IF NOT EXISTS idx_orders_waiter ON orders(waiter_id);
+-- 6. waiter_id column and index already added near line 229-230, duplicate removed
 
 -- 7. Update order_type constraint to include 'retirada' (pickup)
 ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_order_type_check;
@@ -605,6 +604,24 @@ CREATE INDEX IF NOT EXISTS idx_orders_pickup_name ON orders(pickup_name);
 CREATE INDEX IF NOT EXISTS idx_orders_customer_name ON orders(customer_name);
 COMMENT ON COLUMN orders.pickup_name IS 'Name for pickup orders';
 COMMENT ON COLUMN orders.customer_name IS 'Customer name for delivery orders';
+
+-- 8.1. Add delivery address fields for complete address information
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS cep VARCHAR(10);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_street VARCHAR(255);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_number VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_complement VARCHAR(100);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_neighborhood VARCHAR(100);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_city VARCHAR(100);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_state VARCHAR(2);
+COMMENT ON COLUMN orders.phone_number IS 'Phone number for delivery contact';
+COMMENT ON COLUMN orders.cep IS 'CEP (postal code) for delivery address';
+COMMENT ON COLUMN orders.address_street IS 'Street name for delivery address';
+COMMENT ON COLUMN orders.address_number IS 'Street number for delivery address';
+COMMENT ON COLUMN orders.address_complement IS 'Complement/reference for delivery address';
+COMMENT ON COLUMN orders.address_neighborhood IS 'Neighborhood for delivery address';
+COMMENT ON COLUMN orders.address_city IS 'City for delivery address';
+COMMENT ON COLUMN orders.address_state IS 'State abbreviation (2 letters) for delivery address';
 
 -- 9. Add max_tables setting to restaurant_settings
 INSERT INTO restaurant_settings (setting_key, setting_value, setting_type, description)
