@@ -592,7 +592,6 @@ CREATE TRIGGER system_notes_updated_at BEFORE UPDATE ON system_notes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- 6. Add waiter_id to orders table for waiter assignment
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS waiter_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_orders_waiter ON orders(waiter_id);
 COMMENT ON COLUMN orders.waiter_id IS 'Waiter assigned to this order';
 
