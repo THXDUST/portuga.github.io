@@ -226,6 +226,8 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS waiter_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
@@ -518,10 +520,6 @@ ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS pdv_code INTEGER DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_menu_items_local_enabled ON menu_items(local_enabled);
 COMMENT ON COLUMN menu_items.local_enabled IS 'Item available for in-restaurant consumption';
 
-ALTER TABLE orders
-ADD COLUMN IF NOT EXISTS waiter_id INTEGER
-REFERENCES users(id) ON DELETE SET NULL;
-
 -- 2. Table: reviews - Customer and waiter reviews
 CREATE TABLE IF NOT EXISTS reviews (
     id SERIAL PRIMARY KEY,
@@ -592,8 +590,8 @@ CREATE TRIGGER system_notes_updated_at BEFORE UPDATE ON system_notes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- 6. Add waiter_id to orders table for waiter assignment
+-- ERRO AQUI Erro no comando #100: SQLSTATE[42703]: Undefined column: 7 ERROR: column "waiter_id" does not exist
 CREATE INDEX IF NOT EXISTS idx_orders_waiter ON orders(waiter_id);
-COMMENT ON COLUMN orders.waiter_id IS 'Waiter assigned to this order';
 
 -- 7. Update order_type constraint to include 'retirada' (pickup)
 ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_order_type_check;
