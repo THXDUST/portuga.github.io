@@ -137,7 +137,7 @@ def main():
             try:
                 error_data = e.response.json()
                 print(json.dumps(error_data, indent=2, ensure_ascii=False))
-            except:
+            except (json.JSONDecodeError, ValueError):
                 print(e.response.text)
         sys.exit(1)
     except Exception as e:
