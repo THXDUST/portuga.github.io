@@ -8,6 +8,9 @@ xampp
 .htaccess
 .env
 
+# Local app configuration
+localapp/config.json
+
 # Backup files
 *.backup
 *.bak
