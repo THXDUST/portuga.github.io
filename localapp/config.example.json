@@ -1,0 +1,4 @@
+{
+  "endpoint_url": "https://yoursite.com/api/import_products.php",
+  "api_key": "your-secret-api-key-here"
+}

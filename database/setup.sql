@@ -518,8 +518,10 @@ ON CONFLICT (id) DO NOTHING;
 -- 1. Add local_enabled column to menu_items for consumption location availability
 ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS local_enabled BOOLEAN DEFAULT TRUE;
 ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS pdv_code INTEGER DEFAULT 0;
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS cost DECIMAL(10, 2) DEFAULT 0.00;
 CREATE INDEX IF NOT EXISTS idx_menu_items_local_enabled ON menu_items(local_enabled);
 COMMENT ON COLUMN menu_items.local_enabled IS 'Item available for in-restaurant consumption';
+COMMENT ON COLUMN menu_items.cost IS 'Product cost for inventory and profit margin calculations';
 
 -- 2. Table: reviews - Customer and waiter reviews
 CREATE TABLE IF NOT EXISTS reviews (

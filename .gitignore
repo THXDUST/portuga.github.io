@@ -8,6 +8,15 @@ xampp
 .htaccess
 .env
 
+# Local app configuration
+localapp/config.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # Backup files
 *.backup
 *.bak
